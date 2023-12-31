@@ -1,6 +1,7 @@
 import click
 import os
 import json
+from app.application import print_tasks
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -31,16 +32,15 @@ def cli(ctx):
 
 @cli.command()
 @click.pass_context
-@click.option('-l', '--list', is_flag=True, help='List all the tasks')
+@click.option('-ls', '--list', is_flag=True, help='List all the tasks')
 def tasks(ctx, list):
     """
-    Create, Modify, Delete and List all your tasks with parameters such as deadline, priority, etc.
+    Create, Modify, Delete and List as well as view specific tasks.
     """
     if list:
         task_list = ctx.obj['data']['tasks']
-        counter = 1
+        final_list = []
         for task in task_list:
-            click.echo(f'{counter}. {task["task"]["short_description"]}')
-            counter += 1
-        if counter == 1:
-            click.echo("No tasks found.")
+            if task['task']['status'] != 'Completed':
+                final_list.append(task)
+        print_tasks(final_list)
