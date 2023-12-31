@@ -29,7 +29,7 @@ setup(
     install_requires = [requirements],
     python_requires='>=3.8',
     classifiers=[
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3",
         "Operating System :: POSIX :: Linux",
     ],
     entry_points={
