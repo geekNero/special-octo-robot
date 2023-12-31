@@ -8,7 +8,7 @@ def cli():
     pass
 
 @cli.command()
-@click.argument('-l', '--list', is_flag=True, help='List all the tasks')
+@click.option('-l', '--list', is_flag=True, help='List all the tasks')
 def tasks(list):
     """
     Create, Modify, Delete and List all your tasks with parameters such as deadline, priority, etc.
