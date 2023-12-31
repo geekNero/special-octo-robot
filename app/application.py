@@ -2,30 +2,19 @@ from rich.console import Console
 from rich.table import Table
 
 
-def get_status_color(task):
-    if task["status"] == "In Progress":
-        return "cyan"
-    elif task["status"] == "Completed":
-        return "green"
-    elif task["status"] == "Pending":
-        return "red"
-    else:
-        return "white"
-
-
-def get_title_color(task):
+def get_style_color(task):
     if task["priority"] == 6:
         return "rgb(255,82,82)"
     elif task["priority"] == 5:
         return "rgb(255,186,186)"
     elif task["priority"] == 4:
-        return "rgb(190,41,236)"
+        return "yellow"
     elif task["priority"] == 3:
-        return "rgb(239,187,255)"
+        return "green"
     elif task["priority"] == 2:
-        return "blue"
+        return "cyan"
     elif task["priority"] == 1:
-        return "rgb(0,128,128)"
+        return "blue"
     else:
         return "rgb(153,122,141)"
 
@@ -43,10 +32,11 @@ def print_tasks(tasks):
         print(task['priority'])
         table.add_row(
             str(task["id"]),
-            f'[{get_title_color(task)}]'+task["title"],
-            f'[{get_status_color(task)}]'+task["status"],
+            task["title"],
+            task["status"],
             task["deadline"],
             str(len(task["subtasks"])),
+            style=f'{get_style_color(task)}',
         )
 
     console = Console()
