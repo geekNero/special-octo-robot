@@ -15,7 +15,7 @@ def get_version():
 VERSION = get_version()
 
 setup(
-    name = 'devcord',
+    name = 'special-octo-robot',
     version = VERSION,
     author = 'Jahan Chaware',
     author_email = 'sg550js@gmail.com',

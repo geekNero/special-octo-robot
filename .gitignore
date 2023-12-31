@@ -1,1 +1,5 @@
 venv
+
+build
+dist
+special_octo_robot.egg-info
