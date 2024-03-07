@@ -1,4 +1,4 @@
-## Devcord
+# Devcord
 
 Devcord is a CLI tool designed to help you quickly manage your tasks as well as
 help you monitor your time usage. Along with all the essential to-do list functionalities, Devcord allows you to select a task and start a session on it.
@@ -7,15 +7,15 @@ During a session, your time-spent on each of your activity is monitored for you 
 
 None of the data is stored on any server, it is all stored locally on your machine.
 
-## Installation
+# Installation
 
 With pip:
 
 pip install devcord
 
-## Usage
+# Usage
 
-# For adding tasks
+## For adding tasks
 
 Simple add task:
 - devcord tasks -a "task name" - devcord tasks --add "task name"
@@ -43,7 +43,7 @@ With labels:
 Add subtask:
 - devcord tasks -a "task name" -pid task_id - devcord tasks --add "task name" --parent task_id
 
-# For listing tasks
+## For listing tasks
 
 Simple List tasks:
 - devcord tasks -l - devcord tasks --list
@@ -60,7 +60,7 @@ List today's tasks:
 List tasks due in next 7 days:
 - devcord tasks -l -w - devcord tasks --list --week
 
-# For managing tasks
+## For managing tasks
 
 Selecting a task:
 - devcord task -s task_id - devcord task --select task_id
