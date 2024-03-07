@@ -20,6 +20,7 @@ pip install devcord
 Simple add task: - devcord tasks -a "task name" - devcord tasks --add "task name"
 
 With description: - devcord tasks -a "task name" -d - devcord tasks --add "task name" --description
+
 _Opens scrollable text box to enter description_
 
 With due date: - devcord tasks -a "task name" -dd "dd/mm/yyyy" - devcord tasks --add "task name" --due "dd/mm/yyyy"
@@ -51,6 +52,7 @@ List tasks due in next 7 days: - devcord tasks -l -w - devcord tasks --list --we
 Selecting a task: - devcord task -s task_id - devcord task --select task_id
 
 Viewing description: - devcord task -d - devcord task --description
+
 _Opens a scrollable text box with description_
 
 Show substask: - devcord task -st - devcord task --subtask
