@@ -10,6 +10,7 @@ None of the data is stored on any server, it is all stored locally on your machi
 ## Installation
 
 With pip:
+
 pip install devcord
 
 ## Usage
@@ -17,13 +18,20 @@ pip install devcord
 # For adding tasks
 
 Simple add task: - devcord tasks -a "task name" - devcord tasks --add "task name"
+
 With description: - devcord tasks -a "task name" -d - devcord tasks --add "task name" --description
 _Opens scrollable text box to enter description_
+
 With due date: - devcord tasks -a "task name" -dd "dd/mm/yyyy" - devcord tasks --add "task name" --due "dd/mm/yyyy"
+
 Complete by today: - devcord tasks -a "task name" -t - devcord tasks --add "task name" --today
+
 Complete in next 7 days: - devcord tasks -a "task name" -w - devcord tasks --add "task name" --week
+
 With priority (1-5): - devcord tasks -a "task name" -p 3 - devcord tasks --add "task name" --priority 3
+
 With labels: - devcord tasks -a "task name" -lb "label" - devcord tasks --add "task name" --label "label"
+
 Add subtask: - devcord tasks -a "task name" -pid task_id - devcord tasks --add "task name" --parent task_id
 
 # For listing tasks
