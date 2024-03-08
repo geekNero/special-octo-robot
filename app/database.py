@@ -10,7 +10,7 @@ def initialize():
     '''
     conn = sqlite3.connect(path)
     cur = conn.cursor()
-    cur.execute("CREATE TABLE tasks(id INTEGER PRIMARY KEY, title VARCHAR, parent_id INTEGER, status VARCHAR, deadline DATE, priority INTEGER)")
+    cur.execute("CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR NOT NULL, parent_id INTEGER, status VARCHAR DEFAULT 'Pending', deadline DATE, priority INTEGER DEFAULT 0)")
 
 def list_table(table: str, columns: List(str), where_clause: str, group_clause: str, order_by: str) -> list:
     '''
@@ -21,3 +21,13 @@ def list_table(table: str, columns: List(str), where_clause: str, group_clause: 
     cur = conn.cursor()
     res = cur.execute(query).fetchall()
     return res
+
+def insert_into_table(table: str, columns: List(str), values: List(str)) -> None:
+    '''
+    Insert data into a table.
+    '''
+    query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(values)})"
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    cur.execute(query)
+    conn.commit()

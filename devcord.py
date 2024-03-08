@@ -1,8 +1,8 @@
 import click
 import os
 import json
+import app.application
 from app.database import initialize
-from app.application import print_tasks
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

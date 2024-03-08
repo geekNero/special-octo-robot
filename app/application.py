@@ -1,39 +1,31 @@
-from rich.console import Console
-from rich.table import Table
+import console
+import database
 
-
-def get_style_color(task):
-    if task["priority"] == 5:
-        return "red"
-    elif task["priority"] == 4:
-        return "orange"
-    elif task["priority"] == 3:
-        return "yellow"
-    elif task["priority"] == 2:
-        return "rgb(173, 216, 230)"
-    elif task["priority"] == 1:
-        return "rgb(221, 221, 221)"
-    else:
-        return "white"
-
-
-def print_tasks(tasks):
-    table = Table(title="Tasks")
-    table.add_column("ID", justify="center", style="white", no_wrap=True)
-    table.add_column("Task", justify="center", style="white")
-    table.add_column("Status", justify="center", style="white")
-    table.add_column("Deadline", justify="center", style="white")
-
-    for task in tasks:
-        task = task["task"]
-        print(task['priority'])
-        table.add_row(
-            str(task["id"]),
-            task["title"],
-            task["status"],
-            task["deadline"],
-            style=f'{get_style_color(task)}',
-        )
-
-    console = Console()
-    console.print(table)
+def list_tasks(
+    priority: int,
+    today: bool,
+    week: bool,
+    inprogress: bool,
+    completed: bool
+) -> list:
+    '''
+    List all the tasks based on the filters.
+    '''
+    order_by = "priority DESC"
+    where_clause = []
+    if today:
+        where_clause.append("deadline = date('now')")
+    elif week:
+        where_clause.append("deadline BETWEEN date('now') AND date('now', '+7 days')")
+    if inprogress:
+        where_clause.append("status = 'In Progress'")
+    elif completed:
+        where_clause.append("status = 'Completed'")
+    if priority:
+        where_clause.append(f"priority = {priority}")
+    results = list_table(table='tasks', columns=['title',
+        'parent_id', 'status', 'deadline', 'priority'],
+        where_clause="WHERE " + " AND ".join(where_clause),
+        order_by=f"ORDER BY {order_by}")
+    )
+    return results
