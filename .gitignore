@@ -1,6 +1,8 @@
 venv
+env
 
 build
 dist
 special_octo_robot.egg-info
 test_commands/
+__pycache__/

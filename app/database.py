@@ -1,0 +1,23 @@
+import os
+import sqlite3
+from typing import List
+
+path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
+
+def initialize():
+    '''
+    Initalize the databse with all the neccessary tables.
+    '''
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE tasks(id INTEGER PRIMARY KEY, title VARCHAR, parent_id INTEGER, status VARCHAR, deadline DATE, priority INTEGER)")
+
+def list_table(table: str, columns: List(str), where_clause: str, group_clause: str, order_by: str) -> list:
+    '''
+    List data from a table.
+    '''
+    query = f"SELECT {', '.join(columns)} FROM {table} {where_clause} {group_clause} {order_by}"
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    res = cur.execute(query).fetchall()
+    return res

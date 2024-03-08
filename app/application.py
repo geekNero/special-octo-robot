@@ -3,20 +3,18 @@ from rich.table import Table
 
 
 def get_style_color(task):
-    if task["priority"] == 6:
-        return "rgb(255,82,82)"
-    elif task["priority"] == 5:
-        return "rgb(255,186,186)"
+    if task["priority"] == 5:
+        return "red"
     elif task["priority"] == 4:
-        return "yellow"
+        return "orange"
     elif task["priority"] == 3:
-        return "green"
+        return "yellow"
     elif task["priority"] == 2:
-        return "cyan"
+        return "rgb(173, 216, 230)"
     elif task["priority"] == 1:
-        return "blue"
+        return "rgb(221, 221, 221)"
     else:
-        return "rgb(153,122,141)"
+        return "white"
 
 
 def print_tasks(tasks):
@@ -25,7 +23,6 @@ def print_tasks(tasks):
     table.add_column("Task", justify="center", style="white")
     table.add_column("Status", justify="center", style="white")
     table.add_column("Deadline", justify="center", style="white")
-    table.add_column("Subtasks", justify="center", style="white")
 
     for task in tasks:
         task = task["task"]
@@ -35,7 +32,6 @@ def print_tasks(tasks):
             task["title"],
             task["status"],
             task["deadline"],
-            str(len(task["subtasks"])),
             style=f'{get_style_color(task)}',
         )
 
