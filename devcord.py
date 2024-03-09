@@ -1,7 +1,8 @@
 import click
 import os
 import json
-import app.application
+import app.application as application
+from app.console import print_tasks
 from app.database import initialize
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -22,14 +23,19 @@ def cli(ctx):
 
 @cli.command()
 @click.pass_context
-@click.option('-ls', '--list', is_flag=True, help='List all the tasks')
+@click.option('-l', '--list', is_flag=True, help='List all the tasks')
 @click.option('-a', '--add', help='Add a new task', type=str)
-def tasks(ctx, list, add):
+@click.option('-p', '--priority', help='Set the priority of a task', type=int)
+@click.option('-t', '--today', is_flag=True, help='List all the tasks for today')
+@click.option('-w', '--week', is_flag=True, help='List all the tasks for this week')
+@click.option('-i', '--inprogress', is_flag=True, help='List all the tasks that are in progress')
+@click.option('-c', '--completed', is_flag=True, help='List all the tasks that are completed')
+def tasks(ctx, list=None, add=None, priority=None, today=None, week=None, inprogress=None, completed=None):
     """
     Create, Modify, Delete and List as well as view specific tasks.
     """
     if list:
-        pass
+        print_tasks(application.list_tasks(priority=priority, today=today, week=week, inprogress=inprogress, completed=completed))
     elif add:
         task_list = ctx.obj['data']['tasks']
         task_list.append({

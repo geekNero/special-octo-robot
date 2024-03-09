@@ -25,8 +25,6 @@ def print_tasks(tasks):
     table.add_column("Deadline", justify="center", style="white")
 
     for task in tasks:
-        task = task["task"]
-        print(task['priority'])
         table.add_row(
             str(task["id"]),
             task["title"],

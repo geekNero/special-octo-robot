@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from typing import List
 
 path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
 
@@ -12,7 +11,7 @@ def initialize():
     cur = conn.cursor()
     cur.execute("CREATE TABLE tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title VARCHAR NOT NULL, parent_id INTEGER, status VARCHAR DEFAULT 'Pending', deadline DATE, priority INTEGER DEFAULT 0)")
 
-def list_table(table: str, columns: List(str), where_clause: str, group_clause: str, order_by: str) -> list:
+def list_table(table: str, columns: list, where_clause: str="", group_clause: str="", order_by: str="") -> list:
     '''
     List data from a table.
     '''
@@ -22,7 +21,7 @@ def list_table(table: str, columns: List(str), where_clause: str, group_clause: 
     res = cur.execute(query).fetchall()
     return res
 
-def insert_into_table(table: str, columns: List(str), values: List(str)) -> None:
+def insert_into_table(table: str, columns: list, values: list)  -> None:
     '''
     Insert data into a table.
     '''
