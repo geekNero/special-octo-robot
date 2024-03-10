@@ -6,7 +6,7 @@ def get_style_color(task):
     if task["priority"] == 5:
         return "red"
     elif task["priority"] == 4:
-        return "orange"
+        return "#FFA500"
     elif task["priority"] == 3:
         return "yellow"
     elif task["priority"] == 2:
