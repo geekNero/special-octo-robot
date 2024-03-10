@@ -30,12 +30,13 @@ def cli(ctx):
 @click.option('-w', '--week', is_flag=True, help='List all the tasks for this week')
 @click.option('-i', '--inprogress', is_flag=True, help='List all the tasks that are in progress')
 @click.option('-c', '--completed', is_flag=True, help='List all the tasks that are completed')
-def tasks(ctx, list=None, add=None, priority=None, today=None, week=None, inprogress=None, completed=None):
+@click.option('-pd', '--pending', is_flag=True, help="List all the tasks that are pending")
+def tasks(ctx, list=None, add=None, priority=None, today=None, week=None, inprogress=None, completed=None, pending=None):
     """
     Create, Modify, Delete and List as well as view specific tasks.
     """
     if list:
-        print_tasks(application.list_tasks(priority=priority, today=today, week=week, inprogress=inprogress, completed=completed))
+        print_tasks(application.list_tasks(priority=priority, today=today, week=week, inprogress=inprogress, completed=completed, pending=pending))
     elif add:
         task_list = ctx.obj['data']['tasks']
         task_list.append({

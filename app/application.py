@@ -6,7 +6,8 @@ def list_tasks(
     today=None,
     week=None,
     inprogress=None,
-    completed=None
+    completed=None,
+    pending=None
 ) -> list:
     '''
     List all the tasks based on the filters.
@@ -17,13 +18,19 @@ def list_tasks(
         where_clause.append("(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))")
     elif today:
         where_clause.append("(deadline = date('now'))")
-    if inprogress or completed:
+    if inprogress or completed or pending:
         clause = []
         if inprogress:
-            clause.append("status = 'In Progress'")
+            clause.append("'In Progress'")
         if completed:
-            clause.append("status = 'Completed'")
-        where_clause.append("(" + " OR ".join(clause) + ")")
+            clause.append("'Completed'")
+        if pending:
+            clause.append("'Pending'")
+        where_clause.append("status in (" + ",".join(clause) + ")")
+    else:
+        clause = ["'In Progress'", "'Pending'"]
+        where_clause.append("status in (" + ",".join(clause) + ")")
+
     if priority:
         where_clause.append(f"priority = {priority}")
     where_clause = "WHERE " + " AND ".join(where_clause) if where_clause else ""
