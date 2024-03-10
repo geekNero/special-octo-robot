@@ -26,10 +26,14 @@ def list_tasks(
         where_clause.append("(" + " OR ".join(clause) + ")")
     if priority:
         where_clause.append(f"priority = {priority}")
+    if where_clause:
+        where_clause = "WHERE " + " AND ".join(where_clause)
+    else:
+        where_clause = ""
 
     results = database.list_table(table='tasks', columns=['id', 'title',
         'parent_id', 'status', 'deadline', 'priority'],
-        where_clause="WHERE " + " AND ".join(where_clause),
+        where_clause=where_clause,
         order_by=f"ORDER BY {order_by}")
 
     final_results = []
