@@ -1,4 +1,3 @@
-from types import NoneType
 from . import console
 from . import database
 
