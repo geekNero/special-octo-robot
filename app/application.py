@@ -12,7 +12,7 @@ def list_tasks(
     '''
     List all the tasks based on the filters.
     '''
-    order_by = "priority DESC"
+    order_by = "priority DESC, completed ASC"
     where_clause = []
     if week:
         where_clause.append("(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))")
