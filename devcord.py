@@ -26,11 +26,11 @@ def cli(ctx):
 @click.option('-l', '--list', is_flag=True, help='List all the tasks')
 @click.option('-a', '--add', help='Add a new task', type=str)
 @click.option('-p', '--priority', help='Set the priority of a task', type=int)
-@click.option('-t', '--today', is_flag=True, help='List all the tasks for today')
-@click.option('-w', '--week', is_flag=True, help='List all the tasks for this week')
-@click.option('-i', '--inprogress', is_flag=True, help='List all the tasks that are in progress')
-@click.option('-c', '--completed', is_flag=True, help='List all the tasks that are completed')
-@click.option('-pd', '--pending', is_flag=True, help="List all the tasks that are pending")
+@click.option('-t', '--today', is_flag=True, help='Perform for all the tasks for today')
+@click.option('-w', '--week', is_flag=True, help='Perform for  all the tasks for this week')
+@click.option('-i', '--inprogress', is_flag=True, help='Perform for all the tasks that are in progress')
+@click.option('-c', '--completed', is_flag=True, help='Perform for all the tasks that are completed')
+@click.option('-pd', '--pending', is_flag=True, help='Perform for all the tasks that are pending')
 def tasks(ctx, list=None, add=None, priority=None, today=None, week=None, inprogress=None, completed=None, pending=None):
     """
     Create, Modify, Delete and List as well as view specific tasks.
