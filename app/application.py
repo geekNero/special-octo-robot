@@ -35,7 +35,8 @@ def list_tasks(
 
     if priority:
         where_clause.append(f"priority = {priority}")
-    where_clause = "WHERE " + " AND ".join(where_clause) if where_clause else ""
+    where_clause = "WHERE " + \
+        " AND ".join(where_clause) if where_clause else ""
 
     results = database.list_table(table='tasks', columns=['id', 'title',
                                                           'parent_id', 'status', 'deadline', 'priority'],

@@ -14,9 +14,9 @@ def initialize():
         '''CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR NOT NULL, parent_id INTEGER,
-        status VARCHAR DEFAULT 'Pending', 
-        deadline DATE, 
-        priority INTEGER DEFAULT 0, 
+        status VARCHAR DEFAULT 'Pending',
+        deadline DATE,
+        priority INTEGER DEFAULT 0,
         completed DATE
         )''')
     cur.execute("""

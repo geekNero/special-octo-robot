@@ -36,7 +36,16 @@ def tasks(ctx, list=None, add=None, priority=None, today=None, week=None, inprog
     Create, Modify, Delete and List as well as view specific tasks.
     """
     if list:
-        print_tasks(application.list_tasks(priority=priority, today=today, week=week, inprogress=inprogress, completed=completed, pending=pending))
+        print_tasks(
+            application.list_tasks(
+                priority=priority,
+                today=today,
+                week=week,
+                inprogress=inprogress,
+                completed=completed,
+                pending=pending
+            )
+        )
     elif add:
         task_list = ctx.obj['data']['tasks']
         task_list.append({
