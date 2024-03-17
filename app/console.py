@@ -30,7 +30,7 @@ def print_tasks(tasks):
             task["title"],
             task["status"],
             task["deadline"],
-            style=f'{get_style_color(task)}',
+            style=f"{get_style_color(task)}",
         )
 
     console = Console()
