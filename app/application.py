@@ -1,21 +1,23 @@
 from . import console
 from . import database
 
+
 def list_tasks(
-    priority=None,
-    today=None,
-    week=None,
-    inprogress=None,
-    completed=None,
-    pending=None
+        priority=None,
+        today=None,
+        week=None,
+        inprogress=None,
+        completed=None,
+        pending=None
 ) -> list:
-    '''
+    """
     List all the tasks based on the filters.
-    '''
+    """
     order_by = "completed DESC, priority DESC"
     where_clause = []
     if week:
-        where_clause.append("(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))")
+        where_clause.append(
+            "(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))")
     elif today:
         where_clause.append("(deadline = date('now'))")
     if inprogress or completed or pending:
@@ -36,9 +38,9 @@ def list_tasks(
     where_clause = "WHERE " + " AND ".join(where_clause) if where_clause else ""
 
     results = database.list_table(table='tasks', columns=['id', 'title',
-        'parent_id', 'status', 'deadline', 'priority'],
-        where_clause=where_clause,
-        order_by=f"ORDER BY {order_by}")
+                                                          'parent_id', 'status', 'deadline', 'priority'],
+                                  where_clause=where_clause,
+                                  order_by=f"ORDER BY {order_by}")
 
     final_results = []
     for result in results:
