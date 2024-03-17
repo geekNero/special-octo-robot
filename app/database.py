@@ -6,30 +6,39 @@ path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
 
 def initialize():
     """
-        Initialize the database with all the necessary tables.
+    Initialize the database with all the necessary tables.
     """
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute(
-        '''CREATE TABLE tasks(
+        """CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR NOT NULL, parent_id INTEGER,
-        status VARCHAR DEFAULT 'Pending', 
-        deadline DATE, 
-        priority INTEGER DEFAULT 0, 
+        status VARCHAR DEFAULT 'Pending',
+        deadline DATE,
+        priority INTEGER DEFAULT 0,
         completed DATE
-        )''')
-    cur.execute("""
+        )""",
+    )
+    cur.execute(
+        """
         CREATE TRIGGER initialize_completed_column
         AFTER INSERT ON tasks
         FOR EACH ROW
         BEGIN
             UPDATE tasks SET completed = NEW.deadline WHERE id = NEW.id;
         END;
-    """)
+    """,
+    )
 
 
-def list_table(table: str, columns: list, where_clause: str = "", group_clause: str = "", order_by: str = "") -> list:
+def list_table(
+    table: str,
+    columns: list,
+    where_clause: str = "",
+    group_clause: str = "",
+    order_by: str = "",
+) -> list:
     """
     List data from a table.
     """

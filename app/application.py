@@ -3,12 +3,12 @@ from . import database
 
 
 def list_tasks(
-        priority=None,
-        today=None,
-        week=None,
-        inprogress=None,
-        completed=None,
-        pending=None
+    priority=None,
+    today=None,
+    week=None,
+    inprogress=None,
+    completed=None,
+    pending=None,
 ) -> list:
     """
     List all the tasks based on the filters.
@@ -17,7 +17,8 @@ def list_tasks(
     where_clause = []
     if week:
         where_clause.append(
-            "(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))")
+            "(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))",
+        )
     elif today:
         where_clause.append("(deadline = date('now'))")
     if inprogress or completed or pending:
@@ -37,19 +38,30 @@ def list_tasks(
         where_clause.append(f"priority = {priority}")
     where_clause = "WHERE " + " AND ".join(where_clause) if where_clause else ""
 
-    results = database.list_table(table='tasks', columns=['id', 'title',
-                                                          'parent_id', 'status', 'deadline', 'priority'],
-                                  where_clause=where_clause,
-                                  order_by=f"ORDER BY {order_by}")
+    results = database.list_table(
+        table="tasks",
+        columns=[
+            "id",
+            "title",
+            "parent_id",
+            "status",
+            "deadline",
+            "priority",
+        ],
+        where_clause=where_clause,
+        order_by=f"ORDER BY {order_by}",
+    )
 
     final_results = []
     for result in results:
-        final_results.append({
-            "id": result[0],
-            "title": result[1],
-            "parent_id": result[2],
-            "status": result[3],
-            "deadline": result[4] if result[4] else "None",
-            "priority": result[5]
-        })
+        final_results.append(
+            {
+                "id": result[0],
+                "title": result[1],
+                "parent_id": result[2],
+                "status": result[3],
+                "deadline": result[4] if result[4] else "None",
+                "priority": result[5],
+            },
+        )
     return final_results
