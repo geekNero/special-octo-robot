@@ -124,18 +124,13 @@ $ devcord tasks -l --pending
 
 ## For managing tasks
 
-Selecting a task:
-
-```bash
-$ devcord task -s task_id
-$ devcord task --select task_id
-```
+Pass the task ID after the **"task"** keyword to perform any action on the task.
 
 Viewing description:
 
 ```bash
-$ devcord task -d
-$ devcord task --desc
+$ devcord task 1 -d
+$ devcord task 1 --desc
 ```
 
 _Opens a scrollable text box with description_
@@ -143,27 +138,27 @@ _Opens a scrollable text box with description_
 Show substask:
 
 ```bash
-$ devcord task -st
-$ devcord task --subtask
+$ devcord task 4 -st
+$ devcord task 4 --subtask
 ```
 
 Mark as inprogress:
 
 ```bash
-$ devcord task -i
-$ devcord task --inprogress
+$ devcord task 3 -i
+$ devcord task 3 --inprogress
 ```
 
 Mark as complete:
 
 ```bash
-$ devcord task -c
-$ devcord task --complete
+$ devcord task 2 -c
+$ devcord task 2 --complete
 ```
 
 Mark as pending:
 
 ```bash
-$ devcord task -pd
-$ devcord task --pending
+$ devcord task 10 -pd
+$ devcord task 10 --pending
 ```
