@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+import click
+
 path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
 
 
@@ -14,9 +16,11 @@ def initialize():
         """CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR NOT NULL, parent_id INTEGER,
+        description TEXT,
         status VARCHAR DEFAULT 'Pending',
-        deadline DATE,
+        deadline DATE DEFAULT 'None',
         priority INTEGER DEFAULT 0,
+        label VARCHAR,
         completed DATE
         )""",
     )

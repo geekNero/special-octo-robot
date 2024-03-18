@@ -12,7 +12,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 def get_version():
     """Parse package __version__.py to get version."""
     versionpy = (Path("app") / "__version__.py").read_text()
-    return versionpy.split("'")[1]
+    return versionpy.split(".")[1]
 
 
 VERSION = get_version()

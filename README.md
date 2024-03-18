@@ -28,7 +28,7 @@ With description:
 
 ```bash
 $ devcord tasks -a "task name" -d
-$ devcord tasks --add "task name" --description
+$ devcord tasks --add "task name" --desc
 ```
 
 _Opens scrollable text box to enter description_
@@ -135,7 +135,7 @@ Viewing description:
 
 ```bash
 $ devcord task -d
-$ devcord task --description
+$ devcord task --desc
 ```
 
 _Opens a scrollable text box with description_
@@ -159,4 +159,11 @@ Mark as complete:
 ```bash
 $ devcord task -c
 $ devcord task --complete
+```
+
+Mark as pending:
+
+```bash
+$ devcord task -pd
+$ devcord task --pending
 ```

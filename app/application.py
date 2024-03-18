@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from . import console
 from . import database
 
@@ -9,15 +11,16 @@ def list_tasks(
     inprogress=None,
     completed=None,
     pending=None,
+    label=None,
 ) -> list:
     """
     List all the tasks based on the filters.
     """
-    order_by = "completed DESC, priority DESC"
-    where_clause = []
+    order_by = "completed ASC, priority DESC"
+    where_clause = ["parent_id ISNULL"]
     if week:
         where_clause.append(
-            "(deadline >= date('now', 'weekday 1', '-7 days') AND deadline < date('now', 'weekday 1', '+1 days'))",
+            "(deadline >= date('now', 'weekday 1') AND deadline < date('now', 'weekday 1', '+7 days'))",
         )
     elif today:
         where_clause.append("(deadline = date('now'))")
@@ -36,17 +39,20 @@ def list_tasks(
 
     if priority:
         where_clause.append(f"priority = {priority}")
-    where_clause = "WHERE " + " AND ".join(where_clause) if where_clause else ""
+
+    if label:
+        where_clause.append(f"label = '{label}'")
+    where_clause = "WHERE " + " AND ".join(where_clause)
 
     results = database.list_table(
         table="tasks",
         columns=[
             "id",
             "title",
-            "parent_id",
             "status",
             "deadline",
             "priority",
+            "label",
         ],
         where_clause=where_clause,
         order_by=f"ORDER BY {order_by}",
@@ -58,10 +64,113 @@ def list_tasks(
             {
                 "id": result[0],
                 "title": result[1],
-                "parent_id": result[2],
-                "status": result[3],
-                "deadline": result[4] if result[4] else "None",
-                "priority": result[5],
+                "status": result[2],
+                "deadline": (
+                    result[3]
+                    if str(result[3]) == "None"
+                    else convert_to_console_date(result[3])
+                ),
+                "priority": result[4],
+                "label": result[5] if result[5] else "None",
             },
         )
     return final_results
+
+
+def add_tasks(
+    title,
+    description=None,
+    priority=None,
+    today=False,
+    week=False,
+    deadline=None,
+    inprogress=None,
+    completed=None,
+    pending=None,
+    label=None,
+    parent=None,
+):
+    """
+    Add a task to the database.
+    """
+    columns = ["title"]
+    values = [title]
+    if description:
+        columns.append("description")
+        values.append(f'"{description}"')
+    if priority:
+        columns.append("priority")
+        values.append(str(priority))
+    if today:
+        columns.append("deadline")
+        values.append("date('now')")
+    elif week:
+        columns.append("deadline")
+        values.append("date('now', 'weekday 1', '+6 days')")
+    elif deadline:
+        columns.append("deadline")
+        values.append(deadline)
+    if inprogress:
+        columns.append("status")
+        values.append("'In Progress'")
+    elif completed:
+        columns.append("status")
+        values.append("'Completed'")
+    elif pending:
+        columns.append("status")
+        values.append("'Pending'")
+    if label:
+        columns.append("label")
+        values.append(f'"{label}"')
+    if parent:
+        columns.append("parent_id")
+        values.append(str(parent))
+    database.insert_into_table(table="tasks", columns=columns, values=values)
+
+
+def search_task(task_id) -> dict:
+    """
+    Search a task by its id.
+    :param task_id:
+    :return: task_details
+    """
+    task = database.list_table(
+        table="tasks",
+        columns=[
+            "id",
+            "title",
+            "description",
+            "status",
+            "deadline",
+            "priority",
+            "label",
+            "completed",
+        ],
+        where_clause=f"WHERE id = {task_id}",
+    )
+    task_details = {}
+    if task:
+        task = task[0]
+        task_details = {
+            "id": task[0],
+            "title": task[1],
+            "description": task[2],
+            "status": task[3],
+            "deadline": (
+                task[4] if str(task[4]) == "None" else convert_to_console_date(task[4])
+            ),
+            "priority": task[5],
+            "label": task[6] if task[6] else "None",
+            "completed": (
+                task[7] if str(task[7]) == "None" else convert_to_console_date(task[7])
+            ),
+        }
+    return task_details
+
+
+def convert_to_console_date(date_str):
+    """
+    Convert date from "YYYY-MM-DD" to "dd/mm/yyyy"
+    """
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    return date_obj.strftime("%d/%m/%Y")
