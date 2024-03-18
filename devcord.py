@@ -146,7 +146,7 @@ def tasks(
 @click.option(
     "-d",
     "--desc",
-    help="Show description of the selected task",
+    help="View and edit description of the task",
     is_flag=True,
 )
 def task(ctx, task_id, desc=None):
@@ -164,15 +164,10 @@ def task(ctx, task_id, desc=None):
         return
 
     if desc:
+        description = "No given description"
         if current_task["description"]:
-            click.echo_via_pager(current_task["description"])
-        else:
-            click.echo(
-                click.style(
-                    "No given description",
-                    fg="yellow",
-                ),
-            )
+            description = current_task["description"]
+        description = click.edit(description)
 
 
 def convert_to_db_date(date_str):
