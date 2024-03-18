@@ -1,5 +1,5 @@
-import json
 import os
+from datetime import datetime
 
 import click
 
@@ -27,6 +27,7 @@ def cli(ctx):
 @click.pass_context
 @click.option("-l", "--list", is_flag=True, help="List all the tasks")
 @click.option("-a", "--add", help="Add a new task", type=str)
+@click.option("-d", "--desc", is_flag=True, help="Add a description to a task")
 @click.option("-p", "--priority", help="Set the priority of a task", type=int)
 @click.option("-t", "--today", is_flag=True, help="Perform for all the tasks for today")
 @click.option(
@@ -34,6 +35,12 @@ def cli(ctx):
     "--week",
     is_flag=True,
     help="Perform for  all the tasks for this week",
+)
+@click.option(
+    "-dd",
+    "--deadline",
+    help='Set the deadline of a task, date format: "dd/mm/yyyy/"',
+    type=str,
 )
 @click.option(
     "-i",
@@ -53,20 +60,44 @@ def cli(ctx):
     is_flag=True,
     help="Perform for all the tasks that are pending",
 )
+@click.option(
+    "-lb",
+    "--label",
+    help="Perform for all the tasks with a specific label",
+    type=str,
+)
+@click.option("-pid", "--parent", help="Set the parent of a task", type=int)
 def tasks(
     ctx,
     list=None,
     add=None,
+    desc=None,
     priority=None,
     today=None,
     week=None,
+    deadline=None,
     inprogress=None,
     completed=None,
     pending=None,
+    label=None,
+    parent=None,
 ):
     """
     Create, Modify, Delete and List as well as view specific tasks.
     """
+    if deadline:
+        try:
+            deadline = convert_to_db_date(deadline)
+        except ValueError:
+            click.echo(
+                click.style(
+                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    fg="red",
+                ),
+            )
+            click.echo('Example: "01/01/2020"')
+            return
+
     if list:
         print_tasks(
             application.list_tasks(
@@ -76,21 +107,40 @@ def tasks(
                 inprogress=inprogress,
                 completed=completed,
                 pending=pending,
+                label=label,
             ),
         )
     elif add:
-        task_list = ctx.obj["data"]["tasks"]
-        task_list.append(
-            {
-                "task": {
-                    "id": len(task_list) + 1,
-                    "title": add,
-                    "status": "Pending",
-                    "deadline": "No Deadline",
-                    "priority": 5,
-                },
-            },
+        description = None
+        add = f'"{add}"'
+        if desc:
+            description = click.edit()
+        if parent:
+            val = application.search_task(parent)
+            if not val:
+                click.echo(
+                    click.style(
+                        "Error: Parent task does not exist.",
+                        fg="red",
+                    ),
+                )
+                return
+        application.add_tasks(
+            add,
+            description,
+            priority,
+            today,
+            week,
+            deadline,
+            inprogress,
+            completed,
+            pending,
+            label,
+            parent,
         )
-        path = os.path.join(os.getenv("HOME"), ".devcord", "data.json")
-        with open(path, "w") as f:
-            json.dump(ctx.obj["data"], f)
+
+
+def convert_to_db_date(date_str):
+    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
+    date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+    return date_obj.strftime("%Y-%m-%d")
