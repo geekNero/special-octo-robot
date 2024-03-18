@@ -83,7 +83,7 @@ def tasks(
     parent=None,
 ):
     """
-    Create, Modify, Delete and List as well as view specific tasks.
+    Create and List tasks.
     """
     if deadline:
         try:
@@ -138,6 +138,41 @@ def tasks(
             label,
             parent,
         )
+
+
+@cli.command()
+@click.pass_context
+@click.argument("task_id", type=int, required=True)
+@click.option(
+    "-d",
+    "--desc",
+    help="Show description of the selected task",
+    is_flag=True,
+)
+def task(ctx, task_id, desc=None):
+    """
+    Modify a specific task.
+    """
+    current_task = application.search_task(task_id)
+    if not current_task:
+        click.echo(
+            click.style(
+                "Error: Task does not exist.",
+                fg="red",
+            ),
+        )
+        return
+
+    if desc:
+        if current_task["description"]:
+            click.echo_via_pager(current_task["description"])
+        else:
+            click.echo(
+                click.style(
+                    "No given description",
+                    fg="yellow",
+                ),
+            )
 
 
 def convert_to_db_date(date_str):
