@@ -156,16 +156,20 @@ def search_task(task_id) -> dict:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": (
-                task[4] if str(task[4]) == "None" else convert_to_console_date(task[4])
-            ),
+            "deadline": (task[4]),
             "priority": task[5],
             "label": task[6] if task[6] else "None",
-            "completed": (
-                task[7] if str(task[7]) == "None" else convert_to_console_date(task[7])
-            ),
+            "completed": (task[7]),
         }
     return task_details
+
+
+def update_task(new_vals: dict):
+    """If marked as completed then set datetime as now else prev value retain"""
+    if new_vals["status"] == "Completed":
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        new_vals["completed"] = current_date
+    database.update_table("tasks", new_vals)
 
 
 def convert_to_console_date(date_str):

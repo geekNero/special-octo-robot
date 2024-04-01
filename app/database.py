@@ -62,3 +62,17 @@ def insert_into_table(table: str, columns: list, values: list) -> None:
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
+
+
+def update_table(table: str, dp: dict) -> None:
+    """
+    Update Values Of Given Table
+    """
+    set_clause = ", ".join(
+        [f"{key} = '{value}'" for key, value in dp.items() if key != "id"],
+    )
+    query = f"UPDATE {table} SET {set_clause} WHERE id = {dp['id']}"
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    cur.execute(query)
+    conn.commit()

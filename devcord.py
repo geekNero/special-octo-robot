@@ -149,7 +149,12 @@ def tasks(
     help="View and edit description of the task",
     is_flag=True,
 )
-def task(ctx, task_id, desc=None):
+@click.option(
+    "-st",
+    "--status",
+    help="Edit Status By Mentioning values like pd, c, i",
+)
+def task(ctx, task_id, desc=None, status=None):
     """
     Modify a specific task.
     """
@@ -168,6 +173,22 @@ def task(ctx, task_id, desc=None):
         if current_task["description"]:
             description = current_task["description"]
         description = click.edit(description)
+        current_task["description"] = description
+
+    if status:
+        mapping = {"pd": "Pending", "c": "Completed", "i": "In Progress"}
+        if status not in mapping:
+            click.echo(
+                click.style(
+                    "Error: No Matching status flag.",
+                    fg="red",
+                ),
+            )
+            return
+        current_task["status"] = mapping[status]
+
+    # update values in db
+    application.update_task(current_task)
 
 
 def convert_to_db_date(date_str):
