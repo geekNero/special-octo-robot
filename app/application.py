@@ -59,7 +59,6 @@ def list_tasks(
     )
 
     final_results = []
-    print(results)
     for result in results:
         final_results.append(
             {
