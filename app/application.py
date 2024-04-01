@@ -59,6 +59,7 @@ def list_tasks(
     )
 
     final_results = []
+    print(results)
     for result in results:
         final_results.append(
             {
@@ -109,7 +110,7 @@ def add_tasks(
         values.append("date('now', 'weekday 1', '+6 days')")
     elif deadline:
         columns.append("deadline")
-        values.append(deadline)
+        values.append(f"'{deadline}'")
     if inprogress:
         columns.append("status")
         values.append("'In Progress'")
