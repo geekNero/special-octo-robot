@@ -201,6 +201,8 @@ def update_task(updated_data: dict):
     if updated_data["status"] == "Completed":
         current_date = datetime.now().strftime("%Y-%m-%d")
         updated_data["completed"] = current_date
+    else:
+        updated_data["completed"] = updated_data["deadline"]
     database.update_table("tasks", updated_data)
 
 
