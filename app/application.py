@@ -109,7 +109,7 @@ def add_tasks(
         values.append("date('now', 'weekday 1', '+6 days')")
     elif deadline:
         columns.append("deadline")
-        values.append(deadline)
+        values.append(f"'{deadline}'")
     if inprogress:
         columns.append("status")
         values.append("'In Progress'")
@@ -156,16 +156,52 @@ def search_task(task_id) -> dict:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": (
-                task[4] if str(task[4]) == "None" else convert_to_console_date(task[4])
-            ),
+            "deadline": (task[4]),
             "priority": task[5],
             "label": task[6] if task[6] else "None",
-            "completed": (
-                task[7] if str(task[7]) == "None" else convert_to_console_date(task[7])
-            ),
+            "completed": (task[7]),
         }
     return task_details
+
+
+def get_subtasks(task_id: int):
+    results = database.list_table(
+        table="tasks",
+        columns=[
+            "id",
+            "title",
+            "status",
+            "deadline",
+            "priority",
+            "label",
+        ],
+        where_clause=f"WHERE parent_id = {task_id}",
+    )
+    final_results = []
+    for result in results:
+        final_results.append(
+            {
+                "id": result[0],
+                "title": result[1],
+                "status": result[2],
+                "deadline": (
+                    result[3]
+                    if str(result[3]) == "None"
+                    else convert_to_console_date(result[3])
+                ),
+                "priority": result[4],
+                "label": result[5] if result[5] else "None",
+            },
+        )
+    return final_results
+
+
+def update_task(updated_data: dict):
+    """If marked as completed then set datetime as now else prev value retain"""
+    if updated_data["status"] == "Completed":
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        updated_data["completed"] = current_date
+    database.update_table("tasks", updated_data)
 
 
 def convert_to_console_date(date_str):
