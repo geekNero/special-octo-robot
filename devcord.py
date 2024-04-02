@@ -150,14 +150,45 @@ def tasks(
     is_flag=True,
 )
 @click.option(
-    "-st",
-    "--status",
-    help="Edit Status By Mentioning values like pd, c, i",
+    "-i",
+    "--inprogress",
+    is_flag=True,
+    help="Mark Task As In Progress",
 )
-def task(ctx, task_id, desc=None, status=None):
+@click.option(
+    "-c",
+    "--completed",
+    is_flag=True,
+    help="Mark Task As Completed",
+)
+@click.option(
+    "-pd",
+    "--pending",
+    is_flag=True,
+    help="Mark Task As Pending",
+)
+@click.option(
+    "-st",
+    "--subtask",
+    is_flag=True,
+    help="List All Subtask Of Task",
+)
+def task(
+    ctx,
+    task_id,
+    desc=None,
+    inprogress=None,
+    completed=None,
+    pending=None,
+    subtask=None,
+):
     """
     Modify a specific task.
     """
+    if subtask:
+        print_tasks(application.get_subtasks(task_id))
+        return
+
     current_task = application.search_task(task_id)
     if not current_task:
         click.echo(
@@ -175,17 +206,12 @@ def task(ctx, task_id, desc=None, status=None):
         description = click.edit(description)
         current_task["description"] = description
 
-    if status:
-        mapping = {"pd": "Pending", "c": "Completed", "i": "In Progress"}
-        if status not in mapping:
-            click.echo(
-                click.style(
-                    "Error: No Matching status flag.",
-                    fg="red",
-                ),
-            )
-            return
-        current_task["status"] = mapping[status]
+    if inprogress:
+        current_task["status"] = "In Progress"
+    if pending:
+        current_task["status"] = "Pending"
+    if completed:
+        current_task["status"] = "Completed"
 
     # update values in db
     application.update_task(current_task)

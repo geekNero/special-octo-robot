@@ -64,14 +64,14 @@ def insert_into_table(table: str, columns: list, values: list) -> None:
     conn.commit()
 
 
-def update_table(table: str, dp: dict) -> None:
+def update_table(table: str, new_data: dict) -> None:
     """
     Update Values Of Given Table
     """
     set_clause = ", ".join(
-        [f"{key} = '{value}'" for key, value in dp.items() if key != "id"],
+        [f"{key} = '{value}'" for key, value in new_data.items() if key != "id"],
     )
-    query = f"UPDATE {table} SET {set_clause} WHERE id = {dp['id']}"
+    query = f"UPDATE {table} SET {set_clause} WHERE id = {new_data['id']}"
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute(query)

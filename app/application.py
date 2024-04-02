@@ -164,12 +164,44 @@ def search_task(task_id) -> dict:
     return task_details
 
 
-def update_task(new_vals: dict):
+def get_subtasks(task_id: int):
+    results = database.list_table(
+        table="tasks",
+        columns=[
+            "id",
+            "title",
+            "status",
+            "deadline",
+            "priority",
+            "label",
+        ],
+        where_clause=f"WHERE parent_id = {task_id}",
+    )
+    final_results = []
+    for result in results:
+        final_results.append(
+            {
+                "id": result[0],
+                "title": result[1],
+                "status": result[2],
+                "deadline": (
+                    result[3]
+                    if str(result[3]) == "None"
+                    else convert_to_console_date(result[3])
+                ),
+                "priority": result[4],
+                "label": result[5] if result[5] else "None",
+            },
+        )
+    return final_results
+
+
+def update_task(updated_data: dict):
     """If marked as completed then set datetime as now else prev value retain"""
-    if new_vals["status"] == "Completed":
+    if updated_data["status"] == "Completed":
         current_date = datetime.now().strftime("%Y-%m-%d")
-        new_vals["completed"] = current_date
-    database.update_table("tasks", new_vals)
+        updated_data["completed"] = current_date
+    database.update_table("tasks", updated_data)
 
 
 def convert_to_console_date(date_str):
