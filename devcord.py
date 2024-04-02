@@ -208,9 +208,9 @@ def task(
 
     if inprogress:
         current_task["status"] = "In Progress"
-    if pending:
+    elif pending:
         current_task["status"] = "Pending"
-    if completed:
+    elif completed:
         current_task["status"] = "Completed"
 
     # update values in db
