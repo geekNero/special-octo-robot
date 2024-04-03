@@ -20,7 +20,7 @@ def list_tasks(
     where_clause = ["parent_id ISNULL"]
     if week:
         where_clause.append(
-            "(deadline >= date('now', 'weekday 1') AND deadline < date('now', 'weekday 1', '+7 days'))",
+            "(deadline >= date('now', 'weekday 0', '-7 days') AND deadline < date('now', 'weekday 1'))",
         )
     elif today:
         where_clause.append("(deadline = date('now'))")
@@ -106,7 +106,7 @@ def add_tasks(
         values.append("date('now')")
     elif week:
         columns.append("deadline")
-        values.append("date('now', 'weekday 1', '+6 days')")
+        values.append("date('now', 'weekday 0')")
     elif deadline:
         columns.append("deadline")
         values.append(f"'{deadline}'")
