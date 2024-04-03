@@ -1,21 +1,13 @@
-from pathlib import Path
-
 from setuptools import find_packages
 from setuptools import setup
+
+from app.__version__ import VERSION
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 with open("requirements.txt", "r", encoding="utf-8") as fh:
     requirements = fh.read()
 
-
-def get_version():
-    """Parse package __version__.py to get version."""
-    versionpy = (Path("app") / "__version__.py").read_text()
-    return versionpy.split(".")[1]
-
-
-VERSION = get_version()
 
 setup(
     name="special-octo-robot",
