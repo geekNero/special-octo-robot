@@ -118,7 +118,7 @@ List tasks by status:
 
 ```bash
 $ devcord tasks -l -i
-$ devcord tasks --list --complete
+$ devcord tasks --list --completed
 $ devcord tasks -l --pending
 ```
 
@@ -153,7 +153,7 @@ Mark as complete:
 
 ```bash
 $ devcord task 2 -c
-$ devcord task 2 --complete
+$ devcord task 2 --completed
 ```
 
 Mark as pending:
