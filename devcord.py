@@ -169,7 +169,7 @@ def tasks(
 )
 @click.option(
     "-st",
-    "--subtask",
+    "--subtasks",
     is_flag=True,
     help="List All Subtask Of Task",
 )
@@ -180,7 +180,7 @@ def task(
     inprogress=None,
     completed=None,
     pending=None,
-    subtask=None,
+    subtasks=None,
 ):
     """
     Modify a specific task.
