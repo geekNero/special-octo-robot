@@ -114,7 +114,7 @@ def tasks(
         description = None
         add = f'"{add}"'
         if desc:
-            description = click.edit()
+            description = format_description(click.edit())
         if parent:
             val = application.search_task(parent)
             if not val:
@@ -204,7 +204,7 @@ def task(
         if current_task["description"]:
             description = current_task["description"]
         description = click.edit(description)
-        current_task["description"] = description
+        current_task["description"] = format_description(description)
 
     if inprogress:
         current_task["status"] = "In Progress"
@@ -221,3 +221,7 @@ def convert_to_db_date(date_str):
     # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
     date_obj = datetime.strptime(date_str, "%d/%m/%Y")
     return date_obj.strftime("%Y-%m-%d")
+
+
+def format_description(description):
+    return description.replace('"', "'")
