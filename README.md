@@ -47,7 +47,7 @@ $ devcord tasks -a "task name" -t
 $ devcord tasks --add "task name" --today
 ```
 
-Complete in next 7 days:
+Complete in current week:
 
 ```bash
 $ devcord tasks -a "task name" -w
@@ -107,7 +107,7 @@ $ devcord tasks -l -t
 $ devcord tasks --list --today
 ```
 
-List tasks due in next 7 days:
+List tasks due in current week:
 
 ```bash
 $ devcord tasks -l -w
@@ -118,7 +118,7 @@ List tasks by status:
 
 ```bash
 $ devcord tasks -l -i
-$ devcord tasks --list --complete
+$ devcord tasks --list --completed
 $ devcord tasks -l --pending
 ```
 
@@ -135,11 +135,11 @@ $ devcord task 1 --desc
 
 _Opens a scrollable text box with description_
 
-Show substask:
+Show substasks:
 
 ```bash
 $ devcord task 4 -st
-$ devcord task 4 --subtask
+$ devcord task 4 --subtasks
 ```
 
 Mark as inprogress:
@@ -153,7 +153,7 @@ Mark as complete:
 
 ```bash
 $ devcord task 2 -c
-$ devcord task 2 --complete
+$ devcord task 2 --completed
 ```
 
 Mark as pending:

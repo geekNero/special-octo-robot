@@ -16,7 +16,7 @@ def list_tasks(
     """
     List all the tasks based on the filters.
     """
-    order_by = "completed ASC, priority DESC"
+    order_by = "completed ASC, status ASC, priority DESC"
     where_clause = ["parent_id ISNULL"]
     if week:
         where_clause.append(
