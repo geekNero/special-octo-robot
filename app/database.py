@@ -20,7 +20,7 @@ def initialize():
         status VARCHAR DEFAULT 'Pending',
         deadline DATE DEFAULT 'None',
         priority INTEGER DEFAULT 0,
-        label VARCHAR DEFAULT 'None'
+        label VARCHAR DEFAULT 'None',
         completed DATE
         )""",
     )
