@@ -95,10 +95,10 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f'"{title}' ""]
+    values = [f'"{sanitize_text(title)}"' ""]
     if description:
         columns.append("description")
-        values.append(f'"{description}"')
+        values.append(f'"{sanitize_text(description)}"')
     if priority:
         columns.append("priority")
         values.append(str(priority))
@@ -122,7 +122,7 @@ def add_tasks(
         values.append("'Pending'")
     if label:
         columns.append("label")
-        values.append(f'"{label}"')
+        values.append(f'"{sanitize_text(label)}"')
     if parent:
         columns.append("parent_id")
         values.append(str(parent))
@@ -219,3 +219,7 @@ def convert_to_console_date(date_str):
     """
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%d/%m/%Y")
+
+
+def sanitize_text(text):
+    return text.replace('"', "'")
