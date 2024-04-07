@@ -208,7 +208,6 @@ def update_task(updated_data: dict):
 
     for key, value in updated_data.items():
 
-        print(type(value), value, key)
         if type(value) is str or not value:
             updated_data[key] = f'"{value}"'
 
