@@ -66,10 +66,11 @@ def update_table(table: str, new_data: dict) -> None:
     Update Values Of Given Table
     """
     set_clause = ", ".join(
-        [f"{key} = '{value}'" for key, value in new_data.items() if key != "id"],
+        [f"{key} = {value}" for key, value in new_data.items() if key != "id"],
     )
     query = f"UPDATE {table} SET {set_clause} WHERE id = {new_data['id']}"
     conn = sqlite3.connect(path)
     cur = conn.cursor()
+    print(query)
     cur.execute(query)
     conn.commit()

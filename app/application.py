@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from . import console
 from . import database
 
 
@@ -96,7 +95,7 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [title]
+    values = [f'"{title}' ""]
     if description:
         columns.append("description")
         values.append(f'"{description}"')
@@ -158,7 +157,7 @@ def search_task(task_id) -> dict:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": (task[4]),
+            "deadline": task[4],
             "priority": task[5],
             "label": task[6] if task[6] else "None",
             "completed": (task[7]),
@@ -200,11 +199,17 @@ def get_subtasks(task_id: int):
 
 def update_task(updated_data: dict):
     """If marked as completed then set datetime as now else prev value retain"""
+    updated_data["deadline"] = str(updated_data["deadline"])
     if updated_data["status"] == "Completed":
         current_date = datetime.now().strftime("%Y-%m-%d")
-        updated_data["completed"] = current_date
+        updated_data["completed"] = str(current_date)
     else:
         updated_data["completed"] = updated_data["deadline"]
+
+    for key, value in updated_data.items():
+        if type(value) is str:
+            updated_data[key] = f'"{value}"'
+
     database.update_table("tasks", updated_data)
 
 

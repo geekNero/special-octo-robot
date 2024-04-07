@@ -128,9 +128,9 @@ def tasks(
         )
     elif add:
         description = None
-        add = f'"{add}"'
+        add = sanitize_text(add)
         if desc:
-            description = format_description(click.edit())
+            description = sanitize_text(click.edit())
         if parent:
             val = application.search_task(parent)
             if not val:
@@ -220,7 +220,7 @@ def task(
         if current_task["description"]:
             description = current_task["description"]
         description = click.edit(description)
-        current_task["description"] = format_description(description)
+        current_task["description"] = sanitize_text(description)
 
     if inprogress:
         current_task["status"] = "In Progress"
@@ -239,5 +239,5 @@ def convert_to_db_date(date_str):
     return date_obj.strftime("%Y-%m-%d")
 
 
-def format_description(description):
-    return description.replace('"', "'")
+def sanitize_text(text):
+    return text.replace('"', "'")
