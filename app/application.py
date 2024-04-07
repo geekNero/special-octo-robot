@@ -207,7 +207,9 @@ def update_task(updated_data: dict):
         updated_data["completed"] = updated_data["deadline"]
 
     for key, value in updated_data.items():
-        if type(value) is str:
+
+        print(type(value), value, key)
+        if type(value) is str or not value:
             updated_data[key] = f'"{value}"'
 
     database.update_table("tasks", updated_data)

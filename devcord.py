@@ -127,7 +127,7 @@ def tasks(
             path,
         )
     elif add:
-        description = None
+        description = "No given description"
         add = add
         if desc:
             description = click.edit()
