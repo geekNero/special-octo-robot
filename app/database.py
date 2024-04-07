@@ -71,6 +71,5 @@ def update_table(table: str, new_data: dict) -> None:
     query = f"UPDATE {table} SET {set_clause} WHERE id = {new_data['id']}"
     conn = sqlite3.connect(path)
     cur = conn.cursor()
-    print(query)
     cur.execute(query)
     conn.commit()
