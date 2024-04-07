@@ -1,9 +1,6 @@
-import os
 import sqlite3
 
-import click
-
-path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
+from .constants import path
 
 
 def initialize():

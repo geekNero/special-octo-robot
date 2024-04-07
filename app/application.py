@@ -53,6 +53,7 @@ def list_tasks(
             "deadline",
             "priority",
             "label",
+            "description",
         ],
         where_clause=where_clause,
         order_by=f"ORDER BY {order_by}",
@@ -72,6 +73,7 @@ def list_tasks(
                 ),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
+                "description": result[6],
             },
         )
     return final_results
