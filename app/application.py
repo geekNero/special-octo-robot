@@ -95,7 +95,7 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f'"{sanitize_text(title)}"' ""]
+    values = [f'"{sanitize_text(title)}"']
     if description:
         columns.append("description")
         values.append(f'"{sanitize_text(description)}"')
