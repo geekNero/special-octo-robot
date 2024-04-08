@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from . import console
 from . import database
 
 
@@ -53,6 +52,7 @@ def list_tasks(
             "deadline",
             "priority",
             "label",
+            "description",
         ],
         where_clause=where_clause,
         order_by=f"ORDER BY {order_by}",
@@ -72,6 +72,7 @@ def list_tasks(
                 ),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
+                "description": result[6],
             },
         )
     return final_results
@@ -94,10 +95,10 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [title]
+    values = [f'"{sanitize_text(title)}"']
     if description:
         columns.append("description")
-        values.append(f'"{description}"')
+        values.append(f'"{sanitize_text(description)}"')
     if priority:
         columns.append("priority")
         values.append(str(priority))
@@ -121,7 +122,7 @@ def add_tasks(
         values.append("'Pending'")
     if label:
         columns.append("label")
-        values.append(f'"{label}"')
+        values.append(f'"{sanitize_text(label)}"')
     if parent:
         columns.append("parent_id")
         values.append(str(parent))
@@ -156,7 +157,7 @@ def search_task(task_id) -> dict:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": (task[4]),
+            "deadline": task[4],
             "priority": task[5],
             "label": task[6] if task[6] else "None",
             "completed": (task[7]),
@@ -198,11 +199,18 @@ def get_subtasks(task_id: int):
 
 def update_task(updated_data: dict):
     """If marked as completed then set datetime as now else prev value retain"""
+    updated_data["deadline"] = str(updated_data["deadline"])
     if updated_data["status"] == "Completed":
         current_date = datetime.now().strftime("%Y-%m-%d")
-        updated_data["completed"] = current_date
+        updated_data["completed"] = str(current_date)
     else:
         updated_data["completed"] = updated_data["deadline"]
+
+    for key, value in updated_data.items():
+
+        if type(value) is str or not value:
+            updated_data[key] = f'"{value}"'
+
     database.update_table("tasks", updated_data)
 
 
@@ -212,3 +220,7 @@ def convert_to_console_date(date_str):
     """
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%d/%m/%Y")
+
+
+def sanitize_text(text):
+    return text.replace('"', "'")

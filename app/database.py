@@ -1,9 +1,6 @@
-import os
 import sqlite3
 
-import click
-
-path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
+from .constants import path
 
 
 def initialize():
@@ -69,7 +66,7 @@ def update_table(table: str, new_data: dict) -> None:
     Update Values Of Given Table
     """
     set_clause = ", ".join(
-        [f"{key} = '{value}'" for key, value in new_data.items() if key != "id"],
+        [f"{key} = {value}" for key, value in new_data.items() if key != "id"],
     )
     query = f"UPDATE {table} SET {set_clause} WHERE id = {new_data['id']}"
     conn = sqlite3.connect(path)

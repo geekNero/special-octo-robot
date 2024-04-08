@@ -5,6 +5,7 @@ import click
 
 import app.application as application
 from app.console import print_tasks
+from app.constants import path
 from app.database import initialize
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -17,7 +18,16 @@ def cli(ctx):
     Devcord is a CLI tool for developers to help them with their daily tasks.
     """
     ctx.ensure_object(dict)
-    path = os.path.join(os.getenv("HOME"), ".devcord", "data.db")
+    if not path:
+        click.echo(
+            click.style(
+                "Error: Could not find the path to the database, raise an issue with the developers.",
+                fg="red",
+            ),
+        )
+        ctx.abort()
+        return
+
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         initialize()
@@ -66,6 +76,8 @@ def cli(ctx):
     help="Perform for all the tasks with a specific label",
     type=str,
 )
+@click.option("-o", "--output", help="Specify Output Format", type=str)
+@click.option("--path", help="Specify Output File", type=str)
 @click.option("-pid", "--parent", help="Set the parent of a task", type=int)
 def tasks(
     ctx,
@@ -80,6 +92,8 @@ def tasks(
     completed=None,
     pending=None,
     label=None,
+    output=None,
+    path=None,
     parent=None,
 ):
     """
@@ -109,12 +123,13 @@ def tasks(
                 pending=pending,
                 label=label,
             ),
+            output,
+            path,
         )
     elif add:
-        description = None
-        add = f'"{add}"'
+        description = "No given description"
         if desc:
-            description = format_description(click.edit())
+            description = click.edit()
         if parent:
             val = application.search_task(parent)
             if not val:
@@ -185,7 +200,7 @@ def task(
     """
     Modify a specific task.
     """
-    if subtask:
+    if subtasks:
         print_tasks(application.get_subtasks(task_id))
         return
 
@@ -203,8 +218,7 @@ def task(
         description = "No given description"
         if current_task["description"]:
             description = current_task["description"]
-        description = click.edit(description)
-        current_task["description"] = format_description(description)
+        current_task["description"] = click.edit(description)
 
     if inprogress:
         current_task["status"] = "In Progress"
@@ -221,7 +235,3 @@ def convert_to_db_date(date_str):
     # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
     date_obj = datetime.strptime(date_str, "%d/%m/%Y")
     return date_obj.strftime("%Y-%m-%d")
-
-
-def format_description(description):
-    return description.replace('"', "'")

@@ -23,8 +23,11 @@ setup(
     packages=find_packages(),
     install_requires=[requirements],
     python_requires=">=3.8",
+    platforms=["Windows", "MacOS X", "Linux"],
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux",
     ],
     entry_points={

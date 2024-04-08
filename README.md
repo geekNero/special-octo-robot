@@ -122,6 +122,18 @@ $ devcord tasks --list --completed
 $ devcord tasks -l --pending
 ```
 
+Specify Output Format:
+
+```bash
+$ devcord tasks -l -o json
+$ devcord tasks --list --output text
+```
+
+Specify Output File:
+
+```bash
+$ devcord tasks -l --path "path/to/file"
+```
 ## For managing tasks
 
 Pass the task ID after the **"task"** keyword to perform any action on the task.
