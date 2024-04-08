@@ -189,7 +189,7 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
-@click.option("-dt", "--delete", is_flag=True, help="Delete task")
+@click.option("-dl", "--delete", is_flag=True, help="Delete task")
 def task(
     ctx,
     task_id,

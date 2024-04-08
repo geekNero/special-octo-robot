@@ -179,6 +179,6 @@ $ devcord task 10 --pending
 Delete Task:
 
 ```bash
-$ devcord task 10 -dt
+$ devcord task 10 -dl
 $ devcord task 10 --delete
 ```
