@@ -174,3 +174,11 @@ Mark as pending:
 $ devcord task 10 -pd
 $ devcord task 10 --pending
 ```
+
+
+Delete Task:
+
+```bash
+$ devcord task 10 -dt
+$ devcord task 10 --delete
+```

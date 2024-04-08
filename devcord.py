@@ -6,6 +6,7 @@ import click
 import app.application as application
 from app.console import print_tasks
 from app.constants import path
+from app.database import delete_task
 from app.database import initialize
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -188,6 +189,7 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
+@click.option("-dt", "--delete", is_flag=True, help="Delete task")
 def task(
     ctx,
     task_id,
@@ -196,10 +198,15 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
+    delete=None,
 ):
     """
     Modify a specific task.
     """
+    if delete:
+        delete_task(task_id)
+        return
+
     if subtasks:
         print_tasks(application.get_subtasks(task_id))
         return
