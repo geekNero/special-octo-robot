@@ -128,7 +128,6 @@ def tasks(
         )
     elif add:
         description = "No given description"
-        add = add
         if desc:
             description = click.edit()
         if parent:
