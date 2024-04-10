@@ -73,3 +73,14 @@ def update_table(table: str, new_data: dict) -> None:
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
+
+
+def delete_task(task_id: int) -> None:
+    """
+    Delete Task From Database
+    """
+    query = f"DELETE FROM tasks WHERE id = {task_id}"
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    cur.execute(query)
+    conn.commit()
