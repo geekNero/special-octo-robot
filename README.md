@@ -174,3 +174,40 @@ Mark as pending:
 $ devcord task 10 -pd
 $ devcord task 10 --pending
 ```
+
+
+Delete Task:
+
+```bash
+$ devcord task 10 -dl
+$ devcord task 10 --delete
+```
+
+
+Modify Title:
+
+```bash
+$ devcord task 10 -n "new title"
+$ devcord task 10 --name "new title"
+```
+
+Modify Priority:
+
+```bash
+$ devcord task 10 -p 3
+$ devcord task 10 --priority 3
+```
+
+Modify Deadline:
+
+```bash
+$ devcord task 10 -dd "dd/mm/yyyy"
+$ devcord task 10 --deadline "dd/mm/yyyy"
+```
+
+Modify Labels:
+
+```bash
+$ devcord task 10 -lb "label"
+$ devcord task 10 --label "label"
+```

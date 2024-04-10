@@ -6,6 +6,7 @@ import click
 import app.application as application
 from app.console import print_tasks
 from app.constants import path
+from app.database import delete_task
 from app.database import initialize
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -188,6 +189,11 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
+@click.option("-dl", "--delete", is_flag=True, help="Delete task")
+@click.option("-n", "--name", help="Change the name of the task", type=str)
+@click.option("-p", "--priority", help="Change the priority of the task", type=int)
+@click.option("-dd", "--deadline", help="Change the deadline of the task", type=str)
+@click.option("-lb", "--label", help="Change the label of the task", type=str)
 def task(
     ctx,
     task_id,
@@ -196,10 +202,19 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
+    delete=None,
+    name=None,
+    priority=None,
+    deadline=None,
+    label=None,
 ):
     """
     Modify a specific task.
     """
+    if delete:
+        delete_task(task_id)
+        return
+
     if subtasks:
         print_tasks(application.get_subtasks(task_id))
         return
@@ -226,6 +241,24 @@ def task(
         current_task["status"] = "Pending"
     elif completed:
         current_task["status"] = "Completed"
+
+    if name:
+        current_task["title"] = name
+    if priority:
+        current_task["priority"] = priority
+    if label:
+        current_task["label"] = label
+    if deadline:
+        try:
+            current_task["deadline"] = convert_to_db_date(deadline)
+        except ValueError:
+            click.echo(
+                click.style(
+                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    fg="red",
+                ),
+            )
+            return
 
     # update values in db
     application.update_task(current_task)
