@@ -1,13 +1,13 @@
 import sqlite3
 
-from .constants import path
+from .constants import db_path
 
 
 def initialize():
     """
     Initialize the database with all the necessary tables.
     """
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(
         """CREATE TABLE tasks(
@@ -44,7 +44,7 @@ def list_table(
     List data from a table.
     """
     query = f"SELECT {', '.join(columns)} FROM {table} {where_clause} {group_clause} {order_by}"
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     res = cur.execute(query).fetchall()
     return res
@@ -55,7 +55,7 @@ def insert_into_table(table: str, columns: list, values: list) -> None:
     Insert data into a table.
     """
     query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join(values)})"
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
@@ -69,7 +69,7 @@ def update_table(table: str, new_data: dict) -> None:
         [f"{key} = {value}" for key, value in new_data.items() if key != "id"],
     )
     query = f"UPDATE {table} SET {set_clause} WHERE id = {new_data['id']}"
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
@@ -80,7 +80,7 @@ def delete_task(task_id: int) -> None:
     Delete Task From Database
     """
     query = f"DELETE FROM tasks WHERE id = {task_id}"
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
