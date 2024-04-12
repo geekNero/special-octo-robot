@@ -32,7 +32,7 @@ def get_status_color(status):
         return "#FFFFFF"
 
 
-def get_table(tasks, colored=True):
+def get_table(tasks, plain=True):
     table = Table(title="Tasks", highlight=True, leading=True)
     table.add_column("Priority", justify="center", style="white")
     table.add_column("Task", justify="left", style="white")
@@ -49,7 +49,7 @@ def get_table(tasks, colored=True):
         table.add_row(
             (
                 f"[{get_priority_color(task)}]●"
-                if colored
+                if plain
                 else f"[{text_style}]{task['priority']}"
             ),
             f'[{text_style}]{task["title"]}',
@@ -81,7 +81,7 @@ def sanitize_path(path):
     return True
 
 
-def print_tasks(tasks, output=None, path=None):
+def print_tasks(tasks, output=None, path=None, plain=True):
 
     file = None
     if path:
@@ -97,12 +97,8 @@ def print_tasks(tasks, output=None, path=None):
     else:
         console = Console()
 
-    colored = (
-        True  # If the output isn't colored, we need to show the data in number format
-    )
-
     if path:
-        colored = False
+        plain = False
     if output == "json":
         result = json.dumps(tasks, indent=4)
         console.print_json(result)
@@ -118,7 +114,7 @@ def print_tasks(tasks, output=None, path=None):
             index += 1
 
     else:
-        result = get_table(tasks, colored)
+        result = get_table(tasks, plain)
         console.print(result)
 
     if file:

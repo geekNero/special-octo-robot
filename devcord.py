@@ -4,7 +4,11 @@ from datetime import datetime
 import click
 
 import app.application as application
+from app.config import get_config
+from app.config import initialize_config
 from app.console import print_tasks
+from app.constants import config_path
+from app.constants import db_path
 from app.constants import path
 from app.database import delete_task
 from app.database import initialize
@@ -29,9 +33,13 @@ def cli(ctx):
         ctx.abort()
         return
 
-    if not os.path.exists(path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(db_path):
+        os.makedirs(path, exist_ok=True)
         initialize()
+    if not os.path.exists(config_path):
+        ctx.obj["config"] = initialize_config(config_path)
+    else:
+        ctx.obj["config"] = get_config(config_path)
 
 
 @cli.command()
@@ -126,6 +134,7 @@ def tasks(
             ),
             output,
             path,
+            ctx.obj["config"]["unicode"],
         )
     elif add:
         description = "No given description"
@@ -216,7 +225,10 @@ def task(
         return
 
     if subtasks:
-        print_tasks(application.get_subtasks(task_id))
+        print_tasks(
+            tasks=application.get_subtasks(task_id),
+            plain=ctx.obj["config"]["unicode"],
+        )
         return
 
     current_task = application.search_task(task_id)
