@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from click import echo
+from click import style
+
 from . import database
 
 
@@ -11,7 +14,7 @@ def list_tasks(
     completed=None,
     pending=None,
     label=None,
-) -> list:
+) -> list | None:
     """
     List all the tasks based on the filters.
     """
@@ -43,20 +46,24 @@ def list_tasks(
         where_clause.append(f"label = '{label}'")
     where_clause = "WHERE " + " AND ".join(where_clause)
 
-    results = database.list_table(
-        table="tasks",
-        columns=[
-            "id",
-            "title",
-            "status",
-            "deadline",
-            "priority",
-            "label",
-            "description",
-        ],
-        where_clause=where_clause,
-        order_by=f"ORDER BY {order_by}",
-    )
+    try:
+        results = database.list_table(
+            table="tasks",
+            columns=[
+                "id",
+                "title",
+                "status",
+                "deadline",
+                "priority",
+                "label",
+                "description",
+            ],
+            where_clause=where_clause,
+            order_by=f"ORDER BY {order_by}",
+        )
+    except:
+        generate_migration_error()
+        return None
 
     final_results = []
     for result in results:
@@ -126,29 +133,37 @@ def add_tasks(
     if parent:
         columns.append("parent_id")
         values.append(str(parent))
-    database.insert_into_table(table="tasks", columns=columns, values=values)
+    try:
+        database.insert_into_table(table="tasks", columns=columns, values=values)
+    except:
+        generate_migration_error()
 
 
-def search_task(task_id) -> dict:
+def search_task(task_id) -> dict | None:
     """
     Search a task by its id.
     :param task_id:
     :return: task_details
     """
-    task = database.list_table(
-        table="tasks",
-        columns=[
-            "id",
-            "title",
-            "description",
-            "status",
-            "deadline",
-            "priority",
-            "label",
-            "completed",
-        ],
-        where_clause=f"WHERE id = {task_id}",
-    )
+    try:
+        task = database.list_table(
+            table="tasks",
+            columns=[
+                "id",
+                "title",
+                "description",
+                "status",
+                "deadline",
+                "priority",
+                "label",
+                "completed",
+            ],
+            where_clause=f"WHERE id = {task_id}",
+        )
+    except:
+        generate_migration_error()
+        return None
+
     task_details = {}
     if task:
         task = task[0]
@@ -166,18 +181,22 @@ def search_task(task_id) -> dict:
 
 
 def get_subtasks(task_id: int):
-    results = database.list_table(
-        table="tasks",
-        columns=[
-            "id",
-            "title",
-            "status",
-            "deadline",
-            "priority",
-            "label",
-        ],
-        where_clause=f"WHERE parent_id = {task_id}",
-    )
+    try:
+        results = database.list_table(
+            table="tasks",
+            columns=[
+                "id",
+                "title",
+                "status",
+                "deadline",
+                "priority",
+                "label",
+            ],
+            where_clause=f"WHERE parent_id = {task_id}",
+        )
+    except:
+        generate_migration_error()
+        return None
     final_results = []
     for result in results:
         final_results.append(
@@ -210,8 +229,10 @@ def update_task(updated_data: dict):
 
         if type(value) is str or not value:
             updated_data[key] = f'"{value}"'
-
-    database.update_table("tasks", updated_data)
+    try:
+        database.update_table("tasks", updated_data)
+    except:
+        generate_migration_error()
 
 
 def convert_to_console_date(date_str):
@@ -224,3 +245,12 @@ def convert_to_console_date(date_str):
 
 def sanitize_text(text):
     return text.strip().replace('"', "'")
+
+
+def generate_migration_error():
+    echo(
+        style(
+            "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+            fg="red",
+        ),
+    )

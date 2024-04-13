@@ -13,6 +13,16 @@ With pip:
 
 pip install devcord
 
+# Post Installation
+
+On each upgrade, run:
+
+```bash
+$ devcord init --migrate
+```
+
+This updates the database schema if any changes were made
+
 # Usage
 
 ## For adding tasks
