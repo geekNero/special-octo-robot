@@ -3,9 +3,11 @@ from datetime import datetime
 
 import click
 
-import app.application as application
+from app import application
+from app.__version__ import VERSION
 from app.config import get_config
 from app.config import initialize_config
+from app.config import update_config
 from app.console import print_legend
 from app.console import print_tasks
 from app.constants import config_path
@@ -13,6 +15,7 @@ from app.constants import db_path
 from app.constants import path
 from app.database import delete_task
 from app.database import initialize
+from app.migrations import run_migrations
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -123,20 +126,24 @@ def tasks(
             return
 
     if list:
-        print_tasks(
-            application.list_tasks(
-                priority=priority,
-                today=today,
-                week=week,
-                inprogress=inprogress,
-                completed=completed,
-                pending=pending,
-                label=label,
-            ),
-            output,
-            path,
-            ctx.obj["config"]["unicode"],
+        task_list = application.list_tasks(
+            priority=priority,
+            today=today,
+            week=week,
+            inprogress=inprogress,
+            completed=completed,
+            pending=pending,
+            label=label,
         )
+
+        if task_list:
+            print_tasks(
+                task_list,
+                output,
+                path,
+                ctx.obj["config"]["unicode"],
+            )
+
     elif add:
         description = "No given description"
         if desc:
@@ -144,13 +151,15 @@ def tasks(
         if parent:
             val = application.search_task(parent)
             if not val:
-                click.echo(
-                    click.style(
-                        "Error: Parent task does not exist.",
-                        fg="red",
-                    ),
-                )
+                if val is not None:
+                    click.echo(
+                        click.style(
+                            "Error: Parent task does not exist.",
+                            fg="red",
+                        ),
+                    )
                 return
+
         application.add_tasks(
             add,
             description,
@@ -226,20 +235,24 @@ def task(
         return
 
     if subtasks:
-        print_tasks(
-            tasks=application.get_subtasks(task_id),
-            plain=ctx.obj["config"]["unicode"],
-        )
+        val = application.get_subtasks(task_id)
+        if val:
+            print_tasks(
+                tasks=val,
+                plain=ctx.obj["config"]["unicode"],
+            )
         return
 
     current_task = application.search_task(task_id)
+
     if not current_task:
-        click.echo(
-            click.style(
-                "Error: Task does not exist.",
-                fg="red",
-            ),
-        )
+        if current_task is not None:
+            click.echo(
+                click.style(
+                    "Error: Task does not exist.",
+                    fg="red",
+                ),
+            )
         return
 
     if desc:
@@ -292,6 +305,20 @@ def legend(ctx):
                 fg="yellow",
             ),
         )
+
+
+@cli.command()
+@click.pass_context
+@click.option("--migrate", is_flag=True, help="Migrate database")
+def init(ctx, migrate=None):
+    """
+    Run after every install
+    """
+    if migrate:
+        run_migrations(ctx.obj["config"]["version"])
+
+    ctx.obj["config"]["version"] = VERSION
+    update_config(config_path, ctx.obj["config"])
 
 
 def convert_to_db_date(date_str):
