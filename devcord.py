@@ -4,6 +4,7 @@ from datetime import datetime
 import click
 
 import app.application as application
+from app.application import get_migration_message
 from app.config import get_config
 from app.config import initialize_config
 from app.console import print_legend
@@ -13,6 +14,7 @@ from app.constants import db_path
 from app.constants import path
 from app.database import delete_task
 from app.database import initialize
+from app.migrations import run_migrations
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -123,26 +125,35 @@ def tasks(
             return
 
     if list:
-        print_tasks(
-            application.list_tasks(
-                priority=priority,
-                today=today,
-                week=week,
-                inprogress=inprogress,
-                completed=completed,
-                pending=pending,
-                label=label,
-            ),
-            output,
-            path,
-            ctx.obj["config"]["unicode"],
+        task_list = application.list_tasks(
+            priority=priority,
+            today=today,
+            week=week,
+            inprogress=inprogress,
+            completed=completed,
+            pending=pending,
+            label=label,
         )
+        if task_list is None:
+            get_migration_message()
+            return
+        if task_list:
+            print_tasks(
+                task_list,
+                output,
+                path,
+                ctx.obj["config"]["unicode"],
+            )
+
     elif add:
         description = "No given description"
         if desc:
             description = click.edit()
         if parent:
             val = application.search_task(parent)
+            if val is None:
+                get_migration_message()
+                return
             if not val:
                 click.echo(
                     click.style(
@@ -151,7 +162,8 @@ def tasks(
                     ),
                 )
                 return
-        application.add_tasks(
+
+        val = application.add_tasks(
             add,
             description,
             priority,
@@ -164,6 +176,9 @@ def tasks(
             label,
             parent,
         )
+        if val == 1:
+            get_migration_message()
+            return
 
 
 @cli.command()
@@ -226,13 +241,21 @@ def task(
         return
 
     if subtasks:
+        val = get_subtasks(task_id)
+        if val is None:
+            get_migration_message()
+            return
         print_tasks(
-            tasks=application.get_subtasks(task_id),
+            tasks=val,
             plain=ctx.obj["config"]["unicode"],
         )
         return
 
     current_task = application.search_task(task_id)
+    if current_task is None:
+        get_migration_message()
+        return
+
     if not current_task:
         click.echo(
             click.style(
@@ -274,7 +297,9 @@ def task(
             return
 
     # update values in db
-    application.update_task(current_task)
+    if application.update_task(current_task) == 1:
+        get_migration_message()
+        return
 
 
 @cli.command()
@@ -290,6 +315,31 @@ def legend(ctx):
             click.style(
                 "Info: Unicode is disabled, legend not required",
                 fg="yellow",
+            ),
+        )
+
+
+@cli.command()
+@click.pass_context
+@click.option("--migrate", is_flag=True, help="Migrate the database")
+def init(ctx, migrate=None):
+    """
+    Initialize the database
+    """
+    if migrate:
+        if run_migrations(ctx.obj["config"]["version"]) == 1:
+            click.echo(
+                click.style(
+                    "Error: Already Migrated Or Database migration failed! Contact Developer",
+                    fg="red",
+                ),
+            )
+            return
+        initialize_config(config_path)  # update the config file with the new version
+        click.echo(
+            click.style(
+                "Success: Database migrated",
+                fg="green",
             ),
         )
 

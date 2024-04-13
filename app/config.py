@@ -3,6 +3,8 @@ import json
 from click import echo
 from click import style
 
+from .__version__ import VERSION
+
 
 def check_unicode_support():
     try:
@@ -29,6 +31,7 @@ def initialize_config(path):
             "theme": "light",
             "default_output": "table",
             "unicode": check_unicode_support(),
+            "version": VERSION,
         }
         json.dump(config, file, indent=4)
         return config
