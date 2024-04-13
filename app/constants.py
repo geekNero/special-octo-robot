@@ -1,9 +1,6 @@
 import os
 import platform
 
-from click import echo
-from click import style
-
 
 if platform.system() == "Windows":
     home_word_list = ["USERPROFILE", "HOMEDRIVE", "HOMEPATH"]

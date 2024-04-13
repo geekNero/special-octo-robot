@@ -6,6 +6,7 @@ import click
 import app.application as application
 from app.config import get_config
 from app.config import initialize_config
+from app.console import print_legend
 from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
@@ -274,6 +275,23 @@ def task(
 
     # update values in db
     application.update_task(current_task)
+
+
+@cli.command()
+@click.pass_context
+def legend(ctx):
+    """
+    Show the legend for all special characters
+    """
+    if ctx.obj["config"]["unicode"]:
+        print_legend()
+    else:
+        click.echo(
+            click.style(
+                "Info: Unicode is disabled, legend not required",
+                fg="yellow",
+            ),
+        )
 
 
 def convert_to_db_date(date_str):
