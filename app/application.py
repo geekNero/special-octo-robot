@@ -1,6 +1,7 @@
 from datetime import datetime
 
-import click
+from click import echo
+from click import style
 
 from . import database
 
@@ -13,7 +14,7 @@ def list_tasks(
     completed=None,
     pending=None,
     label=None,
-) -> list:
+) -> list | None:
     """
     List all the tasks based on the filters.
     """
@@ -61,6 +62,7 @@ def list_tasks(
             order_by=f"ORDER BY {order_by}",
         )
     except:
+        generate_migration_error()
         return None
 
     final_results = []
@@ -133,12 +135,11 @@ def add_tasks(
         values.append(str(parent))
     try:
         database.insert_into_table(table="tasks", columns=columns, values=values)
-        return 0
     except:
-        return 1
+        generate_migration_error()
 
 
-def search_task(task_id) -> dict:
+def search_task(task_id) -> dict | None:
     """
     Search a task by its id.
     :param task_id:
@@ -160,7 +161,9 @@ def search_task(task_id) -> dict:
             where_clause=f"WHERE id = {task_id}",
         )
     except:
+        generate_migration_error()
         return None
+
     task_details = {}
     if task:
         task = task[0]
@@ -192,6 +195,7 @@ def get_subtasks(task_id: int):
             where_clause=f"WHERE parent_id = {task_id}",
         )
     except:
+        generate_migration_error()
         return None
     final_results = []
     for result in results:
@@ -227,9 +231,8 @@ def update_task(updated_data: dict):
             updated_data[key] = f'"{value}"'
     try:
         database.update_table("tasks", updated_data)
-        return 0
     except:
-        return 1
+        generate_migration_error()
 
 
 def convert_to_console_date(date_str):
@@ -244,9 +247,9 @@ def sanitize_text(text):
     return text.strip().replace('"', "'")
 
 
-def get_migration_message():
-    click.echo(
-        click.style(
+def generate_migration_error():
+    echo(
+        style(
             "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
             fg="red",
         ),

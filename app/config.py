@@ -37,6 +37,11 @@ def initialize_config(path):
         return config
 
 
+def update_config(path, config):
+    with open(path, "w") as file:
+        json.dump(config, file, indent=4)
+
+
 def get_config(path):
     with open(path, "r") as file:
         return json.load(file)

@@ -3,10 +3,11 @@ from datetime import datetime
 
 import click
 
-import app.application as application
-from app.application import get_migration_message
+from app import application
+from app.__version__ import VERSION
 from app.config import get_config
 from app.config import initialize_config
+from app.config import update_config
 from app.console import print_legend
 from app.console import print_tasks
 from app.constants import config_path
@@ -134,9 +135,7 @@ def tasks(
             pending=pending,
             label=label,
         )
-        if task_list is None:
-            get_migration_message()
-            return
+
         if task_list:
             print_tasks(
                 task_list,
@@ -151,19 +150,17 @@ def tasks(
             description = click.edit()
         if parent:
             val = application.search_task(parent)
-            if val is None:
-                get_migration_message()
-                return
             if not val:
-                click.echo(
-                    click.style(
-                        "Error: Parent task does not exist.",
-                        fg="red",
-                    ),
-                )
+                if val is not None:
+                    click.echo(
+                        click.style(
+                            "Error: Parent task does not exist.",
+                            fg="red",
+                        ),
+                    )
                 return
 
-        val = application.add_tasks(
+        application.add_tasks(
             add,
             description,
             priority,
@@ -176,9 +173,6 @@ def tasks(
             label,
             parent,
         )
-        if val == 1:
-            get_migration_message()
-            return
 
 
 @cli.command()
@@ -241,28 +235,24 @@ def task(
         return
 
     if subtasks:
-        val = get_subtasks(task_id)
-        if val is None:
-            get_migration_message()
-            return
-        print_tasks(
-            tasks=val,
-            plain=ctx.obj["config"]["unicode"],
-        )
+        val = application.get_subtasks(task_id)
+        if val:
+            print_tasks(
+                tasks=val,
+                plain=ctx.obj["config"]["unicode"],
+            )
         return
 
     current_task = application.search_task(task_id)
-    if current_task is None:
-        get_migration_message()
-        return
 
     if not current_task:
-        click.echo(
-            click.style(
-                "Error: Task does not exist.",
-                fg="red",
-            ),
-        )
+        if current_task is not None:
+            click.echo(
+                click.style(
+                    "Error: Task does not exist.",
+                    fg="red",
+                ),
+            )
         return
 
     if desc:
@@ -297,9 +287,7 @@ def task(
             return
 
     # update values in db
-    if application.update_task(current_task) == 1:
-        get_migration_message()
-        return
+    application.update_task(current_task)
 
 
 @cli.command()
@@ -321,27 +309,16 @@ def legend(ctx):
 
 @cli.command()
 @click.pass_context
-@click.option("--migrate", is_flag=True, help="Migrate the database")
+@click.option("--migrate", is_flag=True, help="Migrate database")
 def init(ctx, migrate=None):
     """
-    Initialize the database
+    Run after every install
     """
     if migrate:
-        if run_migrations(ctx.obj["config"]["version"]) == 1:
-            click.echo(
-                click.style(
-                    "Error: Already Migrated Or Database migration failed! Contact Developer",
-                    fg="red",
-                ),
-            )
-            return
-        initialize_config(config_path)  # update the config file with the new version
-        click.echo(
-            click.style(
-                "Success: Database migrated",
-                fg="green",
-            ),
-        )
+        run_migrations(ctx.obj["config"]["version"])
+
+    ctx.obj["config"]["version"] = VERSION
+    update_config(config_path, ctx.obj["config"])
 
 
 def convert_to_db_date(date_str):
