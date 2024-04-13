@@ -8,16 +8,16 @@ from rich.style import Style
 from rich.table import Table
 
 
-def get_priority_color(task):
-    if task["priority"] == 5:
+def get_priority_color(priority):
+    if priority == 5:
         return "bold red"
-    elif task["priority"] == 4:
+    elif priority == 4:
         return "#EE4B2B"
-    elif task["priority"] == 3:
+    elif priority == 3:
         return "magenta"
-    elif task["priority"] == 2:
+    elif priority == 2:
         return "blue"
-    elif task["priority"] == 1:
+    elif priority == 1:
         return "cyan"
     else:
         return "#FFFFFF"
@@ -48,7 +48,7 @@ def get_table(tasks, plain=True):
     for task in tasks:
         table.add_row(
             (
-                f"[{get_priority_color(task)}]●"
+                f"[{get_priority_color(task['priority'])}]●"
                 if plain
                 else f"[{text_style}]{task['priority']}"
             ),
@@ -119,3 +119,25 @@ def print_tasks(tasks, output=None, path=None, plain=True):
 
     if file:
         file.close()
+
+
+def print_legend():
+    text_style = Style(color="#FFFFFF")
+    console = Console()
+    table = Table(title="Priority Legend", highlight=True, leading=True)
+    table.add_column("Unicode Character", justify="center", style="white")
+    table.add_column("Value", justify="center", style="white")
+    table.add_row(f"[{get_priority_color(0)}]●", f"[{text_style}]No Priority Level")
+    for i in range(1, 6):
+        table.add_row(
+            f"[{get_priority_color(i)}]●",
+            f"[{text_style}]Priority level: {i}",
+        )
+    console.print(table)
+    console.rule()
+    table = Table(title="Task Properties Legend", highlight=True, leading=True)
+    table.add_column("Unicode Character", justify="center", style="white")
+    table.add_column("Value", justify="center", style="white")
+    table.add_row("[#FFFFFF]►", f"[{text_style}]Has description")
+    table.add_row("[#FFFFFF]|☰", f"[{text_style}]Has subtasks")
+    console.print(table)

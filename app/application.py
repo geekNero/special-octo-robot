@@ -19,7 +19,7 @@ def list_tasks(
     where_clause = ["parent_id ISNULL"]
     if week:
         where_clause.append(
-            "(deadline >= date('now', 'weekday 0', '-7 days') AND deadline < date('now', 'weekday 1'))",
+            "(deadline > date('now', 'weekday 0', '-7 days') AND deadline < date('now', 'weekday 1'))",
         )
     elif today:
         where_clause.append("(deadline = date('now'))")
@@ -223,4 +223,4 @@ def convert_to_console_date(date_str):
 
 
 def sanitize_text(text):
-    return text.replace('"', "'")
+    return text.strip().replace('"', "'")
