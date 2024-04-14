@@ -141,7 +141,7 @@ def tasks(
                 task_list,
                 output,
                 path,
-                ctx.obj["config"]["unicode"],
+                ctx.obj["config"]["unicode"] is False,
             )
 
     elif add:
@@ -230,18 +230,6 @@ def task(
     """
     Modify a specific task.
     """
-    if delete:
-        delete_task(task_id)
-        return
-
-    if subtasks:
-        val = application.get_subtasks(task_id)
-        if val:
-            print_tasks(
-                tasks=val,
-                plain=ctx.obj["config"]["unicode"],
-            )
-        return
 
     current_task = application.search_task(task_id)
 
@@ -254,12 +242,6 @@ def task(
                 ),
             )
         return
-
-    if desc:
-        description = "No given description"
-        if current_task["description"]:
-            description = current_task["description"]
-        current_task["description"] = click.edit(description)
 
     if inprogress:
         current_task["status"] = "In Progress"
@@ -286,7 +268,25 @@ def task(
             )
             return
 
-    # update values in db
+    if subtasks:
+        val = application.get_subtasks(task_id)
+        if val:
+            print_tasks(
+                tasks=val,
+                plain=ctx.obj["config"]["unicode"] is False,
+            )
+        return
+
+    elif desc:
+        description = "No given description"
+        if current_task["description"]:
+            description = current_task["description"]
+        current_task["description"] = click.edit(description)
+
+    elif delete:
+        application.handle_delete(current_task)
+        return
+
     application.update_task(current_task)
 
 

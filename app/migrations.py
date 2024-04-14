@@ -4,7 +4,7 @@ from .constants import db_path
 
 
 migration_list = [
-    ("0.0.8", """ALTER TABLE tasks ADD COLUMN subtask INTEGER DEFAULT 0;"""),
+    ("0.0.8", """ALTER TABLE tasks ADD COLUMN subtasks INTEGER DEFAULT 0;"""),
 ]
 
 
