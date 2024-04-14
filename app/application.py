@@ -57,7 +57,7 @@ def list_tasks(
                 "priority",
                 "label",
                 "description",
-                "subtask",
+                "subtasks",
             ],
             where_clause=where_clause,
             order_by=f"ORDER BY {order_by}",
@@ -81,7 +81,7 @@ def list_tasks(
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
                 "description": result[6],
-                "subtask": result[7],
+                "subtasks": result[7],
             },
         )
     return final_results
@@ -142,12 +142,10 @@ def add_tasks(
         return
     # Insert the record then increment the count of the parent task.
     if parent:
-        try:
-            database.update_table(
-                "tasks", {"subtask": "subtask + 1", "id": f"{parent}"}
-            )
-        except:
-            generate_migration_error()
+        database.update_table(
+            "tasks",
+            {"subtasks": "subtasks + 1", "id": f"{parent}"},
+        )
 
 
 def search_task(task_id) -> dict | None:
@@ -169,6 +167,7 @@ def search_task(task_id) -> dict | None:
                 "label",
                 "completed",
                 "parent_id",
+                "subtasks",
             ],
             where_clause=f"WHERE id = {task_id}",
         )
@@ -189,6 +188,7 @@ def search_task(task_id) -> dict | None:
             "label": task[6] if task[6] else "None",
             "completed": (task[7]),
             "parent_id": task[8],
+            "subtasks": task[9],
         }
     return task_details
 
@@ -204,7 +204,7 @@ def get_subtasks(task_id: int):
                 "deadline",
                 "priority",
                 "label",
-                "subtask",
+                "subtasks",
             ],
             where_clause=f"WHERE parent_id = {task_id}",
         )
@@ -225,7 +225,7 @@ def get_subtasks(task_id: int):
                 ),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
-                "subtask": result[6],
+                "subtasks": result[6],
             },
         )
     return final_results
@@ -256,13 +256,14 @@ def handle_delete(current_task: dict):
     """
     database.delete_task(current_task["id"])
     if current_task["parent_id"]:
-        try:
-            database.update_table(
-                "tasks",
-                {"subtask": "subtask - 1", "id": f"{current_task['parent_id']}"},
-            )
-        except:
-            generate_migration_error()
+        if search_task(current_task["parent_id"])["subtasks"] > 0:
+            try:
+                database.update_table(
+                    "tasks",
+                    {"subtasks": "subtasks - 1", "id": f"{current_task['parent_id']}"},
+                )
+            except:
+                generate_migration_error()
 
 
 def convert_to_console_date(date_str):

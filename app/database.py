@@ -18,7 +18,8 @@ def initialize():
         deadline DATE DEFAULT 'None',
         priority INTEGER DEFAULT 0,
         label VARCHAR DEFAULT 'None',
-        completed DATE
+        completed DATE,
+        subtasks INTEGER DEFAULT 0
         )""",
     )
     cur.execute(
