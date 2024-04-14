@@ -235,8 +235,15 @@ def get_subtasks(task_id: int):
 
 
 def update_task(updated_data: dict):
-    """If marked as completed then set datetime as now else prev value retain"""
-    updated_data["deadline"] = str(updated_data["deadline"])
+    """If marked as completed then set datetime as now else retain prev value"""
+
+    if updated_data["deadline"] == "week":
+        updated_data["deadline"] = "date('now', 'weekday 0')"
+    elif updated_data["deadline"] == "today":
+        updated_data["deadline"] = "date('now')"
+    else:
+        updated_data["deadline"] = str(updated_data["deadline"])
+
     if updated_data["status"] == "Completed":
         current_date = datetime.now().strftime("%Y-%m-%d")
         updated_data["completed"] = str(current_date)

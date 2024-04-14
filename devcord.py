@@ -208,6 +208,13 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
+@click.option(
+    "-w",
+    "--week",
+    is_flag=True,
+    help="Perform for  all the tasks for this week",
+)
+@click.option("-t", "--today", is_flag=True, help="Perform for all the tasks for today")
 @click.option("-dl", "--delete", is_flag=True, help="Delete task")
 @click.option("-n", "--name", help="Change the name of the task", type=str)
 @click.option("-p", "--priority", help="Change the priority of the task", type=int)
@@ -221,6 +228,8 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
+    week=None,
+    today=None,
     delete=None,
     name=None,
     priority=None,
@@ -256,7 +265,11 @@ def task(
         current_task["priority"] = priority
     if label:
         current_task["label"] = label
-    if deadline:
+    if week:
+        current_task["deadline"] = "week"
+    elif today:
+        current_task["deadline"] = "today"
+    elif deadline:
         try:
             current_task["deadline"] = convert_to_db_date(deadline)
         except ValueError:
