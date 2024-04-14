@@ -84,25 +84,3 @@ def delete_task(task_id: int) -> None:
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
-
-
-def increment_count(task_id: int) -> None:
-    """
-    Increment Count Of Subtask In Parent Task
-    """
-    query = f"UPDATE tasks SET subtask = subtask + 1 WHERE id = {task_id}"
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    cur.execute(query)
-    conn.commit()
-
-
-def decrement_count(task_id: int) -> None:
-    """
-    Increment Count Of Subtask In Parent Task
-    """
-    query = f"UPDATE tasks SET subtask = subtask - 1 WHERE id = {task_id}"
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    cur.execute(query)
-    conn.commit()

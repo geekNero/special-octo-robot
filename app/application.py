@@ -143,7 +143,9 @@ def add_tasks(
     # Insert the record then increment the count of the parent task.
     if parent:
         try:
-            database.increment_count(parent)
+            database.update_table(
+                "tasks", {"subtask": "subtask + 1", "id": f"{parent}"}
+            )
         except:
             generate_migration_error()
 
@@ -166,6 +168,7 @@ def search_task(task_id) -> dict | None:
                 "priority",
                 "label",
                 "completed",
+                "parent_id",
             ],
             where_clause=f"WHERE id = {task_id}",
         )
@@ -185,6 +188,7 @@ def search_task(task_id) -> dict | None:
             "priority": task[5],
             "label": task[6] if task[6] else "None",
             "completed": (task[7]),
+            "parent_id": task[8],
         }
     return task_details
 
@@ -246,28 +250,19 @@ def update_task(updated_data: dict):
         generate_migration_error()
 
 
-def handle_delete(task_id):
+def handle_delete(current_task: dict):
     """
     Delete a task from the database
     """
-    try:
-        result = database.list_table(
-            table="tasks",
-            columns=[
-                "parent_id",
-            ],
-            where_clause=f"WHERE id = {task_id}",
-        )
-    except:
-        generate_migration_error()
-
-    parent = result[0][0]
-    if parent:
+    database.delete_task(current_task["id"])
+    if current_task["parent_id"]:
         try:
-            database.decrement_count(parent)
+            database.update_table(
+                "tasks",
+                {"subtask": "subtask - 1", "id": f"{current_task['parent_id']}"},
+            )
         except:
             generate_migration_error()
-    database.delete_task(task_id)
 
 
 def convert_to_console_date(date_str):

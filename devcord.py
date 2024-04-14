@@ -230,8 +230,11 @@ def task(
     """
     Modify a specific task.
     """
+
+    current_task = application.search_task(task_id)
+
     if delete:
-        application.handle_delete(task_id)
+        application.handle_delete(current_task)
         return
 
     if subtasks:
@@ -242,8 +245,6 @@ def task(
                 plain=ctx.obj["config"]["unicode"],
             )
         return
-
-    current_task = application.search_task(task_id)
 
     if not current_task:
         if current_task is not None:

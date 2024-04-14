@@ -40,7 +40,6 @@ def get_table(tasks, plain=True):
     table.add_column("Deadline", justify="center", style="white")
     table.add_column("Label", justify="center", style="white")
     table.add_column("ID", justify="center", style="white", no_wrap=True)
-    table.add_column("Subtask", justify="center", style="white", no_wrap=True)
     text_style = Style(color="#FFFFFF")
     bold_text_style = Style(color="#FFFFFF", bold=True)
     none_style = Style(color="magenta")
@@ -56,11 +55,6 @@ def get_table(tasks, plain=True):
             task["deadline"],
             f'[{bold_text_style if task["label"] != "None" else none_style}]{task["label"]}',
             f"[{text_style}]{task['id']}",
-            (
-                "[#FFFFFF]|☰"
-                if plain and task["subtask"] != 0
-                else "" if plain else str(task["subtask"])
-            ),
         )
     return table
 
