@@ -204,9 +204,11 @@ def get_subtasks(task_id: int):
                 "deadline",
                 "priority",
                 "label",
+                "description",
                 "subtasks",
             ],
             where_clause=f"WHERE parent_id = {task_id}",
+            order_by="ORDER BY completed ASC, status ASC, priority DESC",
         )
     except:
         generate_migration_error()
@@ -225,7 +227,8 @@ def get_subtasks(task_id: int):
                 ),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
-                "subtasks": result[6],
+                "description": result[6],
+                "subtasks": result[7],
             },
         )
     return final_results

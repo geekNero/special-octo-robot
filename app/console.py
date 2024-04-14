@@ -32,7 +32,7 @@ def get_status_color(status):
         return "#FFFFFF"
 
 
-def get_table(tasks, plain=True):
+def get_table(tasks, plain=False):
     table = Table(title="Tasks", highlight=True, leading=True)
     table.add_column("Priority", justify="center", style="white")
     table.add_column("Task", justify="left", style="white")
@@ -40,14 +40,30 @@ def get_table(tasks, plain=True):
     table.add_column("Deadline", justify="center", style="white")
     table.add_column("Label", justify="center", style="white")
     table.add_column("ID", justify="center", style="white", no_wrap=True)
+    table.add_column("Properties", justify="center", style="white")
     text_style = Style(color="#FFFFFF")
     bold_text_style = Style(color="#FFFFFF", bold=True)
     none_style = Style(color="magenta")
     for task in tasks:
+        properties = []
+        if task["description"] and task["description"] not in [
+            "None",
+            "No given description",
+        ]:
+            if plain:
+                properties.append("Description")
+            else:
+                properties.append("►")
+        if task["subtasks"] > 0:
+            if plain:
+                properties.append("Subtasks")
+            else:
+                properties.append("|☰")
+
         table.add_row(
             (
                 f"[{get_priority_color(task['priority'])}]●"
-                if plain
+                if not plain
                 else f"[{text_style}]{task['priority']}"
             ),
             f'[{text_style}]{task["title"]}',
@@ -55,6 +71,7 @@ def get_table(tasks, plain=True):
             task["deadline"],
             f'[{bold_text_style if task["label"] != "None" else none_style}]{task["label"]}',
             f"[{text_style}]{task['id']}",
+            f"[{text_style}]{','.join(properties)}",
         )
     return table
 
@@ -79,7 +96,7 @@ def sanitize_path(path):
     return True
 
 
-def print_tasks(tasks, output=None, path=None, plain=True):
+def print_tasks(tasks, output=None, path=None, plain=False):
 
     file = None
     if path:
@@ -96,7 +113,7 @@ def print_tasks(tasks, output=None, path=None, plain=True):
         console = Console()
 
     if path:
-        plain = False
+        plain = True
     if output == "json":
         result = json.dumps(tasks, indent=4)
         console.print_json(result)

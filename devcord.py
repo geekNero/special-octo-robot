@@ -141,7 +141,7 @@ def tasks(
                 task_list,
                 output,
                 path,
-                ctx.obj["config"]["unicode"],
+                ctx.obj["config"]["unicode"] is False,
             )
 
     elif add:
@@ -273,7 +273,7 @@ def task(
         if val:
             print_tasks(
                 tasks=val,
-                plain=ctx.obj["config"]["unicode"],
+                plain=ctx.obj["config"]["unicode"] is False,
             )
         return
 
