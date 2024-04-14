@@ -92,6 +92,7 @@ def cli(ctx):
 @click.option("-o", "--output", help="Specify Output Format", type=str)
 @click.option("--path", help="Specify Output File", type=str)
 @click.option("-pid", "--parent", help="Set the parent of a task", type=int)
+@click.option("-st", "--subtasks", is_flag=True, help="List all subtasks")
 def tasks(
     ctx,
     list=None,
@@ -108,6 +109,7 @@ def tasks(
     output=None,
     path=None,
     parent=None,
+    subtasks=False,
 ):
     """
     Create and List tasks.
@@ -134,6 +136,7 @@ def tasks(
             completed=completed,
             pending=pending,
             label=label,
+            subtasks=subtasks,
         )
 
         if task_list:

@@ -14,12 +14,15 @@ def list_tasks(
     completed=None,
     pending=None,
     label=None,
+    subtasks=False,
 ) -> list | None:
     """
     List all the tasks based on the filters.
     """
     order_by = "completed ASC, status ASC, priority DESC"
-    where_clause = ["parent_id ISNULL"]
+    where_clause = []
+    if not subtasks:
+        where_clause.append("parent_id ISNULL")
     if week:
         where_clause.append(
             "(deadline > date('now', 'weekday 0', '-7 days') AND deadline < date('now', 'weekday 1'))",
