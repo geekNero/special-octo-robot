@@ -57,7 +57,7 @@ def cli(ctx):
     "-w",
     "--week",
     is_flag=True,
-    help="Perform for  all the tasks for this week",
+    help="Perform for all the tasks for this week",
 )
 @click.option(
     "-dd",
@@ -212,9 +212,9 @@ def tasks(
     "-w",
     "--week",
     is_flag=True,
-    help="Perform for  all the tasks for this week",
+    help="Change deadline to this week",
 )
-@click.option("-t", "--today", is_flag=True, help="Perform for all the tasks for today")
+@click.option("-t", "--today", is_flag=True, help="Change deadline to today")
 @click.option("-dl", "--delete", is_flag=True, help="Delete task")
 @click.option("-n", "--name", help="Change the name of the task", type=str)
 @click.option("-p", "--priority", help="Change the priority of the task", type=int)
