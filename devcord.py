@@ -13,7 +13,6 @@ from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
-from app.database import delete_task
 from app.database import initialize
 from app.migrations import run_migrations
 
@@ -299,11 +298,11 @@ def task(
             description = current_task["description"]
         current_task["description"] = click.edit(description)
 
-    elif delete:
+    application.update_task(current_task)
+
+    if delete:
         application.handle_delete(current_task)
         return
-
-    application.update_task(current_task)
 
 
 @cli.command()
