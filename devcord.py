@@ -231,7 +231,7 @@ def task(
     Modify a specific task.
     """
     if delete:
-        delete_task(task_id)
+        application.handle_delete(task_id)
         return
 
     if subtasks:

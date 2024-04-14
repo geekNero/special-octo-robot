@@ -57,6 +57,7 @@ def list_tasks(
                 "priority",
                 "label",
                 "description",
+                "subtask",
             ],
             where_clause=where_clause,
             order_by=f"ORDER BY {order_by}",
@@ -80,6 +81,7 @@ def list_tasks(
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
                 "description": result[6],
+                "subtask": result[7],
             },
         )
     return final_results
@@ -137,6 +139,13 @@ def add_tasks(
         database.insert_into_table(table="tasks", columns=columns, values=values)
     except:
         generate_migration_error()
+        return
+    # Insert the record then increment the count of the parent task.
+    if parent:
+        try:
+            database.increment_count(parent)
+        except:
+            generate_migration_error()
 
 
 def search_task(task_id) -> dict | None:
@@ -191,6 +200,7 @@ def get_subtasks(task_id: int):
                 "deadline",
                 "priority",
                 "label",
+                "subtask",
             ],
             where_clause=f"WHERE parent_id = {task_id}",
         )
@@ -211,6 +221,7 @@ def get_subtasks(task_id: int):
                 ),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
+                "subtask": result[6],
             },
         )
     return final_results
@@ -233,6 +244,30 @@ def update_task(updated_data: dict):
         database.update_table("tasks", updated_data)
     except:
         generate_migration_error()
+
+
+def handle_delete(task_id):
+    """
+    Delete a task from the database
+    """
+    try:
+        result = database.list_table(
+            table="tasks",
+            columns=[
+                "parent_id",
+            ],
+            where_clause=f"WHERE id = {task_id}",
+        )
+    except:
+        generate_migration_error()
+
+    parent = result[0][0]
+    if parent:
+        try:
+            database.decrement_count(parent)
+        except:
+            generate_migration_error()
+    database.delete_task(task_id)
 
 
 def convert_to_console_date(date_str):
