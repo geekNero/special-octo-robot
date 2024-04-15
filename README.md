@@ -185,6 +185,19 @@ $ devcord task 10 -pd
 $ devcord task 10 --pending
 ```
 
+Set deadline to this week:
+
+```bash
+$ devcord task 10 -w
+$ devcord task 10 --week
+```
+
+Set deadline to today:
+
+```bash
+$ devcord task 10 -t
+$ devcord task 10 --today
+```
 
 Delete Task:
 

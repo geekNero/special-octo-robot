@@ -13,7 +13,7 @@ def initialize():
         """CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR NOT NULL, parent_id INTEGER,
-        description TEXT,
+        description TEXT DEFAULT 'None',
         status VARCHAR DEFAULT 'Pending',
         deadline DATE DEFAULT 'None',
         priority INTEGER DEFAULT 0,

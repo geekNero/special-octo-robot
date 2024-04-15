@@ -13,7 +13,6 @@ from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
-from app.database import delete_task
 from app.database import initialize
 from app.migrations import run_migrations
 
@@ -57,7 +56,7 @@ def cli(ctx):
     "-w",
     "--week",
     is_flag=True,
-    help="Perform for  all the tasks for this week",
+    help="Perform for all the tasks for this week",
 )
 @click.option(
     "-dd",
@@ -92,6 +91,7 @@ def cli(ctx):
 @click.option("-o", "--output", help="Specify Output Format", type=str)
 @click.option("--path", help="Specify Output File", type=str)
 @click.option("-pid", "--parent", help="Set the parent of a task", type=int)
+@click.option("-st", "--subtasks", is_flag=True, help="List all subtasks")
 def tasks(
     ctx,
     list=None,
@@ -108,6 +108,7 @@ def tasks(
     output=None,
     path=None,
     parent=None,
+    subtasks=False,
 ):
     """
     Create and List tasks.
@@ -134,6 +135,7 @@ def tasks(
             completed=completed,
             pending=pending,
             label=label,
+            subtasks=subtasks,
         )
 
         if task_list:
@@ -208,6 +210,13 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
+@click.option(
+    "-w",
+    "--week",
+    is_flag=True,
+    help="Change deadline to this week",
+)
+@click.option("-t", "--today", is_flag=True, help="Change deadline to today")
 @click.option("-dl", "--delete", is_flag=True, help="Delete task")
 @click.option("-n", "--name", help="Change the name of the task", type=str)
 @click.option("-p", "--priority", help="Change the priority of the task", type=int)
@@ -221,6 +230,8 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
+    week=None,
+    today=None,
     delete=None,
     name=None,
     priority=None,
@@ -256,7 +267,11 @@ def task(
         current_task["priority"] = priority
     if label:
         current_task["label"] = label
-    if deadline:
+    if week:
+        current_task["deadline"] = "week"
+    elif today:
+        current_task["deadline"] = "today"
+    elif deadline:
         try:
             current_task["deadline"] = convert_to_db_date(deadline)
         except ValueError:
@@ -283,11 +298,11 @@ def task(
             description = current_task["description"]
         current_task["description"] = click.edit(description)
 
-    elif delete:
+    application.update_task(current_task)
+
+    if delete:
         application.handle_delete(current_task)
         return
-
-    application.update_task(current_task)
 
 
 @cli.command()
