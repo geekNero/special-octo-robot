@@ -39,7 +39,6 @@ def get_table(tasks, plain=False):
     table.add_column("Status", justify="center", style="white")
     table.add_column("Deadline", justify="center", style="white")
     table.add_column("Label", justify="center", style="white")
-    table.add_column("ID", justify="center", style="white", no_wrap=True)
     table.add_column("Properties", justify="center", style="white")
     text_style = Style(color="#FFFFFF")
     bold_text_style = Style(color="#FFFFFF", bold=True)
@@ -70,7 +69,6 @@ def get_table(tasks, plain=False):
             f'[{get_status_color(task["status"])}][italic]{task["status"]}',
             task["deadline"],
             f'[{bold_text_style if task["label"] != "None" else none_style}]{task["label"]}',
-            f"[{text_style}]{task['id']}",
             f"[{text_style}]{','.join(properties)}",
         )
     return table

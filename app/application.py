@@ -246,7 +246,7 @@ def update_task(updated_data: dict):
         updated_data["deadline"] = str(weekend)
     elif updated_data["deadline"] == "today":
         updated_data["deadline"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-    else:
+    elif updated_data["deadline"] not in [None, "None"]:
         updated_data["deadline"] = str(convert_to_db_date(updated_data["deadline"]))
 
     if updated_data["status"] == "Completed":
