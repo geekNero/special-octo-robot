@@ -2,6 +2,9 @@ import os
 from datetime import datetime
 
 import click
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import FuzzyWordCompleter
+from prompt_toolkit.completion import ThreadedCompleter
 
 from app import application
 from app.__version__ import VERSION
@@ -179,7 +182,6 @@ def tasks(
 
 @cli.command()
 @click.pass_context
-@click.argument("task_id", type=int, required=True)
 @click.option(
     "-d",
     "--desc",
@@ -224,7 +226,6 @@ def tasks(
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
 def task(
     ctx,
-    task_id,
     desc=None,
     inprogress=None,
     completed=None,
@@ -242,7 +243,23 @@ def task(
     Modify a specific task.
     """
 
-    current_task = application.search_task(task_id)
+    all_tasks = application.list_tasks(subtasks=True)
+    task_titles = [each_task["title"] for each_task in all_tasks]
+
+    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
+    select_task_title = prompt(
+        "Enter any part from title of the task: \n",
+        completer=task_completer,
+    )
+
+    current_task = next(
+        (
+            each_task
+            for each_task in all_tasks
+            if each_task["title"] == select_task_title
+        ),
+        None,
+    )
 
     if not current_task:
         if current_task is not None:
@@ -284,7 +301,7 @@ def task(
             return
 
     if subtasks:
-        val = application.get_subtasks(task_id)
+        val = application.get_subtasks(current_task["id"])
         if val:
             print_tasks(
                 tasks=val,
