@@ -247,7 +247,7 @@ def update_task(updated_data: dict):
     elif updated_data["deadline"] == "today":
         updated_data["deadline"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     else:
-        updated_data["deadline"] = str(updated_data["deadline"])
+        updated_data["deadline"] = str(convert_to_db_date(updated_data["deadline"]))
 
     if updated_data["status"] == "Completed":
         updated_data["completed"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
@@ -296,12 +296,18 @@ def handle_delete(current_task: dict):
                 generate_migration_error()
 
 
-def convert_to_console_date(date_str):
+def convert_to_console_date(date_str, title=None):
     """
     Convert date from "YYYY-MM-DD" to "dd/mm/yyyy"
     """
     date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%d/%m/%Y")
+
+
+def convert_to_db_date(date_str):
+    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
+    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+    return date_obj.strftime("%Y-%m-%d")
 
 
 def sanitize_text(text):

@@ -15,6 +15,15 @@ pip install devcord
 
 # Post Installation
 
+To avoid typing devcord repetitively, register an alias in your shell configuration file.
+
+For bash:
+
+```bash
+alias tasks="devcord tasks"
+alias task="devcord task"
+```
+
 On each upgrade, run:
 
 ```bash
@@ -146,13 +155,14 @@ $ devcord tasks -l --path "path/to/file"
 ```
 ## For managing tasks
 
-Pass the task ID after the **"task"** keyword to perform any action on the task.
+Pass the keyword to perform required action on the task. The command will then prompt you through a fuzzy finder to enter
+the task title. The keyword action would be performed on the selected task.
 
 Viewing description:
 
 ```bash
-$ devcord task 1 -d
-$ devcord task 1 --desc
+$ devcord task -d
+$ devcord task --desc
 ```
 
 _Opens a scrollable text box with description_
@@ -160,77 +170,77 @@ _Opens a scrollable text box with description_
 Show substasks:
 
 ```bash
-$ devcord task 4 -st
-$ devcord task 4 --subtasks
+$ devcord task -st
+$ devcord task --subtasks
 ```
 
 Mark as inprogress:
 
 ```bash
-$ devcord task 3 -i
-$ devcord task 3 --inprogress
+$ devcord task -i
+$ devcord task --inprogress
 ```
 
 Mark as complete:
 
 ```bash
-$ devcord task 2 -c
-$ devcord task 2 --completed
+$ devcord task -c
+$ devcord task --completed
 ```
 
 Mark as pending:
 
 ```bash
-$ devcord task 10 -pd
-$ devcord task 10 --pending
+$ devcord task -pd
+$ devcord task --pending
 ```
 
 Set deadline to this week:
 
 ```bash
-$ devcord task 10 -w
-$ devcord task 10 --week
+$ devcord task -w
+$ devcord task --week
 ```
 
 Set deadline to today:
 
 ```bash
-$ devcord task 10 -t
-$ devcord task 10 --today
+$ devcord task -t
+$ devcord task --today
 ```
 
 Delete Task:
 
 ```bash
-$ devcord task 10 -dl
-$ devcord task 10 --delete
+$ devcord task -dl
+$ devcord task --delete
 ```
 
 
 Modify Title:
 
 ```bash
-$ devcord task 10 -n "new title"
-$ devcord task 10 --name "new title"
+$ devcord task -n "new title"
+$ devcord task --name "new title"
 ```
 
 Modify Priority:
 
 ```bash
-$ devcord task 10 -p 3
-$ devcord task 10 --priority 3
+$ devcord task -p 3
+$ devcord task --priority 3
 ```
 
 Modify Deadline:
 
 ```bash
-$ devcord task 10 -dd "dd/mm/yyyy"
-$ devcord task 10 --deadline "dd/mm/yyyy"
+$ devcord task -dd "dd/mm/yyyy"
+$ devcord task --deadline "dd/mm/yyyy"
 ```
 
 Modify Labels:
 
 ```bash
-$ devcord task 10 -lb "label"
-$ devcord task 10 --label "label"
+$ devcord task -lb "label"
+$ devcord task --label "label"
 ```
