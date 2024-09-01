@@ -55,6 +55,7 @@ def list_tasks(
             columns=[
                 "id",
                 "title",
+                "parent_id",
                 "status",
                 "deadline",
                 "priority",
@@ -75,16 +76,17 @@ def list_tasks(
             {
                 "id": result[0],
                 "title": result[1],
-                "status": result[2],
+                "parent_id": result[2],
+                "status": result[3],
                 "deadline": (
-                    result[3]
-                    if str(result[3]) == "None"
-                    else convert_to_console_date(result[3])
+                    result[4]
+                    if str(result[4]) == "None"
+                    else convert_to_console_date(result[4])
                 ),
-                "priority": result[4],
-                "label": result[5] if result[5] else "None",
-                "description": result[6],
-                "subtasks": result[7],
+                "priority": result[5],
+                "label": result[6] if result[6] else "None",
+                "description": result[7],
+                "subtasks": result[8],
             },
         )
     return final_results
@@ -107,10 +109,10 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f'"{sanitize_text(title)}"']
+    values = [f"'{sanitize_text(title)}'"]
     if description:
         columns.append("description")
-        values.append(f'"{sanitize_text(description)}"')
+        values.append(f"'{sanitize_text(description)}'")
     if priority:
         columns.append("priority")
         values.append(str(priority))
@@ -134,10 +136,10 @@ def add_tasks(
         values.append("'Pending'")
     if label:
         columns.append("label")
-        values.append(f'"{sanitize_text(label)}"')
+        values.append(f"'{sanitize_text(label)}'")
     if parent:
         columns.append("parent_id")
-        values.append(str(parent))
+        values.append(str(parent["id"]))
     try:
         database.insert_into_table(table="tasks", columns=columns, values=values)
     except:
@@ -147,7 +149,7 @@ def add_tasks(
     if parent:
         database.update_table(
             "tasks",
-            {"subtasks": "subtasks + 1", "id": f"{parent}"},
+            {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
         )
 
 
@@ -261,7 +263,7 @@ def update_task(updated_data: dict):
             continue
 
         if type(value) is str:
-            updated_data[key] = f"'{value}'"
+            updated_data[key] = f"'{sanitize_text(value)}'"
 
         final_data[key] = updated_data[key]
 
@@ -311,7 +313,7 @@ def convert_to_db_date(date_str):
 
 
 def sanitize_text(text):
-    return text.strip().replace('"', "'")
+    return text.strip().replace("'", '"')
 
 
 def generate_migration_error():
