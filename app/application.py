@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from click import echo
 from click import style
@@ -14,18 +14,21 @@ def list_tasks(
     completed=None,
     pending=None,
     label=None,
+    subtasks=False,
 ) -> list | None:
     """
     List all the tasks based on the filters.
     """
     order_by = "completed ASC, status ASC, priority DESC"
-    where_clause = ["parent_id ISNULL"]
+    where_clause = []
+    if not subtasks:
+        where_clause.append("parent_id ISNULL")
     if week:
         where_clause.append(
-            "(deadline > date('now', 'weekday 0', '-7 days') AND deadline < date('now', 'weekday 1'))",
+            "(completed > date('now', 'weekday 0', '-7 days') AND completed < date('now', 'weekday 1'))",
         )
     elif today:
-        where_clause.append("(deadline = date('now'))")
+        where_clause.append("(completed = date('now'))")
     if inprogress or completed or pending:
         clause = []
         if inprogress:
@@ -52,6 +55,7 @@ def list_tasks(
             columns=[
                 "id",
                 "title",
+                "parent_id",
                 "status",
                 "deadline",
                 "priority",
@@ -72,16 +76,17 @@ def list_tasks(
             {
                 "id": result[0],
                 "title": result[1],
-                "status": result[2],
+                "parent_id": result[2],
+                "status": result[3],
                 "deadline": (
-                    result[3]
-                    if str(result[3]) == "None"
-                    else convert_to_console_date(result[3])
+                    result[4]
+                    if str(result[4]) == "None"
+                    else convert_to_console_date(result[4])
                 ),
-                "priority": result[4],
-                "label": result[5] if result[5] else "None",
-                "description": result[6],
-                "subtasks": result[7],
+                "priority": result[5],
+                "label": result[6] if result[6] else "None",
+                "description": result[7],
+                "subtasks": result[8],
             },
         )
     return final_results
@@ -104,10 +109,10 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f'"{sanitize_text(title)}"']
+    values = [f"'{sanitize_text(title)}'"]
     if description:
         columns.append("description")
-        values.append(f'"{sanitize_text(description)}"')
+        values.append(f"'{sanitize_text(description)}'")
     if priority:
         columns.append("priority")
         values.append(str(priority))
@@ -131,10 +136,10 @@ def add_tasks(
         values.append("'Pending'")
     if label:
         columns.append("label")
-        values.append(f'"{sanitize_text(label)}"')
+        values.append(f"'{sanitize_text(label)}'")
     if parent:
         columns.append("parent_id")
-        values.append(str(parent))
+        values.append(str(parent["id"]))
     try:
         database.insert_into_table(table="tasks", columns=columns, values=values)
     except:
@@ -144,7 +149,7 @@ def add_tasks(
     if parent:
         database.update_table(
             "tasks",
-            {"subtasks": "subtasks + 1", "id": f"{parent}"},
+            {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
         )
 
 
@@ -235,21 +240,37 @@ def get_subtasks(task_id: int):
 
 
 def update_task(updated_data: dict):
-    """If marked as completed then set datetime as now else prev value retain"""
-    updated_data["deadline"] = str(updated_data["deadline"])
+    """If marked as completed then set datetime as now else retain prev value"""
+
+    if updated_data["deadline"] == "week":
+        today = datetime.date.today()
+        weekend = today + datetime.timedelta(days=6 - today.weekday())
+        updated_data["deadline"] = str(weekend)
+    elif updated_data["deadline"] == "today":
+        updated_data["deadline"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
+    elif updated_data["deadline"] not in [None, "None"]:
+        updated_data["deadline"] = str(convert_to_db_date(updated_data["deadline"]))
+
     if updated_data["status"] == "Completed":
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        updated_data["completed"] = str(current_date)
+        updated_data["completed"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     else:
         updated_data["completed"] = updated_data["deadline"]
 
-    for key, value in updated_data.items():
+    final_data = {}
 
-        if type(value) is str or not value:
-            updated_data[key] = f'"{value}"'
+    for key, value in updated_data.items():
+        if value is None:
+            continue
+
+        if type(value) is str:
+            updated_data[key] = f"'{sanitize_text(value)}'"
+
+        final_data[key] = updated_data[key]
+
     try:
-        database.update_table("tasks", updated_data)
-    except:
+        database.update_table("tasks", final_data)
+    except Exception as e:
+        print(e)
         generate_migration_error()
 
 
@@ -258,8 +279,16 @@ def handle_delete(current_task: dict):
     Delete a task from the database
     """
     database.delete_task(current_task["id"])
+    children = database.list_table(
+        table="tasks",
+        columns=["id"],
+        where_clause=f"WHERE parent_id = {current_task['id']}",
+    )
+    for child in children:
+        database.delete_task(child[0])
     if current_task["parent_id"]:
-        if search_task(current_task["parent_id"])["subtasks"] > 0:
+        parent = search_task(current_task["parent_id"])
+        if parent and parent["subtasks"] > 0:
             try:
                 database.update_table(
                     "tasks",
@@ -269,16 +298,22 @@ def handle_delete(current_task: dict):
                 generate_migration_error()
 
 
-def convert_to_console_date(date_str):
+def convert_to_console_date(date_str, title=None):
     """
     Convert date from "YYYY-MM-DD" to "dd/mm/yyyy"
     """
-    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%d/%m/%Y")
 
 
+def convert_to_db_date(date_str):
+    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
+    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+    return date_obj.strftime("%Y-%m-%d")
+
+
 def sanitize_text(text):
-    return text.strip().replace('"', "'")
+    return text.strip().replace("'", '"')
 
 
 def generate_migration_error():

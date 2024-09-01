@@ -2,6 +2,9 @@ import os
 from datetime import datetime
 
 import click
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import FuzzyWordCompleter
+from prompt_toolkit.completion import ThreadedCompleter
 
 from app import application
 from app.__version__ import VERSION
@@ -13,7 +16,6 @@ from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
-from app.database import delete_task
 from app.database import initialize
 from app.migrations import run_migrations
 
@@ -57,7 +59,7 @@ def cli(ctx):
     "-w",
     "--week",
     is_flag=True,
-    help="Perform for  all the tasks for this week",
+    help="Perform for all the tasks for this week",
 )
 @click.option(
     "-dd",
@@ -91,7 +93,7 @@ def cli(ctx):
 )
 @click.option("-o", "--output", help="Specify Output Format", type=str)
 @click.option("--path", help="Specify Output File", type=str)
-@click.option("-pid", "--parent", help="Set the parent of a task", type=int)
+@click.option("-st", "--subtask", is_flag=True, help="List or add subtasks")
 def tasks(
     ctx,
     list=None,
@@ -107,7 +109,7 @@ def tasks(
     label=None,
     output=None,
     path=None,
-    parent=None,
+    subtask=False,
 ):
     """
     Create and List tasks.
@@ -134,6 +136,7 @@ def tasks(
             completed=completed,
             pending=pending,
             label=label,
+            subtasks=subtask,
         )
 
         if task_list:
@@ -145,13 +148,14 @@ def tasks(
             )
 
     elif add:
+        parent = None
         description = "No given description"
         if desc:
             description = click.edit()
-        if parent:
-            val = application.search_task(parent)
-            if not val:
-                if val is not None:
+        if subtask:
+            parent = fuzzy_search_task()
+            if not parent:
+                if parent is not None:
                     click.echo(
                         click.style(
                             "Error: Parent task does not exist.",
@@ -177,7 +181,6 @@ def tasks(
 
 @cli.command()
 @click.pass_context
-@click.argument("task_id", type=int, required=True)
 @click.option(
     "-d",
     "--desc",
@@ -208,6 +211,13 @@ def tasks(
     is_flag=True,
     help="List All Subtask Of Task",
 )
+@click.option(
+    "-w",
+    "--week",
+    is_flag=True,
+    help="Change deadline to this week",
+)
+@click.option("-t", "--today", is_flag=True, help="Change deadline to today")
 @click.option("-dl", "--delete", is_flag=True, help="Delete task")
 @click.option("-n", "--name", help="Change the name of the task", type=str)
 @click.option("-p", "--priority", help="Change the priority of the task", type=int)
@@ -215,12 +225,13 @@ def tasks(
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
 def task(
     ctx,
-    task_id,
     desc=None,
     inprogress=None,
     completed=None,
     pending=None,
     subtasks=None,
+    week=None,
+    today=None,
     delete=None,
     name=None,
     priority=None,
@@ -231,7 +242,7 @@ def task(
     Modify a specific task.
     """
 
-    current_task = application.search_task(task_id)
+    current_task = fuzzy_search_task()
 
     if not current_task:
         if current_task is not None:
@@ -256,7 +267,11 @@ def task(
         current_task["priority"] = priority
     if label:
         current_task["label"] = label
-    if deadline:
+    if week:
+        current_task["deadline"] = "week"
+    elif today:
+        current_task["deadline"] = "today"
+    elif deadline:
         try:
             current_task["deadline"] = convert_to_db_date(deadline)
         except ValueError:
@@ -269,7 +284,7 @@ def task(
             return
 
     if subtasks:
-        val = application.get_subtasks(task_id)
+        val = application.get_subtasks(current_task["id"])
         if val:
             print_tasks(
                 tasks=val,
@@ -283,11 +298,11 @@ def task(
             description = current_task["description"]
         current_task["description"] = click.edit(description)
 
-    elif delete:
+    application.update_task(current_task)
+
+    if delete:
         application.handle_delete(current_task)
         return
-
-    application.update_task(current_task)
 
 
 @cli.command()
@@ -319,6 +334,27 @@ def init(ctx, migrate=None):
 
     ctx.obj["config"]["version"] = VERSION
     update_config(config_path, ctx.obj["config"])
+
+
+def fuzzy_search_task() -> dict:
+    all_tasks = application.list_tasks(subtasks=True)
+    task_titles = [each_task["title"] for each_task in all_tasks]
+
+    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
+    select_task_title = prompt(
+        "Enter any part from title of the task: \n",
+        completer=task_completer,
+    )
+
+    current_task = next(
+        (
+            each_task
+            for each_task in all_tasks
+            if each_task["title"] == select_task_title
+        ),
+        None,
+    )
+    return current_task
 
 
 def convert_to_db_date(date_str):
