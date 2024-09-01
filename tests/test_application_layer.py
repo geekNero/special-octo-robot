@@ -27,12 +27,16 @@ def fill_db():
 
 class ListTasks(unittest.TestCase):
     def test_list_task_with_empty_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         # Test with no entries in table
         self.assertEqual(list_tasks(), [])
 
     def test_list_task_with_filled_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -119,6 +123,8 @@ class ListTasks(unittest.TestCase):
         )
 
     def test_list_task_with_priority_and_today(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -126,6 +132,8 @@ class ListTasks(unittest.TestCase):
         self.assertEqual(list_tasks(priority=1, today=True), [])
 
     def test_list_task_with_priority(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -145,6 +153,8 @@ class ListTasks(unittest.TestCase):
             ])
 
     def test_list_task_with_today(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -165,6 +175,8 @@ class ListTasks(unittest.TestCase):
         )
 
     def test_list_task_with_week(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -207,6 +219,8 @@ class ListTasks(unittest.TestCase):
                          )
 
     def test_list_task_with_status(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
@@ -238,6 +252,8 @@ class ListTasks(unittest.TestCase):
         )
 
     def test_list_task_with_label(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
         # set test environment
         create_db()
         fill_db()
