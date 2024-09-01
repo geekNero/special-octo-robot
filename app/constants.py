@@ -14,8 +14,12 @@ else:
     path = os.path.join(os.getenv("HOME"), ".devcord")
 
 if path:
-    db_path = os.path.join(path, "data.db")
-    config_path = os.path.join(path, "config.json")
+    if os.environ.get("DEBUG", "") == "True":
+        db_path = os.path.join(path, "test.db")
+        config_path = os.path.join(path, "test_config.json")
+    else:
+        db_path = os.path.join(path, "data.db")
+        config_path = os.path.join(path, "config.json")
 else:
     db_path = None
     config_path = None
