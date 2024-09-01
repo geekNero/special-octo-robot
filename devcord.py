@@ -93,8 +93,7 @@ def cli(ctx):
 )
 @click.option("-o", "--output", help="Specify Output Format", type=str)
 @click.option("--path", help="Specify Output File", type=str)
-@click.option("-pid", "--parent", help="Set the parent of a task", type=int)
-@click.option("-st", "--subtasks", is_flag=True, help="List all subtasks")
+@click.option("-st", "--subtask", is_flag=True, help="List or add subtasks")
 def tasks(
     ctx,
     list=None,
@@ -110,8 +109,7 @@ def tasks(
     label=None,
     output=None,
     path=None,
-    parent=None,
-    subtasks=False,
+    subtask=False,
 ):
     """
     Create and List tasks.
@@ -138,7 +136,7 @@ def tasks(
             completed=completed,
             pending=pending,
             label=label,
-            subtasks=subtasks,
+            subtasks=subtask,
         )
 
         if task_list:
@@ -150,13 +148,14 @@ def tasks(
             )
 
     elif add:
+        parent = None
         description = "No given description"
         if desc:
             description = click.edit()
-        if parent:
-            val = application.search_task(parent)
-            if not val:
-                if val is not None:
+        if subtask:
+            parent = fuzzy_search_task()
+            if not parent:
+                if parent is not None:
                     click.echo(
                         click.style(
                             "Error: Parent task does not exist.",
@@ -243,23 +242,7 @@ def task(
     Modify a specific task.
     """
 
-    all_tasks = application.list_tasks(subtasks=True)
-    task_titles = [each_task["title"] for each_task in all_tasks]
-
-    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-    select_task_title = prompt(
-        "Enter any part from title of the task: \n",
-        completer=task_completer,
-    )
-
-    current_task = next(
-        (
-            each_task
-            for each_task in all_tasks
-            if each_task["title"] == select_task_title
-        ),
-        None,
-    )
+    current_task = fuzzy_search_task()
 
     if not current_task:
         if current_task is not None:
@@ -351,6 +334,27 @@ def init(ctx, migrate=None):
 
     ctx.obj["config"]["version"] = VERSION
     update_config(config_path, ctx.obj["config"])
+
+
+def fuzzy_search_task() -> dict:
+    all_tasks = application.list_tasks(subtasks=True)
+    task_titles = [each_task["title"] for each_task in all_tasks]
+
+    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
+    select_task_title = prompt(
+        "Enter any part from title of the task: \n",
+        completer=task_completer,
+    )
+
+    current_task = next(
+        (
+            each_task
+            for each_task in all_tasks
+            if each_task["title"] == select_task_title
+        ),
+        None,
+    )
+    return current_task
 
 
 def convert_to_db_date(date_str):
