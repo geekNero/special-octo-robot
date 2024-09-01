@@ -211,7 +211,18 @@ class ListTasks(unittest.TestCase):
         create_db()
         fill_db()
 
-        self.assertEqual(list_tasks(inprogress=True), [
+        self.assertEqual(list_tasks(inprogress=True, completed=True), [
+                {
+                    "id": 5,
+                    "title": "Task 5",
+                    "parent_id": None,
+                    "status": "Completed",
+                    "deadline": "None",
+                    "priority": 5,
+                    "label": "None",
+                    "description": "Description 5",
+                    "subtasks": 0,
+                },
                 {
                     "id": 6,
                     "title": "Task 6",
@@ -222,7 +233,7 @@ class ListTasks(unittest.TestCase):
                     "label": "None",
                     "description": "Description 6",
                     "subtasks": 0,
-                }
+                },
             ]
         )
 
