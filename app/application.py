@@ -55,6 +55,7 @@ def list_tasks(
             columns=[
                 "id",
                 "title",
+                "parent_id",
                 "status",
                 "deadline",
                 "priority",
@@ -75,16 +76,17 @@ def list_tasks(
             {
                 "id": result[0],
                 "title": result[1],
-                "status": result[2],
+                "parent_id": result[2],
+                "status": result[3],
                 "deadline": (
-                    result[3]
-                    if str(result[3]) == "None"
-                    else convert_to_console_date(result[3])
+                    result[4]
+                    if str(result[4]) == "None"
+                    else convert_to_console_date(result[4])
                 ),
-                "priority": result[4],
-                "label": result[5] if result[5] else "None",
-                "description": result[6],
-                "subtasks": result[7],
+                "priority": result[5],
+                "label": result[6] if result[6] else "None",
+                "description": result[7],
+                "subtasks": result[8],
             },
         )
     return final_results
@@ -137,7 +139,7 @@ def add_tasks(
         values.append(f'"{sanitize_text(label)}"')
     if parent:
         columns.append("parent_id")
-        values.append(str(parent))
+        values.append(str(parent["id"]))
     try:
         database.insert_into_table(table="tasks", columns=columns, values=values)
     except:
@@ -147,7 +149,7 @@ def add_tasks(
     if parent:
         database.update_table(
             "tasks",
-            {"subtasks": "subtasks + 1", "id": f"{parent}"},
+            {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
         )
 
 
