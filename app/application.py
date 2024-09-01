@@ -109,10 +109,10 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f'"{sanitize_text(title)}"']
+    values = [f"'{sanitize_text(title)}'"]
     if description:
         columns.append("description")
-        values.append(f'"{sanitize_text(description)}"')
+        values.append(f"'{sanitize_text(description)}'")
     if priority:
         columns.append("priority")
         values.append(str(priority))
@@ -136,7 +136,7 @@ def add_tasks(
         values.append("'Pending'")
     if label:
         columns.append("label")
-        values.append(f'"{sanitize_text(label)}"')
+        values.append(f"'{sanitize_text(label)}'")
     if parent:
         columns.append("parent_id")
         values.append(str(parent["id"]))
@@ -263,7 +263,7 @@ def update_task(updated_data: dict):
             continue
 
         if type(value) is str:
-            updated_data[key] = f"'{value}'"
+            updated_data[key] = f"'{sanitize_text(value)}'"
 
         final_data[key] = updated_data[key]
 
@@ -313,7 +313,7 @@ def convert_to_db_date(date_str):
 
 
 def sanitize_text(text):
-    return text.strip().replace('"', "'")
+    return text.strip().replace("'", '"')
 
 
 def generate_migration_error():
