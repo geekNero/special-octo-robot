@@ -25,112 +25,226 @@ def fill_db():
     add_tasks(title='Child of child task 1', parent={"id": 9}, week=True)
 
 
-class Tasks(unittest.TestCase):
-    def test_list_task(self):
+class ListTasks(unittest.TestCase):
+    def test_list_task_with_empty_db(self):
         # set test environment
         create_db()
         # Test with no entries in table
         self.assertEqual(list_tasks(), [])
+
+    def test_list_task_with_filled_db(self):
+        # set test environment
+        create_db()
         fill_db()
 
-        tests = []
-        # test case 1
-        tests.append({
-         "params": {
-                "priority": None,
-                "today": False,
-                "week": False,
-                "inprogress": False,
-                "completed": False,
-                "pending": False,
-                "label": None,
-                "subtasks": False,
-            },
-        "expected": [
-    {
-        "id": 8,
-        "title": "Task 8",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "11/09/2000",
-        "priority": 3,
-        "label": "None",
-        "description": "None",
-        "subtasks": 0,
-    },
-    {
-        "id": 2,
-        "title": "Task 2",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "01/09/2024",
-        "priority": 4,
-        "label": "None",
-        "description": "Description 2",
-        "subtasks": 0,
-    },
-    {
-        "id": 3,
-        "title": "Task 3",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "01/09/2024",
-        "priority": 2,
-        "label": "None",
-        "description": "Description 3",
-        "subtasks": 0,
-    },
-    {
-        "id": 4,
-        "title": "Task 4",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "11/09/2024",
-        "priority": 3,
-        "label": "None",
-        "description": "Description 4",
-        "subtasks": 0,
-    },
-    {
-        "id": 6,
-        "title": "Task 6",
-        "parent_id": None,
-        "status": "In Progress",
-        "deadline": "None",
-        "priority": 0,
-        "label": "None",
-        "description": "Description 6",
-        "subtasks": 0,
-    },
-    {
-        "id": 1,
-        "title": "Task 1",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "None",
-        "priority": 1,
-        "label": "None",
-        "description": "Description 1",
-        "subtasks": 1,
-    },
-    {
-        "id": 7,
-        "title": "Task 7",
-        "parent_id": None,
-        "status": "Pending",
-        "deadline": "None",
-        "priority": 0,
-        "label": "None",
-        "description": "Description 7",
-        "subtasks": 0,
-    },
-]
+        self.assertEqual(list_tasks(), [
+                {
+                    "id": 8,
+                    "title": "Task 8",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "11/09/2000",
+                    "priority": 3,
+                    "label": "None",
+                    "description": "None",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 2,
+                    "title": "Task 2",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "31/08/2024",
+                    "priority": 4,
+                    "label": "None",
+                    "description": "Description 2",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 3,
+                    "title": "Task 3",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "01/09/2024",
+                    "priority": 2,
+                    "label": "None",
+                    "description": "Description 3",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 4,
+                    "title": "Task 4",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "10/09/2024",
+                    "priority": 3,
+                    "label": "None",
+                    "description": "Description 4",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 6,
+                    "title": "Task 6",
+                    "parent_id": None,
+                    "status": "In Progress",
+                    "deadline": "None",
+                    "priority": 0,
+                    "label": "None",
+                    "description": "Description 6",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 1,
+                    "title": "Task 1",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 1,
+                    "label": "None",
+                    "description": "Description 1",
+                    "subtasks": 1,
+                },
+                {
+                    "id": 7,
+                    "title": "Task 7",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 0,
+                    "label": "None",
+                    "description": "Description 7",
+                    "subtasks": 0,
+                },
+            ]
+        )
 
+    def test_list_task_with_priority_and_today(self):
+        # set test environment
+        create_db()
+        fill_db()
 
-        })
+        self.assertEqual(list_tasks(priority=1, today=True), [])
 
-        for test in tests:
-            self.assertEqual(list_tasks(**test["params"]), test["expected"])
+    def test_list_task_with_priority(self):
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(list_tasks(priority=1),[
+                {
+                    "id": 1,
+                    "title": "Task 1",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 1,
+                    "label": "None",
+                    "description": "Description 1",
+                    "subtasks": 1,
+                }
+            ])
+
+    def test_list_task_with_today(self):
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(list_tasks(today=True), [
+                {
+                    "id": 2,
+                    "title": "Task 2",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "31/08/2024",
+                    "priority": 4,
+                    "label": "None",
+                    "description": "Description 2",
+                    "subtasks": 0,
+                }
+            ]
+        )
+
+    def test_list_task_with_week(self):
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(list_tasks(week=True, subtasks=True), [
+                {
+                    "id": 2,
+                    "title": "Task 2",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "31/08/2024",
+                    "priority": 4,
+                    "label": "None",
+                    "description": "Description 2",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 3,
+                    "title": "Task 3",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "01/09/2024",
+                    "priority": 2,
+                    "label": "None",
+                    "description": "Description 3",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 10,
+                    "title": "Child of child task 1",
+                    "parent_id": 9,
+                    "status": "Pending",
+                    "deadline": "01/09/2024",
+                    "priority": 0,
+                    "label": "None",
+                    "description": "None",
+                    "subtasks": 0,
+                },
+            ]
+                         )
+
+    def test_list_task_with_status(self):
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(list_tasks(inprogress=True), [
+                {
+                    "id": 6,
+                    "title": "Task 6",
+                    "parent_id": None,
+                    "status": "In Progress",
+                    "deadline": "None",
+                    "priority": 0,
+                    "label": "None",
+                    "description": "Description 6",
+                    "subtasks": 0,
+                }
+            ]
+        )
+
+    def test_list_task_with_label(self):
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(list_tasks(label='Label1', subtasks=True), [
+                {
+                    "id": 9,
+                    "title": "Child of task 1",
+                    "parent_id": 1,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 0,
+                    "label": "Label1",
+                    "description": "None",
+                    "subtasks": 1,
+                }
+            ]
+        )
 
 
 if __name__ == '__main__':
