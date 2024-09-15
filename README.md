@@ -90,8 +90,8 @@ $ devcord tasks --add "task name" --label "label"
 Add subtask:
 
 ```bash
-$ devcord tasks -a "task name" -pid task_id
-$ devcord tasks --add "task name" --parent task_id
+$ devcord tasks -a "task name" -st
+$ devcord tasks --add "task name" --subtask
 ```
 
 ## For listing tasks
