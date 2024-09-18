@@ -2,7 +2,7 @@ import os
 import unittest
 from app.constants import path, db_path
 from app.database import initialize
-from app.application import list_tasks, add_tasks
+from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete
 from datetime import datetime, timedelta
 
 def create_db():
@@ -272,6 +272,228 @@ class ListTasks(unittest.TestCase):
                 }
             ]
         )
+
+class AddTasks(unittest.TestCase):
+    def test_adding_task_with_single_quotes_in_description(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+
+        self.assertEqual(add_tasks(title='Dummy Task', description="'Description'"), None)
+
+    def test_adding_task_with_special_characters(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+
+        self.assertEqual(add_tasks(title='Dummy Task', description="$ / \ "), None)
+
+class SearchTask(unittest.TestCase):
+    def test_search_task_with_empty_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+
+        self.assertEqual(search_task(1), {})
+
+    def test_search_task_with_filled_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(search_task(1), {
+                "id": 1,
+                "title": "Task 1",
+                "description": "Description 1",
+                "status": "Pending",
+                "deadline": "None",
+                "priority": 1,
+                "label": "None",
+                "completed": "None",
+                "parent_id": None,
+                "subtasks": 1,
+            }
+        )
+
+    def test_search_task_with_invalid_id(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(search_task(100), {})
+
+class GetSubtasks(unittest.TestCase):
+    def test_get_subtasks_with_empty_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+
+        self.assertEqual(get_subtasks(1), [])
+
+    def test_get_subtasks_with_filled_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+
+        print(get_subtasks(1))
+        self.assertEqual(
+            get_subtasks(1),
+            [
+                {
+                    'id': 9,
+                    'title': 'Child of task 1',
+                    'status': 'Pending',
+                    'deadline': 'None',
+                    'priority': 0,
+                    'label': 'Label1',
+                    'description': 'None',
+                    'subtasks': 1
+                }
+            ]
+        )
+
+    def test_get_subtasks_with_invalid_id(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+
+        self.assertEqual(get_subtasks(100), [])
+
+class HandleDelete(unittest.TestCase):
+    def test_with_filled_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+        # test with valid id
+        handle_delete({"id": 1, "parent_id": None})
+        self.assertEqual(list_tasks(), [
+            {
+                "id": 8,
+                "title": "Task 8",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "11/09/2000",
+                "priority": 3,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            },
+            {
+                "id": 2,
+                "title": "Task 2",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "31/08/2024",
+                "priority": 4,
+                "label": "None",
+                "description": "Description 2",
+                "subtasks": 0,
+            },
+            {
+                "id": 3,
+                "title": "Task 3",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "01/09/2024",
+                "priority": 2,
+                "label": "None",
+                "description": "Description 3",
+                "subtasks": 0,
+            },
+            {
+                "id": 4,
+                "title": "Task 4",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "10/09/2024",
+                "priority": 3,
+                "label": "None",
+                "description": "Description 4",
+                "subtasks": 0,
+            },
+            {
+                "id": 6,
+                "title": "Task 6",
+                "parent_id": None,
+                "status": "In Progress",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 6",
+                "subtasks": 0,
+            },
+            {
+                "id": 7,
+                "title": "Task 7",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 7",
+                "subtasks": 0,
+            },
+        ])
+        self.assertEqual(list_tasks(week=True, subtasks=True), [
+            {
+                "id": 2,
+                "title": "Task 2",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "31/08/2024",
+                "priority": 4,
+                "label": "None",
+                "description": "Description 2",
+                "subtasks": 0,
+            },
+            {
+                "id": 3,
+                "title": "Task 3",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "01/09/2024",
+                "priority": 2,
+                "label": "None",
+                "description": "Description 3",
+                "subtasks": 0,
+            },
+        ])
+
+    def test_subtask_deletion(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+        # test with subtask id
+        handle_delete({"id": 9, "parent_id": 1})
+        self.assertEqual(search_task(1), {
+                "id": 1,
+                "title": "Task 1",
+                "description": "Description 1",
+                "status": "Pending",
+                "deadline": "None",
+                "priority": 1,
+                "label": "None",
+                "completed": "None",
+                "parent_id": None,
+                "subtasks": 0,
+            })
+
 
 
 if __name__ == '__main__':
