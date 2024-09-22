@@ -61,7 +61,7 @@ def get_table(tasks, plain=False):
 
         table.add_row(
             (
-                f"[{get_priority_color(task['priority'])}]●"
+                f"[{get_priority_color(task['priority'])}]{task['priority']}"
                 if not plain
                 else f"[{text_style}]{task['priority']}"
             ),
