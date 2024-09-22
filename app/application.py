@@ -18,12 +18,15 @@ def list_tasks(
     pending=None,
     label=None,
     subtasks=False,
+    archive=False,
 ) -> list | None:
     """
     List all the tasks based on the filters.
     """
     order_by = "completed ASC, status ASC, priority DESC"
     where_clause = []
+    if archive:
+        completed = True
     if not subtasks:
         where_clause.append("parent_id ISNULL")
     if week:
