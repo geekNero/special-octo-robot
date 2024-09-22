@@ -345,7 +345,6 @@ class GetSubtasks(unittest.TestCase):
         create_db()
         fill_db()
 
-        print(get_subtasks(1))
         self.assertEqual(
             get_subtasks(1),
             [
