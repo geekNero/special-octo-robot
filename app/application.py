@@ -4,6 +4,9 @@ from click import echo
 from click import style
 
 from . import database
+from app.utility import convert_to_console_date
+from app.utility import convert_to_db_date
+from app.utility import sanitize_text
 
 
 def list_tasks(
@@ -281,11 +284,11 @@ def handle_delete(current_task: dict):
     database.delete_task(current_task["id"])
     children = database.list_table(
         table="tasks",
-        columns=["id"],
+        columns=["id", "parent_id"],
         where_clause=f"WHERE parent_id = {current_task['id']}",
     )
     for child in children:
-        database.delete_task(child[0])
+        handle_delete({"id": child[0], "parent_id": child[1]})
     if current_task["parent_id"]:
         parent = search_task(current_task["parent_id"])
         if parent and parent["subtasks"] > 0:
@@ -296,24 +299,6 @@ def handle_delete(current_task: dict):
                 )
             except:
                 generate_migration_error()
-
-
-def convert_to_console_date(date_str, title=None):
-    """
-    Convert date from "YYYY-MM-DD" to "dd/mm/yyyy"
-    """
-    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-    return date_obj.strftime("%d/%m/%Y")
-
-
-def convert_to_db_date(date_str):
-    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
-    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
-    return date_obj.strftime("%Y-%m-%d")
-
-
-def sanitize_text(text):
-    return text.strip().replace("'", '"')
 
 
 def generate_migration_error():

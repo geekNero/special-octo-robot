@@ -1,10 +1,6 @@
 import os
-from datetime import datetime
 
 import click
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import FuzzyWordCompleter
-from prompt_toolkit.completion import ThreadedCompleter
 
 from app import application
 from app.__version__ import VERSION
@@ -18,6 +14,8 @@ from app.constants import db_path
 from app.constants import path
 from app.database import initialize
 from app.migrations import run_migrations
+from app.utility import convert_to_db_date
+from app.utility import fuzzy_search_task
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -154,14 +152,13 @@ def tasks(
             description = click.edit()
         if subtask:
             parent = fuzzy_search_task()
-            if not parent:
-                if parent is not None:
-                    click.echo(
-                        click.style(
-                            "Error: Parent task does not exist.",
-                            fg="red",
-                        ),
-                    )
+            if parent is None:
+                click.echo(
+                    click.style(
+                        "Error: Parent task does not exist.",
+                        fg="red",
+                    ),
+                )
                 return
 
         application.add_tasks(
@@ -244,14 +241,13 @@ def task(
 
     current_task = fuzzy_search_task()
 
-    if not current_task:
-        if current_task is not None:
-            click.echo(
-                click.style(
-                    "Error: Task does not exist.",
-                    fg="red",
-                ),
-            )
+    if current_task is None:
+        click.echo(
+            click.style(
+                "Error: Task does not exist.",
+                fg="red",
+            ),
+        )
         return
 
     if inprogress:
@@ -334,30 +330,3 @@ def init(ctx, migrate=None):
 
     ctx.obj["config"]["version"] = VERSION
     update_config(config_path, ctx.obj["config"])
-
-
-def fuzzy_search_task() -> dict:
-    all_tasks = application.list_tasks(subtasks=True)
-    task_titles = [each_task["title"] for each_task in all_tasks]
-
-    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-    select_task_title = prompt(
-        "Enter any part from title of the task: \n",
-        completer=task_completer,
-    )
-
-    current_task = next(
-        (
-            each_task
-            for each_task in all_tasks
-            if each_task["title"] == select_task_title
-        ),
-        None,
-    )
-    return current_task
-
-
-def convert_to_db_date(date_str):
-    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
-    date_obj = datetime.strptime(date_str, "%d/%m/%Y")
-    return date_obj.strftime("%Y-%m-%d")
