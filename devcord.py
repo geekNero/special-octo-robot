@@ -269,7 +269,8 @@ def task(
         current_task["deadline"] = "today"
     elif deadline:
         try:
-            current_task["deadline"] = convert_to_db_date(deadline)
+            convert_to_db_date(deadline)
+            current_task["deadline"] = deadline
         except ValueError:
             click.echo(
                 click.style(
