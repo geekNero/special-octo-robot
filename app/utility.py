@@ -25,8 +25,8 @@ def sanitize_text(text):
     return text.strip().replace("'", '"')
 
 
-def fuzzy_search_task() -> dict:
-    all_tasks = application.list_tasks(subtasks=True)
+def fuzzy_search_task(completed=False) -> dict:
+    all_tasks = application.list_tasks(subtasks=True, completed=completed)
     task_titles = [each_task["title"] for each_task in all_tasks]
 
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
@@ -46,22 +46,3 @@ def fuzzy_search_task() -> dict:
     return current_task
 
 
-def fuzzy_search_task_completed() -> dict:
-    all_tasks = application.list_tasks(archive=True)
-    task_titles = [each_task["title"] for each_task in all_tasks]
-
-    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-    select_task_title = prompt(
-        "Enter any part from title of the task: \n",
-        completer=task_completer,
-    )
-
-    current_task = next(
-        (
-            each_task
-            for each_task in all_tasks
-            if each_task["title"] == select_task_title
-        ),
-        None,
-    )
-    return current_task

@@ -16,7 +16,6 @@ from app.database import initialize
 from app.migrations import run_migrations
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
-from app.utility import fuzzy_search_task_completed
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -236,15 +235,13 @@ def task(
     priority=None,
     deadline=None,
     label=None,
-    archive=None,
+    archive=False,
 ):
     """
     Modify a specific task.
     """
-    if archive:
-        current_task = fuzzy_search_task_completed()
-    else:
-        current_task = fuzzy_search_task()
+
+    current_task = fuzzy_search_task(archive)
 
     if current_task is None:
         click.echo(
