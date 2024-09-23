@@ -1,6 +1,6 @@
 import sqlite3
 
-from .constants import db_path
+from app.constants import db_path
 
 
 def initialize():

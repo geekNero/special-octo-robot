@@ -44,5 +44,3 @@ def fuzzy_search_task(completed=False) -> dict:
         None,
     )
     return current_task
-
-
