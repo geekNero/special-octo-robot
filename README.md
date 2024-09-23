@@ -158,6 +158,14 @@ $ devcord tasks -l --path "path/to/file"
 Pass the keyword to perform required action on the task. The command will then prompt you through a fuzzy finder to enter
 the task title. The keyword action would be performed on the selected task.
 
+Modify Completed Task:
+
+```bash
+$ devcord task -ar
+$ devcord task --archive
+$ devcord task -ar -n "new title"
+```
+
 Viewing description:
 
 ```bash

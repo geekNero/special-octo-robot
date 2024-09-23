@@ -220,6 +220,7 @@ def tasks(
 @click.option("-p", "--priority", help="Change the priority of the task", type=int)
 @click.option("-dd", "--deadline", help="Change the deadline of the task", type=str)
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
+@click.option("-ar", "--archive", is_flag=True, help="Edit Completed the task")
 def task(
     ctx,
     desc=None,
@@ -234,12 +235,13 @@ def task(
     priority=None,
     deadline=None,
     label=None,
+    archive=False,
 ):
     """
     Modify a specific task.
     """
 
-    current_task = fuzzy_search_task()
+    current_task = fuzzy_search_task(archive)
 
     if current_task is None:
         click.echo(
@@ -269,7 +271,8 @@ def task(
         current_task["deadline"] = "today"
     elif deadline:
         try:
-            current_task["deadline"] = convert_to_db_date(deadline)
+            convert_to_db_date(deadline)
+            current_task["deadline"] = deadline
         except ValueError:
             click.echo(
                 click.style(
