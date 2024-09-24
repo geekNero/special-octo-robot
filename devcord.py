@@ -242,7 +242,6 @@ def task(
     """
 
     current_task = fuzzy_search_task(archive)
-
     if current_task is None:
         click.echo(
             click.style(
@@ -258,6 +257,11 @@ def task(
         current_task["status"] = "Pending"
     elif completed:
         current_task["status"] = "Completed"
+        if current_task['subtasks'] != 0:
+            val = application.get_subtasks(current_task["id"])
+            for childs in val:
+                childs['status'] = "Completed"
+                application.update_task(childs)
 
     if name:
         current_task["title"] = name
