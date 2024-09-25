@@ -275,6 +275,16 @@ def update_task(updated_data: dict):
     except Exception as e:
         print(e)
         generate_migration_error()
+        return
+
+    if updated_data["subtasks"] != 0 and updated_data["status"] == "Completed":
+        children = get_subtasks(updated_data["id"])
+        for child in children:
+            child["status"] = "Completed"
+            try:
+                update_task(child)
+            except Exception:
+                generate_migration_error()
 
 
 def handle_delete(current_task: dict):
