@@ -31,7 +31,7 @@ jobs:
         
     - name: Test with pytest
       run: |
-        sudo apt-get install libfaketime && cd tests && bash tests.sh
+        date -s "31 AUG 2024 21:00:00" && cd tests && python3 -m unittest test_application_layer.py
     - name: Linting
       run: |
         pre-commit run --all-files
