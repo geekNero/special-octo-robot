@@ -28,7 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r dev-requirements.txt
         pip install pre-commit
-        apt-get install libfaketime
+        sudo apt-get install libfaketime
         
     - name: Test with pytest
       run: |
