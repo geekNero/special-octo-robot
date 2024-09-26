@@ -32,7 +32,7 @@ jobs:
         
     - name: Test with pytest
       run: |
-        printenv
+        export PYTHONPATH=$(pwd)
         cd tests && bash tests.sh
 
     - name: Linting
