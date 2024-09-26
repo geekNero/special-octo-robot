@@ -28,11 +28,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r dev-requirements.txt
         pip install pre-commit
-        sudo apt-get install libfaketime
         
     - name: Test with pytest
       run: |
-        cd tests && bash tests.sh
+        sudo apt-get install libfaketime && cd tests && bash tests.sh
     - name: Linting
       run: |
         pre-commit run --all-files
