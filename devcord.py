@@ -242,7 +242,6 @@ def task(
     """
 
     current_task = fuzzy_search_task(archive)
-
     if current_task is None:
         click.echo(
             click.style(
