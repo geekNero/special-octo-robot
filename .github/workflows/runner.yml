@@ -28,11 +28,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r dev-requirements.txt
         pip install pre-commit
-    - uses: awalsh128/cache-apt-pkgs-action@latest
+        
+    - uses: ConorMacBride/install-package@v1
       with:
-        packages: libfaketime
-        version: 1.0
-
+        apt: libfaketime
+        
     - name: Verify faketime installation
       run: |
         faketime --version  # Just to verify if it's installed
