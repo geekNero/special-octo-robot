@@ -28,16 +28,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r dev-requirements.txt
         pip install pre-commit
-        
-    - name: Verify faketime installation
-      run: |
         sudo apt-get install faketime
-        faketime --version  # Just to verify if it's installed
-        which faketime
         
-    # - name: Test with pytest
-    #   run: |
-    #     date -s "31 AUG 2024 21:00:00" && cd tests && python3 -m unittest test_application_layer.py
+    - name: Test with pytest
+      run: |
+        cd tests && bash tests.sh
+
     - name: Linting
       run: |
         pre-commit run --all-files
