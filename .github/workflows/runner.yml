@@ -29,12 +29,9 @@ jobs:
         pip install -r dev-requirements.txt
         pip install pre-commit
         
-    - uses: ConorMacBride/install-package@v1
-      with:
-        apt: libfaketime
-        
     - name: Verify faketime installation
       run: |
+        apt-get install faketime
         faketime --version  # Just to verify if it's installed
         which faketime
         
