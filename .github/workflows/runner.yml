@@ -31,7 +31,7 @@ jobs:
         
     - name: Verify faketime installation
       run: |
-        apt-get install faketime
+        sudo apt-get install faketime
         faketime --version  # Just to verify if it's installed
         which faketime
         
