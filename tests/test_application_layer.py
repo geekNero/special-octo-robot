@@ -2,7 +2,7 @@ import os
 import unittest
 from app.constants import path, db_path
 from app.database import initialize
-from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete
+from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete, update_task
 from datetime import datetime, timedelta
 
 def create_db():
@@ -493,6 +493,20 @@ class HandleDelete(unittest.TestCase):
                 "subtasks": 0,
             })
 
+
+class HandleModify(unittest.TestCase):
+    def test_cascading_effect_with_filled_db(self):
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+        task = search_task(1)
+        task['status'] = 'Completed'
+        update_task(task)   # cascading update
+        self.assertEqual(search_task(1), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '2024-08-31', 'parent_id': None, 'subtasks': 1})
+        self.assertEqual(get_subtasks(1), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1}])
+        self.assertEqual(get_subtasks(9), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0}])
 
 
 if __name__ == '__main__':

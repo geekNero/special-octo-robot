@@ -276,8 +276,7 @@ def update_task(updated_data: dict):
         print(e)
         generate_migration_error()
         return
-
-    if updated_data["subtasks"] != 0 and updated_data["status"] == "Completed":
+    if updated_data["subtasks"] != 0 and updated_data["status"] == "'Completed'":
         children = get_subtasks(updated_data["id"])
         for child in children:
             child["status"] = "Completed"
