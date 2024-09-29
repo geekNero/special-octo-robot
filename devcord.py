@@ -14,6 +14,7 @@ from app.constants import db_path
 from app.constants import path
 from app.database import initialize
 from app.migrations import run_migrations
+from app.migrations import update_version
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
 
@@ -45,6 +46,8 @@ def cli(ctx):
         ctx.obj["config"] = initialize_config(config_path)
     else:
         ctx.obj["config"] = get_config(config_path)
+
+    update_version(ctx.obj["config"])
 
 
 @cli.command()
@@ -324,12 +327,9 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-def init(ctx, migrate=None):
+def init(ctx, migrate=False):
     """
     Run after every install
     """
     if migrate:
-        run_migrations(ctx.obj["config"]["version"])
-
-    ctx.obj["config"]["version"] = VERSION
-    update_config(config_path, ctx.obj["config"])
+        update_version(ctx.obj["config"])
