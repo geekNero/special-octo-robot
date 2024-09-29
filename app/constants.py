@@ -11,6 +11,7 @@ if platform.system() == "Windows":
     else:
         path = None
 else:
+    # Path value can be None as there is a check in devcord.py
     path = os.path.join(os.getenv("HOME"), ".devcord")
 
 if path:

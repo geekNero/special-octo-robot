@@ -37,6 +37,7 @@ def cli(ctx):
         ctx.abort()
         return
 
+    # db_path as well as config_path can only be set if path is not None
     if not os.path.exists(db_path):
         os.makedirs(path, exist_ok=True)
         initialize()
@@ -98,8 +99,8 @@ def tasks(
     add=None,
     desc=None,
     priority=None,
-    today=None,
-    week=None,
+    today=False,
+    week=False,
     deadline=None,
     inprogress=None,
     completed=None,
@@ -228,8 +229,8 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
-    week=None,
-    today=None,
+    week=False,
+    today=False,
     delete=None,
     name=None,
     priority=None,
