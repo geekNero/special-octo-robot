@@ -177,6 +177,13 @@ $ devcord task -st
 $ devcord task --subtasks
 ```
 
+Show substasks in tree view:
+
+```bash
+$ devcord task -tr
+$ devcord task --tree
+```
+
 Mark as inprogress:
 
 ```bash

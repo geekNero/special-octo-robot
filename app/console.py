@@ -6,6 +6,29 @@ from click import style
 from rich.console import Console
 from rich.style import Style
 from rich.table import Table
+from rich.tree import Tree
+
+from .application import get_subtasks
+
+colors = {0: "red", 1: "blue", 2: "green"}
+
+
+def get_all_children(root, task, color):
+    if task["subtasks"] == 0:
+        return
+    children = get_subtasks(task["id"])
+    for child in children:
+        child_tree = root.add(f"[{colors[color]}]{child['title']}")
+        get_all_children(child_tree, child, (color + 1) % 3)
+
+
+def print_tree(parent):
+
+    console = Console()
+    # Create the root of the tree
+    tree = Tree(f"{parent['title']}")
+    get_all_children(tree, parent, 0)
+    console.print(tree)
 
 
 def get_priority_color(priority):

@@ -9,6 +9,7 @@ from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
 from app.console import print_tasks
+from app.console import print_tree
 from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
@@ -120,6 +121,7 @@ def tasks(
     """
     Create and List tasks.
     """
+
     if deadline:
         try:
             deadline = convert_to_db_date(deadline)
@@ -229,6 +231,7 @@ def tasks(
 @click.option("-dd", "--deadline", help="Change the deadline of the task", type=str)
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
 @click.option("-ar", "--archive", is_flag=True, help="Edit Completed the task")
+@click.option("-tr", "--tree", is_flag=True, help="Print tasks in tree format")
 def task(
     ctx,
     desc=None,
@@ -244,6 +247,7 @@ def task(
     deadline=None,
     label=None,
     archive=False,
+    tree=False,
 ):
     """
     Modify a specific task.
@@ -257,6 +261,10 @@ def task(
                 fg="red",
             ),
         )
+        return
+
+    if tree:
+        print_tree(current_task)
         return
 
     if inprogress:
