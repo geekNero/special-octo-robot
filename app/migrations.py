@@ -10,6 +10,7 @@ from app.constants import config_path
 
 migration_list = [
     ("0.0.8", """ALTER TABLE tasks ADD COLUMN subtasks INTEGER DEFAULT 0;"""),
+    ("0.0.12", """CREATE INDEX title on tasks(title);"""),
 ]
 
 
