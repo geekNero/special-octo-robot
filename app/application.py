@@ -1,11 +1,13 @@
 import datetime
 
+import click
 from click import echo
 from click import style
 
 from . import database
 from app.utility import convert_to_console_date
 from app.utility import convert_to_db_date
+from app.utility import generate_migration_error
 from app.utility import sanitize_text
 
 
@@ -308,12 +310,3 @@ def handle_delete(current_task: dict):
                 )
             except:
                 generate_migration_error()
-
-
-def generate_migration_error():
-    echo(
-        style(
-            "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
-            fg="red",
-        ),
-    )

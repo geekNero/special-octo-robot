@@ -1,5 +1,7 @@
 import datetime
 
+from click import echo
+from click import style
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.completion import ThreadedCompleter
@@ -44,3 +46,12 @@ def fuzzy_search_task(completed=False) -> dict:
         None,
     )
     return current_task
+
+
+def generate_migration_error():
+    echo(
+        style(
+            "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+            fg="red",
+        ),
+    )
