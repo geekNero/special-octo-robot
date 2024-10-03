@@ -3,4 +3,5 @@ keyring>=25.0.0
 packaging>=24.0
 pre-commit>=3.6.2
 prompt-toolkit>=3.0.43
+requests>=2.31.0
 rich>=13.7.0
