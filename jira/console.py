@@ -7,6 +7,7 @@ from app.constants import config_path
 
 def set_jira_config(config):
     if config.get("jira", None) is None:
+        config["jira"] = {}
         config = set_organization_url(config=config)
         config = set_organization_email(config=config)
         set_token()
