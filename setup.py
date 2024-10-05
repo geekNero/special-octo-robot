@@ -22,7 +22,7 @@ setup(
     py_modules=["devcord", "app"],
     packages=find_packages(),
     install_requires=[requirements],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     platforms=["Windows", "MacOS X", "Linux"],
     classifiers=[
         "Programming Language :: Python :: 3",
