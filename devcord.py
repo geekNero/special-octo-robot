@@ -13,9 +13,14 @@ from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
 from app.database import initialize
-from app.migrations import run_migrations
+from app.migrations import update_version
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
+from jira.application import update_issues
+from jira.console import set_jira_config
+from jira.console import set_organization_email
+from jira.console import set_organization_url
+from jira.console import set_token
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -37,6 +42,7 @@ def cli(ctx):
         ctx.abort()
         return
 
+    # db_path as well as config_path can only be set if path is not None
     if not os.path.exists(db_path):
         os.makedirs(path, exist_ok=True)
         initialize()
@@ -44,6 +50,8 @@ def cli(ctx):
         ctx.obj["config"] = initialize_config(config_path)
     else:
         ctx.obj["config"] = get_config(config_path)
+
+    update_version(ctx.obj["config"])
 
 
 @cli.command()
@@ -98,8 +106,8 @@ def tasks(
     add=None,
     desc=None,
     priority=None,
-    today=None,
-    week=None,
+    today=False,
+    week=False,
     deadline=None,
     inprogress=None,
     completed=None,
@@ -228,8 +236,8 @@ def task(
     completed=None,
     pending=None,
     subtasks=None,
-    week=None,
-    today=None,
+    week=False,
+    today=False,
     delete=None,
     name=None,
     priority=None,
@@ -305,6 +313,51 @@ def task(
 
 @cli.command()
 @click.pass_context
+@click.option(
+    "--sync",
+    is_flag=True,
+    help="Sync with your tasks on Jira",
+)
+@click.option(
+    "--token",
+    is_flag=True,
+    help="Set private API token",
+)
+@click.option(
+    "--url",
+    is_flag=True,
+    help="Set organization Jira url",
+)
+@click.option(
+    "--email",
+    is_flag=True,
+    help="Set oraganization email",
+)
+def jira(ctx, sync=False, token=False, url=False, email=False):
+    """
+    Import your work from Jira
+    """
+    set_jira_config(ctx.obj["config"])
+
+    if token:
+        set_token()
+
+    if url:
+        set_organization_url(ctx.obj["config"])
+
+    if email:
+        set_organization_email(ctx.obj["config"])
+
+    if sync:
+        update_issues(
+            ctx.obj["config"]["jira"]["url"],
+            ctx.obj["config"]["jira"]["email"],
+        )
+        click.echo("Issues synced")
+
+
+@cli.command()
+@click.pass_context
 def legend(ctx):
     """
     Show the legend for all special characters
@@ -323,12 +376,9 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-def init(ctx, migrate=None):
+def init(ctx, migrate=False):
     """
     Run after every install
     """
     if migrate:
-        run_migrations(ctx.obj["config"]["version"])
-
-    ctx.obj["config"]["version"] = VERSION
-    update_config(config_path, ctx.obj["config"])
+        update_version(ctx.obj["config"])

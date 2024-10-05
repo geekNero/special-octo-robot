@@ -11,7 +11,9 @@ None of the data is stored on any server, it is all stored locally on your machi
 
 With pip:
 
-pip install devcord
+```bash
+pip install --upgrade devcord
+```
 
 # Post Installation
 
@@ -251,4 +253,33 @@ Modify Completed Task:
 ```bash
 $ devcord task -ar -n "new title"
 $ devcord task --archive --name "new title"
+```
+## Jira Integration
+
+With Jira integration you can view all your issues on devcord itself and sync
+them as when required with a single command. On your first use of any of the following commands,
+you'd be ask to setup your configuration for Jira.
+
+Sync with Jira
+
+```bash
+$ devcord jira --sync
+```
+
+Set Organization URL
+
+```bash
+$ devcord jira --url
+```
+
+Set Organization Email
+
+```bash
+$ devcord jira --email
+```
+
+Set Jira Access token
+
+```bash
+$ devcord jira --token
 ```
