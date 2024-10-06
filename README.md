@@ -280,6 +280,47 @@ $ devcord jira --email
 
 Set Jira Access token
 
-```bash
+```bash 
 $ devcord jira --token
 ```
+
+|**Category**                  | **Description**                                                             | **Command**|
+| :---         |     :---      |          :--- |
+| | | |
+| **Installation**              | Installs or upgrades Devcord CLI tool.                                     | pip install --upgrade devcord                                          |
+| **Post Installation**         | Register aliases to avoid repetitive typing.                               | `alias tasks="devcord tasks"`<br>`alias task="devcord task"`                                           |
+|                               | Updates the database schema on upgrade.                                    | `devcord init --migrate`                                                                                 |
+| **Add Tasks**                 | Adds a simple task.                                                        | `devcord tasks -a "task name"`<br>`devcord tasks --add "task name"`                                      |
+|                               | Adds a task with a description (opens a scrollable text box).              | `devcord tasks -a "task name" -d`<br>`devcord tasks --add "task name" --desc`                           |
+|                               | Adds a task with a due date.                                               | `devcord tasks -a "task name" -dd "dd/mm/yyyy"`<br>`devcord tasks --add "task name" --due "dd/mm/yyyy"` |
+|                               | Marks the task to be completed by today.                                   | `devcord tasks -a "task name" -t`<br>`devcord tasks --add "task name" --today`                         |
+|                               | Marks the task to be completed in the current week.                        | `devcord tasks -a "task name" -w`<br>`devcord tasks --add "task name" --week`                          |
+|                               | Adds a task with priority (1-5).                                          | `devcord tasks -a "task name" -p 3`<br>`devcord tasks --add "task name" --priority 3`                  |
+|                               | Adds a task with labels.                                                  | `devcord tasks -a "task name" -lb "label"`<br>`devcord tasks --add "task name" --label "label"`        |
+|                               | Adds a subtask.                                                           | `devcord tasks -a "task name" -st`<br>`devcord tasks --add "task name" --subtask`                      |
+| **List Tasks**                | Lists in-progress and pending tasks (completed tasks are skipped).        | `devcord tasks -l`<br>`devcord tasks --list`                                                             |
+|                               | Lists tasks by priority.                                                  | `devcord tasks -l -p 3`<br>`devcord tasks --list --priority 3`                                          |
+|                               | Lists tasks by label.                                                     | `devcord tasks -l -lb "label"`<br>`devcord tasks --list --label "label"`                                |
+|                               | Lists today's tasks.                                                      | `devcord tasks -l -t`<br>`devcord tasks --list --today`                                               |
+|                               | Lists tasks due in the current week.                                      | `devcord tasks -l -w`<br>`devcord tasks --list --week`                                                 |
+|                               | Lists tasks by status.                                                    | `devcord tasks -l -i`<br>`devcord tasks --list --completed`<br>`devcord tasks -l --pending`             |
+|                               | Specifies output format.                                                  | `devcord tasks -l -o json`<br>`devcord tasks --list --output text`                                      |
+|                               | Specifies output file.                                                    | `devcord tasks -l --path "path/to/file"`                                                                 |
+| **Manage Tasks**              | Views the description of a task (opens a scrollable text box).           | `devcord task -d`<br>`devcord task --desc`                                                               |
+|                               | Shows subtasks of the selected task.                                      | `devcord task -st`<br>`devcord task --subtasks`                                                          |
+|                               | Marks the task as in-progress.                                            | `devcord task -i`<br>`devcord task --inprogress`                                                         |
+|                               | Marks the task as complete.                                               | `devcord task -c`<br>`devcord task --completed`                                                          |
+|                               | Marks the task as pending.                                                | `devcord task -pd`<br>`devcord task --pending`                                                           |
+|                               | Sets deadline to this week.                                               | `devcord task -w`<br>`devcord task --week`                                                               |
+|                               | Sets deadline to today.                                                   | `devcord task -t`<br>`devcord task --today`                                                              |
+|                               | Deletes the task.                                                         | `devcord task -dl`<br>`devcord task --delete`                                                            |
+|                               | Modifies the task title.                                                  | `devcord task -n "new title"`<br>`devcord task --name "new title"`                                     |
+|                               | Modifies the task priority.                                               | `devcord task -p 3`<br>`devcord task --priority 3`                                                      |
+|                               | Modifies the task deadline.                                               | `devcord task -dd "dd/mm/yyyy"`<br>`devcord task --deadline "dd/mm/yyyy"`                             |
+|                               | Modifies task labels.                                                    | `devcord task -lb "label"`<br>`devcord task --label "label"`                                           |
+|                               | Modifies a completed task.                                               | `devcord task -ar -n "new title"`<br>`devcord task --archive --name "new title"`                       |
+| **Jira Integration**          | Syncs with Jira.                                                          | `devcord jira --sync`                                                                                     |
+|                               | Sets the organization URL.                                               | `devcord jira --url`                                                                                      |
+|                               | Sets the organization email.                                             | `devcord jira --email`                                                                                   |
+|                               | Sets the Jira access token.                                              | `devcord jira --token`                                                                                   |
+
