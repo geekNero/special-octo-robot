@@ -3,32 +3,24 @@ import os
 
 from click import echo
 from click import style
+from PrettyPrint import PrettyPrintTree
 from rich.console import Console
 from rich.style import Style
 from rich.table import Table
-from rich.tree import Tree
-
-from .application import get_subtasks
-
-colors = {0: "red", 1: "blue", 2: "green"}
 
 
-def get_all_children(root, task, color):
-    if task["subtasks"] == 0:
-        return
-    children = get_subtasks(task["id"])
-    for child in children:
-        child_tree = root.add(f"[{colors[color]}]{child['title']}")
-        get_all_children(child_tree, child, (color + 1) % 3)
+class Tree:
 
+    def __init__(self, task={}):
+        if task == {}:
+            self.val = "Root"
+        else:
+            self.val = f"Title:{task['title']}\nPriority:{task['priority']} | Deadline:{task['deadline']}| Status:{task['status']}"
+        self.children = []
 
-def print_tree(parent):
-
-    console = Console()
-    # Create the root of the tree
-    tree = Tree(f"{parent['title']}")
-    get_all_children(tree, parent, 0)
-    console.print(tree)
+    def add_child(self, child):
+        self.children.append(child)
+        return child
 
 
 def get_priority_color(priority):
@@ -115,6 +107,27 @@ def sanitize_path(path):
         )
         return False
     return True
+
+
+def print_pretty_tree(tasks, parent={}):
+    pt = PrettyPrintTree(
+        lambda x: x.children,
+        lambda x: x.val,
+        border=True,
+        orientation=PrettyPrintTree.Horizontal,
+    )
+    root = Tree(parent)
+    existing_node = {}
+    if parent != {}:
+        existing_node[parent["id"]] = root
+    for task in tasks:
+        if task["parent_id"] is None:  # all the None should appear before the children
+            existing_node[task["id"]] = root.add_child(Tree(task))
+        else:
+            if task["parent_id"] in existing_node:
+                child_task = existing_node[task["parent_id"]].add_child(Tree(task))
+                existing_node[task["id"]] = child_task
+    pt(root)
 
 
 def print_tasks(tasks, output=None, path=None, plain=False):
