@@ -107,7 +107,7 @@ $ devcord tasks -l
 $ devcord tasks --list
 ```
 
-List tasks in tree view:
+List tasks with subtasks in tree view:
 
 ```bash
 $ devcord tasks -l -st
@@ -177,7 +177,7 @@ $ devcord task --desc
 
 _Opens a scrollable text box with description_
 
-Show substasks in tree view:
+Show substasks:
 
 ```bash
 $ devcord task -st

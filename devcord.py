@@ -8,7 +8,6 @@ from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
-from app.console import print_pretty_tree
 from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
@@ -146,9 +145,6 @@ def tasks(
             label=label,
             subtasks=subtask,
         )
-        if subtask:
-            print_pretty_tree(task_list)
-            return
 
         if task_list:
             print_tasks(
@@ -156,6 +152,7 @@ def tasks(
                 output,
                 path,
                 ctx.obj["config"]["unicode"] is False,
+                subtask,
             )
 
     elif add:
@@ -295,11 +292,16 @@ def task(
             return
 
     if subtasks:
-        val = application.get_all_subtask(current_task)
-
+        val = application.get_subtasks_recursive(current_task)
+        current_task["parent_id"] = -1  # To make it as root task
+        val.append(current_task)
         if val:
-            print_pretty_tree(val, current_task)
-        return
+            print_tasks(
+                tasks=val,
+                plain=ctx.obj["config"]["unicode"] is False,
+                subtasks=subtasks,
+            )
+            return
 
     elif desc:
         description = "No given description"

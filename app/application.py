@@ -246,14 +246,13 @@ def get_subtasks(task_id: int):
     return final_results
 
 
-def get_all_subtask(task):
+def get_subtasks_recursive(task):
     if task["subtasks"] == 0:
-        return [task]
+        return []
     final_results = []
     for child in get_subtasks(task["id"]):
         final_results.append(child)
-        if child["subtasks"] != 0:
-            final_results.extend(get_all_subtask(child))
+        final_results.extend(get_subtasks_recursive(child))
     return final_results
 
 
