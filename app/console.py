@@ -1,11 +1,15 @@
 import json
 import os
+from posix import POSIX_FADV_SEQUENTIAL
 
 from click import echo
 from click import style
+from PrettyPrint import PrettyPrintTree
 from rich.console import Console
 from rich.style import Style
 from rich.table import Table
+
+from app.models import Tree
 
 
 def get_priority_color(priority):
@@ -94,8 +98,58 @@ def sanitize_path(path):
     return True
 
 
-def print_tasks(tasks, output=None, path=None, plain=False):
+def parse_subtask_string(task):
+    return f"{task['title']}\nPriority:{task['priority']} | {task['deadline']}| {task['status']} | {task['label']}"
 
+
+def print_tree(tasks, table_name="Tasks"):
+    pt = PrettyPrintTree(
+        lambda x: x.children,
+        lambda x: x.value,
+        border=False,
+        orientation=PrettyPrintTree.Horizontal,
+    )
+    root = Tree(value=table_name)
+    existing_node = {}
+
+    for task in tasks:
+
+        if task["parent_id"] in (None, -1):
+            if existing_node.get(task["id"], False):
+                existing_node[task["id"]].set_value(parse_subtask_string(task))
+            else:
+                existing_node[task["id"]] = Tree(parse_subtask_string(task))
+            if task["parent_id"] == -1:
+                root = existing_node[task["id"]]
+            else:
+                root.add_child(existing_node[task["id"]])
+        else:
+
+            if task["id"] in existing_node:
+                existing_node[task["id"]].set_value(parse_subtask_string(task))
+            else:
+                existing_node[task["id"]] = Tree(parse_subtask_string(task))
+
+            if task["parent_id"] not in existing_node:
+                parent_task = Tree(value="temp")  # temparary node for adding child
+                existing_node[task["parent_id"]] = parent_task
+
+            existing_node[task["parent_id"]].add_child(existing_node[task["id"]])
+
+    pt(root)
+
+
+def print_tasks(
+    tasks,
+    output=None,
+    path=None,
+    plain=False,
+    subtasks=False,
+    table_name="Tasks",
+):
+    if subtasks:
+        print_tree(tasks, table_name)
+        return
     file = None
     if path:
         path = path.strip()
