@@ -1,5 +1,6 @@
 import json
 import os
+from posix import POSIX_FADV_SEQUENTIAL
 
 from click import echo
 from click import style
@@ -97,43 +98,43 @@ def sanitize_path(path):
     return True
 
 
-def print_tree(tasks, table_name="Root"):
+def parse_subtask_string(task):
+    return f"{task['title']}\nPriority:{task['priority']} | {task['deadline']}| {task['status']} | {task['label']}"
+
+
+def print_tree(tasks, table_name="Tasks"):
     pt = PrettyPrintTree(
         lambda x: x.children,
-        lambda x: x.val,
-        border=True,
+        lambda x: x.value,
+        border=False,
         orientation=PrettyPrintTree.Horizontal,
     )
-    root = Tree(table_name=table_name)
+    root = Tree(value=table_name)
     existing_node = {}
 
     for task in tasks:
 
-        if task["parent_id"] is None:
-            if task["id"] in existing_node:
-                existing_node[task["id"]].modify_title(task)
-                existing_node[task["id"]] = root.add_child(existing_node[task["id"]])
-                continue
-            existing_node[task["id"]] = root.add_child(Tree(task))
-        elif task["parent_id"] == -1:  # When printing specific subtree
-            if task["id"] in existing_node:
-                existing_node[task["id"]].modify_title(task)
+        if task["parent_id"] in (None, -1):
+            if existing_node.get(task["id"], False):
+                existing_node[task["id"]].set_value(parse_subtask_string(task))
+            else:
+                existing_node[task["id"]] = Tree(parse_subtask_string(task))
+            if task["parent_id"] == -1:
                 root = existing_node[task["id"]]
-                continue
-            root.modify_title(task)
-            existing_node[task["id"]] = root
+            else:
+                root.add_child(existing_node[task["id"]])
         else:
 
             if task["id"] in existing_node:
-                existing_node[task["id"]].modify_title(task)
-                continue
+                existing_node[task["id"]].set_value(parse_subtask_string(task))
+            else:
+                existing_node[task["id"]] = Tree(parse_subtask_string(task))
 
             if task["parent_id"] not in existing_node:
-                parent_task = Tree(table_name="temp")  # temparary node for adding child
+                parent_task = Tree(value="temp")  # temparary node for adding child
                 existing_node[task["parent_id"]] = parent_task
 
-            child_task = existing_node[task["parent_id"]].add_child(Tree(task))
-            existing_node[task["id"]] = child_task
+            existing_node[task["parent_id"]].add_child(existing_node[task["id"]])
 
     pt(root)
 
@@ -144,7 +145,7 @@ def print_tasks(
     path=None,
     plain=False,
     subtasks=False,
-    table_name="Root",
+    table_name="Tasks",
 ):
     if subtasks:
         print_tree(tasks, table_name)

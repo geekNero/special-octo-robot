@@ -292,12 +292,10 @@ def task(
             return
 
     if subtasks:
-        val = application.get_subtasks_recursive(current_task)
-        current_task["parent_id"] = -1  # To make it as root task
-        val.append(current_task)
-        if val:
+        tasks = application.get_subtasks_recursive(current_task)
+        if tasks:
             print_tasks(
-                tasks=val,
+                tasks=tasks,
                 plain=ctx.obj["config"]["unicode"] is False,
                 subtasks=subtasks,
             )
