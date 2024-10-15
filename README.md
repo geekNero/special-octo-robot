@@ -107,6 +107,13 @@ $ devcord tasks -l
 $ devcord tasks --list
 ```
 
+List tasks with subtasks in tree view:
+
+```bash
+$ devcord tasks -l -st
+$ devcord tasks --list --subtasks
+```
+
 List tasks by priority:
 
 ```bash

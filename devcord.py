@@ -120,6 +120,7 @@ def tasks(
     """
     Create and List tasks.
     """
+
     if deadline:
         try:
             deadline = convert_to_db_date(deadline)
@@ -151,6 +152,7 @@ def tasks(
                 output,
                 path,
                 ctx.obj["config"]["unicode"] is False,
+                subtask,
             )
 
     elif add:
@@ -290,13 +292,16 @@ def task(
             return
 
     if subtasks:
-        val = application.get_subtasks(current_task["id"])
+        val = application.get_subtasks_recursive(current_task)
+        current_task["parent_id"] = -1  # To make it as root task
+        val.append(current_task)
         if val:
             print_tasks(
                 tasks=val,
                 plain=ctx.obj["config"]["unicode"] is False,
+                subtasks=subtasks,
             )
-        return
+            return
 
     elif desc:
         description = "No given description"

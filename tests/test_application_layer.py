@@ -356,7 +356,8 @@ class GetSubtasks(unittest.TestCase):
                     'priority': 0,
                     'label': 'Label1',
                     'description': 'None',
-                    'subtasks': 1
+                    'subtasks': 1,
+                    'parent_id': 1
                 }
             ]
         )
@@ -505,8 +506,8 @@ class HandleModify(unittest.TestCase):
         task['status'] = 'Completed'
         update_task(task)   # cascading update
         self.assertEqual(search_task(1), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '2024-08-31', 'parent_id': None, 'subtasks': 1})
-        self.assertEqual(get_subtasks(1), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1}])
-        self.assertEqual(get_subtasks(9), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0}])
+        self.assertEqual(get_subtasks(1), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1, 'parent_id': 1}])
+        self.assertEqual(get_subtasks(9), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0, 'parent_id': 9}])
 
 
 if __name__ == '__main__':

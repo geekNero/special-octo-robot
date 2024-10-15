@@ -216,6 +216,7 @@ def get_subtasks(task_id: int):
                 "label",
                 "description",
                 "subtasks",
+                "parent_id",
             ],
             where_clause=f"WHERE parent_id = {task_id}",
             order_by="ORDER BY completed ASC, status ASC, priority DESC",
@@ -239,8 +240,19 @@ def get_subtasks(task_id: int):
                 "label": result[5] if result[5] else "None",
                 "description": result[6],
                 "subtasks": result[7],
+                "parent_id": result[8],
             },
         )
+    return final_results
+
+
+def get_subtasks_recursive(task):
+    if task["subtasks"] == 0:
+        return []
+    final_results = []
+    for child in get_subtasks(task["id"]):
+        final_results.append(child)
+        final_results.extend(get_subtasks_recursive(child))
     return final_results
 
 

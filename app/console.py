@@ -3,9 +3,12 @@ import os
 
 from click import echo
 from click import style
+from PrettyPrint import PrettyPrintTree
 from rich.console import Console
 from rich.style import Style
 from rich.table import Table
+
+from app.models import Tree
 
 
 def get_priority_color(priority):
@@ -94,8 +97,58 @@ def sanitize_path(path):
     return True
 
 
-def print_tasks(tasks, output=None, path=None, plain=False):
+def print_tree(tasks, table_name="Root"):
+    pt = PrettyPrintTree(
+        lambda x: x.children,
+        lambda x: x.val,
+        border=True,
+        orientation=PrettyPrintTree.Horizontal,
+    )
+    root = Tree(table_name=table_name)
+    existing_node = {}
 
+    for task in tasks:
+
+        if task["parent_id"] is None:
+            if task["id"] in existing_node:
+                existing_node[task["id"]].modify_title(task)
+                existing_node[task["id"]] = root.add_child(existing_node[task["id"]])
+                continue
+            existing_node[task["id"]] = root.add_child(Tree(task))
+        elif task["parent_id"] == -1:  # When printing specific subtree
+            if task["id"] in existing_node:
+                existing_node[task["id"]].modify_title(task)
+                root = existing_node[task["id"]]
+                continue
+            root.modify_title(task)
+            existing_node[task["id"]] = root
+        else:
+
+            if task["id"] in existing_node:
+                existing_node[task["id"]].modify_title(task)
+                continue
+
+            if task["parent_id"] not in existing_node:
+                parent_task = Tree(table_name="temp")  # temparary node for adding child
+                existing_node[task["parent_id"]] = parent_task
+
+            child_task = existing_node[task["parent_id"]].add_child(Tree(task))
+            existing_node[task["id"]] = child_task
+
+    pt(root)
+
+
+def print_tasks(
+    tasks,
+    output=None,
+    path=None,
+    plain=False,
+    subtasks=False,
+    table_name="Root",
+):
+    if subtasks:
+        print_tree(tasks, table_name)
+        return
     file = None
     if path:
         path = path.strip()
