@@ -1,6 +1,5 @@
 import json
 import os
-from posix import POSIX_FADV_SEQUENTIAL
 
 from click import echo
 from click import style
