@@ -3,7 +3,6 @@ import os
 import click
 
 from app import application
-from app.__version__ import VERSION
 from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
