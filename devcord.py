@@ -1,7 +1,6 @@
 import os
 
 import click
-from docutils.nodes import table
 
 from app import application
 from app.config import check_unicode_support
