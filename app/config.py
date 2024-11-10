@@ -32,6 +32,7 @@ def initialize_config(path):
             "default_output": "table",
             "unicode": check_unicode_support(),
             "version": VERSION,
+            "pretty_tree": True,
         }
         json.dump(config, file, indent=4)
         return config

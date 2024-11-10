@@ -3,7 +3,6 @@ import os
 import click
 
 from app import application
-from app.__version__ import VERSION
 from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
@@ -153,6 +152,8 @@ def tasks(
                 path,
                 ctx.obj["config"]["unicode"] is False,
                 subtask,
+                "Tasks",
+                ctx.obj["config"]["pretty_tree"],
             )
 
     elif add:
@@ -298,6 +299,7 @@ def task(
                 tasks=tasks,
                 plain=ctx.obj["config"]["unicode"] is False,
                 subtasks=subtasks,
+                pretty_tree=ctx.obj["config"]["pretty_tree"],
             )
             return
 
@@ -379,9 +381,19 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-def init(ctx, migrate=False):
+@click.option("--pretty_tree", help="Change the name of the task", type=bool)
+def init(ctx, migrate=False, pretty_tree=None):
     """
     Run after every install
     """
     if migrate:
         update_version(ctx.obj["config"])
+    if pretty_tree is not None:
+        ctx.obj["config"]["pretty_tree"] = pretty_tree
+        update_config(config_path, ctx.obj["config"])
+        click.echo(
+            click.style(
+                "Info: Pretty Tree setting updated",
+                fg="yellow",
+            ),
+        )

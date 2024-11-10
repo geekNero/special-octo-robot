@@ -26,14 +26,6 @@ alias tasks="devcord tasks"
 alias task="devcord task"
 ```
 
-On each upgrade, run:
-
-```bash
-$ devcord init --migrate
-```
-
-This updates the database schema if any changes were made
-
 # Usage
 
 ## For adding tasks
@@ -264,8 +256,8 @@ $ devcord task --archive --name "new title"
 ## Jira Integration
 
 With Jira integration you can view all your issues on devcord itself and sync
-them as when required with a single command. On your first use of any of the following commands,
-you'd be ask to setup your configuration for Jira.
+them as when required with a single command. On your first use instead of the following commands,
+you'd be asked to set up your configuration for Jira.
 
 Sync with Jira
 
@@ -289,4 +281,25 @@ Set Jira Access token
 
 ```bash
 $ devcord jira --token
+```
+
+## Miscellaneous
+
+Update Database Schema:
+
+```bash
+$ devcord init --migrate
+```
+This updates the database schema if any changes were made
+
+Use Rich Tree:
+
+```bash
+$ devcord init --pretty_tree False
+```
+
+Use Pretty Tree:
+
+```bash
+$ devcord init --pretty_tree True
 ```
