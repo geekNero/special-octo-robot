@@ -1,28 +1,11 @@
 import json
-
-from click import echo
-from click import style
+import sys
 
 from .__version__ import VERSION
 
 
 def check_unicode_support():
-    try:
-        echo(
-            style(
-                text="✔️ Unicode Supported",
-                fg="yellow",
-            ),
-        )
-        return True
-    except UnicodeEncodeError:
-        echo(
-            style(
-                text="Unicode Unsupported",
-                fg="yellow",
-            ),
-        )
-        return False
+    return sys.stdout.encoding.lower() == "utf-8"
 
 
 def initialize_config(path):
@@ -30,7 +13,6 @@ def initialize_config(path):
         config = {
             "theme": "light",
             "default_output": "table",
-            "unicode": check_unicode_support(),
             "version": VERSION,
             "pretty_tree": True,
         }

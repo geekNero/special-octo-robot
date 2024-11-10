@@ -3,6 +3,7 @@ import os
 import click
 
 from app import application
+from app.config import check_unicode_support
 from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
@@ -50,6 +51,7 @@ def cli(ctx):
     else:
         ctx.obj["config"] = get_config(config_path)
 
+    ctx.obj["config"]["unicode"] = check_unicode_support()
     update_version(ctx.obj["config"])
 
 
