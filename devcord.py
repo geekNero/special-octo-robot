@@ -1,6 +1,7 @@
 import os
 
 import click
+from docutils.nodes import table
 
 from app import application
 from app.config import check_unicode_support
@@ -8,6 +9,7 @@ from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
+from app.console import print_tables
 from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
@@ -16,6 +18,7 @@ from app.database import initialize
 from app.migrations import update_version
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
+from app.utility import sanitize_table_name
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -45,7 +48,7 @@ def cli(ctx):
     # db_path as well as config_path can only be set if path is not None
     if not os.path.exists(db_path):
         os.makedirs(path, exist_ok=True)
-        initialize()
+        initialize("tasks")
     if not os.path.exists(config_path):
         ctx.obj["config"] = initialize_config(config_path)
     else:
@@ -320,6 +323,51 @@ def task(
 
 @cli.command()
 @click.pass_context
+@click.option("-l", "--list", is_flag=True, help="List all the tables")
+@click.option("-a", "--add", help="Add a new table", type=str)
+@click.option("-sl", "--select", help="Select a table", type=str)
+@click.option("-dl", "--delete", help="Delete a table", type=str)
+@click.option("-n", "--name", help="Change the name of the table", type=str)
+def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
+    """
+    Use multiple tables for segregating your tasks.
+    """
+    if list:
+        table_list = application.list_tables()
+        print_tables(table_list, ctx.obj["config"]["current_table"])
+    elif add:
+        table_list = application.list_tables()
+        if add in table_list:
+            click.echo(
+                click.style(
+                    "Error: Table already exists.",
+                    fg="red",
+                ),
+            )
+            return
+        add, ok = sanitize_table_name(add)
+        if not ok:
+            click.echo(
+                click.style(
+                    "Error: Table name is not valid, please use only alphanumeric characters or underscores."
+                    + "Maybe you are not a developer?",
+                    fg="red",
+                ),
+            )
+        ok = application.add_table(add)
+        if ok:
+            click.echo(
+                click.style(
+                    "Success: ",
+                    fg="green",
+                )
+                + "Table stored as: "
+                + click.style(add, fg="yellow"),
+            )
+
+
+@cli.command()
+@click.pass_context
 @click.option(
     "--sync",
     is_flag=True,
@@ -383,7 +431,11 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-@click.option("--pretty_tree", help="Change the name of the task", type=bool)
+@click.option(
+    "--pretty_tree",
+    help="Set to True for Pretty_Tree or False for rich tree",
+    type=bool,
+)
 def init(ctx, migrate=False, pretty_tree=None):
     """
     Run after every install

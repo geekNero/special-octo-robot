@@ -55,3 +55,13 @@ def generate_migration_error():
             fg="red",
         ),
     )
+
+
+def sanitize_table_name(table_name: str) -> (str, bool):
+    for ch in table_name:
+        if ch.isalnum() or ch == " " or ch == "_":
+            continue
+        else:
+            return "", False
+
+    return table_name.replace(" ", "_"), True

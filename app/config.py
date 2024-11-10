@@ -15,6 +15,7 @@ def initialize_config(path):
             "default_output": "table",
             "version": VERSION,
             "pretty_tree": True,
+            "current_table": "tasks",
         }
         json.dump(config, file, indent=4)
         return config

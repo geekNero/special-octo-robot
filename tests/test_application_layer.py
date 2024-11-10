@@ -9,7 +9,7 @@ def create_db():
     os.makedirs(path, exist_ok=True)
     if os.path.exists(db_path):
         os.remove(db_path)
-    initialize()
+    initialize("tasks")
 
 def fill_db():
     add_tasks(title = "Task 1", description="Description 1", priority=1)

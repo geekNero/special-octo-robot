@@ -3,14 +3,14 @@ import sqlite3
 from app.constants import db_path
 
 
-def initialize():
+def initialize(table_name: str) -> None:
     """
     Initialize the database with all the necessary tables.
     """
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(
-        """CREATE TABLE tasks(
+        f"""CREATE TABLE {table_name}(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title VARCHAR NOT NULL, parent_id INTEGER,
         description TEXT DEFAULT 'None',
@@ -23,15 +23,25 @@ def initialize():
         )""",
     )
     cur.execute(
-        """
-        CREATE TRIGGER initialize_completed_column
-        AFTER INSERT ON tasks
+        f"""
+        CREATE TRIGGER initialize_completed_column_{table_name}
+        AFTER INSERT ON {table_name}
         FOR EACH ROW
         BEGIN
             UPDATE tasks SET completed = NEW.deadline WHERE id = NEW.id;
         END;
     """,
     )
+
+
+def list_tables() -> list:
+    """
+    List all the tables in the database.
+    """
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    res = cur.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    return res
 
 
 def list_table(

@@ -209,3 +209,15 @@ def print_legend():
     table.add_row("[#FFFFFF]►", f"[{text_style}]Has description")
     table.add_row("[#FFFFFF]|☰", f"[{text_style}]Has subtasks")
     console.print(table)
+
+
+def print_tables(tables, current_table):
+    console = Console()
+    table = Table(title="Task Lists", highlight=True, leading=True)
+    table.add_column("List Name", justify="center", style="white")
+    for table_name in tables:
+        if table_name == current_table:
+            table.add_row(f"[#FFFFFF][italic]-> {table_name}")
+        else:
+            table.add_row(f"[#FFFFFF]{table_name}")
+    console.print(table)

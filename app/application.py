@@ -1,9 +1,5 @@
 import datetime
 
-import click
-from click import echo
-from click import style
-
 from . import database
 from app.utility import convert_to_console_date
 from app.utility import convert_to_db_date
@@ -324,3 +320,33 @@ def handle_delete(current_task: dict):
                 )
             except:
                 generate_migration_error()
+
+
+def list_tables() -> list:
+    """
+    List all the tables in the database.
+    """
+    try:
+        res = database.list_tables()
+    except:
+        generate_migration_error()
+        return []
+
+    result = []
+    for table in res:
+        if table[0] != "sqlite_sequence":
+            result.append(table[0])
+    return result
+
+
+def add_table(table_name: str) -> bool:
+    """
+    Add a table to the database.
+    """
+    try:
+        database.initialize(table_name)
+        return True
+    except Exception as e:
+        # generate_migration_error()
+        print(e)
+        return False
