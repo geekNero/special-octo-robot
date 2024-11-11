@@ -23,7 +23,7 @@ Register an alias for tasks
 ``` bash 
 alias tasks = "devcord tasks"          
 alias task  = "devcord task"
-```
+
 
 # Usage
 
@@ -44,6 +44,7 @@ alias task  = "devcord task"
 
 By default, in-progress and pending tasks are listed, with in-progress first followed by pending tasks and completed tasks are skipped.
 
+
 | Description                                      | Command                                  |
 |:-------------------------------------------------|:------------------------------------------|
 | Simple List tasks                  | `devcord tasks l`<br/> `devcord tasks --list` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|
@@ -55,6 +56,7 @@ By default, in-progress and pending tasks are listed, with in-progress first fol
 | List tasks by status                            | `devcord tasks -l -i`<br/>  `devcord tasks --list --completed` <br/> `devcord tasks -l --pending`|
 | Specify output format as JSON                   | `devcord tasks -l -o json` <br/> `devcord tasks --list --output text`               |
 | Specify output file path                        | `devcord tasks -l --path "path/to/file"` |
+
 
 ## For managing tasks
 
@@ -81,8 +83,8 @@ the task title. The keyword action would be performed on the selected task.
 ## Jira Integration
 
 With Jira integration you can view all your issues on devcord itself and sync
-them as when required with a single command. On your first use of any of the following commands,
-you'd be ask to setup your configuration for Jira.
+them as when required with a single command. On your first use instead of the following commands,
+you'd be asked to set up your configuration for Jira.
 
 | Description                                      | Command                                  |
 |:-------------------------------------------------|:------------------------------------------|
@@ -102,4 +104,3 @@ Use Pretty Tree:
 ``` bash
 devcord init --pretty_tree True
 ```
-
