@@ -23,7 +23,7 @@ Register an alias for tasks
 ``` bash 
 alias tasks = "devcord tasks"          
 alias task  = "devcord task"
-
+```
 
 # Usage
 
