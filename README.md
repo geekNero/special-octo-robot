@@ -12,7 +12,7 @@ None of the data is stored on any server, it is all stored locally on your machi
 
 Install Devcord using pip  
 ``` bash 
-pip install --upgrade devcord
+pip install --upgrade special-octo-robot
 ``` 
 
 # Post Installation
