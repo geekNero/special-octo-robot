@@ -157,7 +157,7 @@ def tasks(
                 ctx.obj["config"]["unicode"] is False,
                 subtask,
                 "Tasks",
-                ctx.obj["config"]["pretty_tree"],
+                pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
 
     elif add:
@@ -297,13 +297,19 @@ def task(
             return
 
     if subtasks:
-        tasks = application.get_subtasks_recursive(current_task)
-        if tasks:
+        task_list = application.get_subtasks_recursive(current_task)
+        if task_list:
+            temp = current_task.copy()
+            temp["parent_id"] = (
+                -1
+            )  # For subtasks, the parent of the parent node is irrelevant
+            # Parent_id cannot be -1, therefore functions ahead can recognize this node as root.
+            task_list.append(temp)
             print_tasks(
-                tasks=tasks,
+                tasks=task_list,
                 plain=ctx.obj["config"]["unicode"] is False,
                 subtasks=subtasks,
-                pretty_tree=ctx.obj["config"]["pretty_tree"],
+                pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
             return
 

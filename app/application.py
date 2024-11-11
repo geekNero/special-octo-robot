@@ -245,8 +245,7 @@ def get_subtasks(task_id: int):
 def get_subtasks_recursive(task: dict):
     if task["subtasks"] == 0:
         return []
-    task["parent_id"] = -1  # For subtasks, the parent of the parent node is irrelevant
-    # Parent_id cannot be -1, therefore functions ahead can recognize this node as root.
+
     final_results = [task]
     for child in get_subtasks(task["id"]):
         final_results.append(child)
