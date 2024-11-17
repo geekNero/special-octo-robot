@@ -66,10 +66,10 @@ def print_tree(tasks, table_name="Tasks", pretty_tree=True):
             text.append(f" {task['title']}\n", style="italic bold")
             text.append("Priority: ", style="dim")
             text.append(
-                f"{task['priority']} | ",
-                style=f"{console_helper.get_priority_color(task['priority'])} dim",
+                f"{task['priority']} ",
+                style=f"{console_helper.get_priority_color(task['priority'])}",
             )
-            text.append(f"{task['deadline']} | ", style="dim")
+            text.append(f"| {task['deadline']} | ", style="dim")
             text.append(
                 f"{task['status']} ",
                 style=console_helper.get_status_color(task["status"]) + " dim",

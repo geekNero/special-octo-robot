@@ -436,11 +436,7 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-@click.option(
-    "--pretty_tree",
-    help="Set to True for Pretty_Tree or False for rich tree",
-    type=bool,
-)
+@click.option("--pretty_tree", help="Change the name of the task", type=bool)
 def init(ctx, migrate=False, pretty_tree=None):
     """
     Run after every install
