@@ -126,7 +126,7 @@ def tasks(
     """
     Create and List tasks.
     """
-    table = None
+
     if not table:
         table = ctx.obj["config"].get("current_table", "tasks")
 
@@ -356,7 +356,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
         print_tables(table_list, ctx.obj["config"].get("current_table", "tasks"))
 
     elif add:
-        exists, add = sanitize_table_name(add)
+        exists, add = check_table_exists(add)
         if exists:
             click.echo(
                 click.style(

@@ -28,7 +28,7 @@ def sanitize_text(text):
 
 
 def fuzzy_search_task(table, completed=False) -> dict:
-    all_tasks = application.list_tasks(subtasks=True, completed=completed)
+    all_tasks = application.list_tasks(table, subtasks=True, completed=completed)
     task_titles = [each_task["title"] for each_task in all_tasks]
 
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))

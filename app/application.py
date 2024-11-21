@@ -95,7 +95,7 @@ def list_tasks(
 
 
 def add_tasks(
-    title,
+    title: str,
     table="tasks",
     description=None,
     priority=None,
@@ -144,7 +144,7 @@ def add_tasks(
         columns.append("parent_id")
         values.append(str(parent["id"]))
     try:
-        database.insert_into_table(table="tasks", columns=columns, values=values)
+        database.insert_into_table(table, columns=columns, values=values)
     except:
         generate_migration_error()
         return
