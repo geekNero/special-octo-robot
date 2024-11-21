@@ -15,6 +15,7 @@ from app.constants import db_path
 from app.constants import path
 from app.database import initialize
 from app.migrations import update_version
+from app.utility import check_table_exists
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
 from app.utility import sanitize_table_name
@@ -103,6 +104,7 @@ def cli(ctx):
 @click.option("-o", "--output", help="Specify Output Format", type=str)
 @click.option("--path", help="Specify Output File", type=str)
 @click.option("-st", "--subtask", is_flag=True, help="List or add subtasks")
+@click.option("-tb", "--table", help="Specify Table", type=str)
 def tasks(
     ctx,
     list=None,
@@ -119,10 +121,14 @@ def tasks(
     output=None,
     path=None,
     subtask=False,
+    table=None,
 ):
     """
     Create and List tasks.
     """
+    table = None
+    if not table:
+        table = ctx.obj["config"].get("current_table", "tasks")
 
     if deadline:
         try:
@@ -139,6 +145,7 @@ def tasks(
 
     if list:
         task_list = application.list_tasks(
+            table=table,
             priority=priority,
             today=today,
             week=week,
@@ -156,7 +163,7 @@ def tasks(
                 path,
                 ctx.obj["config"]["unicode"] is False,
                 subtask,
-                "Tasks",
+                table,
                 pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
 
@@ -166,7 +173,7 @@ def tasks(
         if desc:
             description = click.edit()
         if subtask:
-            parent = fuzzy_search_task()
+            parent = fuzzy_search_task(table)
             if parent is None:
                 click.echo(
                     click.style(
@@ -178,6 +185,7 @@ def tasks(
 
         application.add_tasks(
             add,
+            table,
             description,
             priority,
             today,
@@ -236,6 +244,7 @@ def tasks(
 @click.option("-dd", "--deadline", help="Change the deadline of the task", type=str)
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
 @click.option("-ar", "--archive", is_flag=True, help="Edit Completed the task")
+@click.option("-tb", "--table", help="Specify Table", type=str)
 def task(
     ctx,
     desc=None,
@@ -251,12 +260,16 @@ def task(
     deadline=None,
     label=None,
     archive=False,
+    table=None,
 ):
     """
     Modify a specific task.
     """
 
-    current_task = fuzzy_search_task(archive)
+    if table is None:
+        table = ctx.obj["config"].get("current_table", "tasks")
+
+    current_task = fuzzy_search_task(table, archive)
     if current_task is None:
         click.echo(
             click.style(
@@ -297,7 +310,7 @@ def task(
             return
 
     if subtasks:
-        task_list = application.get_subtasks_recursive(current_task)
+        task_list = application.get_subtasks_recursive(current_task, table)
         if task_list:
             temp = current_task.copy()
             temp["parent_id"] = (
@@ -309,6 +322,7 @@ def task(
                 tasks=task_list,
                 plain=ctx.obj["config"]["unicode"] is False,
                 subtasks=subtasks,
+                table_name=table,
                 pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
             return
@@ -319,10 +333,10 @@ def task(
             description = current_task["description"]
         current_task["description"] = click.edit(description)
 
-    application.update_task(current_task)
+    application.update_task(current_task, table)
 
     if delete:
-        application.handle_delete(current_task)
+        application.handle_delete(current_task, table)
         return
 
 
@@ -339,10 +353,11 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     """
     if list:
         table_list = application.list_tables()
-        print_tables(table_list, ctx.obj["config"]["current_table"])
+        print_tables(table_list, ctx.obj["config"].get("current_table", "tasks"))
+
     elif add:
-        table_list = application.list_tables()
-        if add in table_list:
+        exists, add = sanitize_table_name(add)
+        if exists:
             click.echo(
                 click.style(
                     "Error: Table already exists.",
@@ -350,16 +365,9 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                 ),
             )
             return
-        add, ok = sanitize_table_name(add)
-        if not ok:
-            click.echo(
-                click.style(
-                    "Error: Table name is not valid, please use only alphanumeric characters or underscores."
-                    + "Maybe you are not a developer?",
-                    fg="red",
-                ),
-            )
+
         ok = application.add_table(add)
+
         if ok:
             click.echo(
                 click.style(
@@ -368,6 +376,91 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                 )
                 + "Table stored as: "
                 + click.style(add, fg="yellow"),
+            )
+
+    elif select:
+        exists, select = check_table_exists(select)
+        if not exists:
+            click.echo(
+                click.style(
+                    "Error: Table does not exist.",
+                    fg="red",
+                ),
+            )
+            return
+
+        ctx.obj["config"]["current_table"] = select
+        update_config(config_path, ctx.obj["config"])
+
+        click.echo(
+            click.style(
+                "Success: ",
+                fg="green",
+            )
+            + "Table selected: "
+            + click.style(select, fg="yellow"),
+        )
+
+    elif delete:
+        exists, delete = check_table_exists(delete)
+        if not exists:
+            click.echo(
+                click.style(
+                    "Error: Table does not exist.",
+                    fg="red",
+                ),
+            )
+            return
+        if application.list_tables() == 1:
+            click.echo(
+                click.style(
+                    "Error: Cannot delete the only table.",
+                    fg="red",
+                ),
+            )
+            return
+
+        ok = application.delete_table(delete)
+
+        if ok:
+            click.echo(
+                click.style(
+                    "Success: ",
+                    fg="green",
+                )
+                + "Table deleted: "
+                + click.style(delete, fg="yellow"),
+            )
+
+    elif name:
+        exists, name = check_table_exists(name)
+        if not exists:
+            click.echo(
+                click.style(
+                    "Error: Table does not exist.",
+                    fg="red",
+                ),
+            )
+            return
+
+        new_name = click.prompt(
+            "Enter new name for the table",
+            default=name,
+            show_default=False,
+        )
+
+        ok = application.rename_table(name, new_name)
+
+        if ok:
+            click.echo(
+                click.style(
+                    "Success: ",
+                    fg="green",
+                )
+                + "Table renamed from: "
+                + click.style(name, fg="yellow")
+                + " to: "
+                + click.style(new_name, fg="yellow"),
             )
 
 
@@ -409,9 +502,14 @@ def jira(ctx, sync=False, token=False, url=False, email=False):
         set_organization_email(ctx.obj["config"])
 
     if sync:
+        exists, _ = sanitize_table_name("jira")
+        if not exists:
+            application.add_table("jira")
+
         update_issues(
             ctx.obj["config"]["jira"]["url"],
             ctx.obj["config"]["jira"]["email"],
+            "jira",
         )
         click.echo("Issues synced")
 

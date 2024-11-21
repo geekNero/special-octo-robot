@@ -86,11 +86,33 @@ def update_table(table: str, new_data: dict) -> None:
     conn.commit()
 
 
-def delete_task(task_id: int) -> None:
+def delete_task(table: str, task_id: int) -> None:
     """
     Delete Task From Database
     """
-    query = f"DELETE FROM tasks WHERE id = {task_id}"
+    query = f"DELETE FROM {table} WHERE id = {task_id}"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(query)
+    conn.commit()
+
+
+def delete_table(table_name: str) -> None:
+    """
+    Delete Table From Database
+    """
+    query = f"DROP TABLE {table_name}"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(query)
+    conn.commit()
+
+
+def rename_table(old_table_name: str, new_table_name: str) -> None:
+    """
+    Rename Table In Database
+    """
+    query = f"ALTER TABLE {old_table_name} RENAME TO {new_table_name}"
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)

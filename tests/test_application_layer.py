@@ -297,7 +297,7 @@ class SearchTask(unittest.TestCase):
         # set test environment
         create_db()
 
-        self.assertEqual(search_task(1), {})
+        self.assertEqual(search_task(1, "tasks"), {})
 
     def test_search_task_with_filled_db(self):
         # check if DEBUG is set to True
@@ -306,7 +306,7 @@ class SearchTask(unittest.TestCase):
         create_db()
         fill_db()
 
-        self.assertEqual(search_task(1), {
+        self.assertEqual(search_task(1, "tasks"), {
                 "id": 1,
                 "title": "Task 1",
                 "description": "Description 1",
@@ -327,7 +327,7 @@ class SearchTask(unittest.TestCase):
         create_db()
         fill_db()
 
-        self.assertEqual(search_task(100), {})
+        self.assertEqual(search_task(100, "tasks"), {})
 
 class GetSubtasks(unittest.TestCase):
     def test_get_subtasks_with_empty_db(self):
@@ -336,7 +336,7 @@ class GetSubtasks(unittest.TestCase):
         # set test environment
         create_db()
 
-        self.assertEqual(get_subtasks(1), [])
+        self.assertEqual(get_subtasks(1, "tasks"), [])
 
     def test_get_subtasks_with_filled_db(self):
         # check if DEBUG is set to True
@@ -346,7 +346,7 @@ class GetSubtasks(unittest.TestCase):
         fill_db()
 
         self.assertEqual(
-            get_subtasks(1),
+            get_subtasks(1, "tasks"),
             [
                 {
                     'id': 9,
@@ -369,7 +369,7 @@ class GetSubtasks(unittest.TestCase):
         create_db()
         fill_db()
 
-        self.assertEqual(get_subtasks(100), [])
+        self.assertEqual(get_subtasks(100, "tasks"), [])
 
 class HandleDelete(unittest.TestCase):
     def test_with_filled_db(self):
@@ -379,7 +379,7 @@ class HandleDelete(unittest.TestCase):
         create_db()
         fill_db()
         # test with valid id
-        handle_delete({"id": 1, "parent_id": None})
+        handle_delete({"id": 1, "parent_id": None}, "tasks")
         self.assertEqual(list_tasks(), [
             {
                 "id": 8,
@@ -480,8 +480,8 @@ class HandleDelete(unittest.TestCase):
         create_db()
         fill_db()
         # test with subtask id
-        handle_delete({"id": 9, "parent_id": 1})
-        self.assertEqual(search_task(1), {
+        handle_delete({"id": 9, "parent_id": 1}, "tasks")
+        self.assertEqual(search_task(1, "tasks"), {
                 "id": 1,
                 "title": "Task 1",
                 "description": "Description 1",
@@ -502,12 +502,12 @@ class HandleModify(unittest.TestCase):
         # set test environment
         create_db()
         fill_db()
-        task = search_task(1)
+        task = search_task(1, "tasks")
         task['status'] = 'Completed'
-        update_task(task)   # cascading update
-        self.assertEqual(search_task(1), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '2024-08-31', 'parent_id': None, 'subtasks': 1})
-        self.assertEqual(get_subtasks(1), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1, 'parent_id': 1}])
-        self.assertEqual(get_subtasks(9), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0, 'parent_id': 9}])
+        update_task(task, "tasks")   # cascading update
+        self.assertEqual(search_task(1, "tasks"), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '2024-08-31', 'parent_id': None, 'subtasks': 1})
+        self.assertEqual(get_subtasks(1, "tasks"), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1, 'parent_id': 1}])
+        self.assertEqual(get_subtasks(9, "tasks"), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0, 'parent_id': 9}])
 
 
 if __name__ == '__main__':
