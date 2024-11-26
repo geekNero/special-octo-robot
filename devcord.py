@@ -166,6 +166,13 @@ def tasks(
                 table,
                 pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
+        else:
+            click.echo(
+                click.style(
+                    "Info: No tasks found.",
+                    fg="yellow",
+                ),
+            )
 
     elif add:
         parent = None
