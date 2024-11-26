@@ -27,8 +27,8 @@ def sanitize_text(text):
     return text.strip().replace("'", '"')
 
 
-def fuzzy_search_task(completed=False) -> dict:
-    all_tasks = application.list_tasks(subtasks=True, completed=completed)
+def fuzzy_search_task(table, completed=False) -> dict:
+    all_tasks = application.list_tasks(table, subtasks=True, completed=completed)
     task_titles = [each_task["title"] for each_task in all_tasks]
 
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
@@ -55,3 +55,26 @@ def generate_migration_error():
             fg="red",
         ),
     )
+
+
+def sanitize_table_name(table_name: str) -> (str, bool):
+    for ch in table_name:
+        if ch.isalnum() or ch == " " or ch == "_":
+            continue
+        else:
+            return "", False
+
+    return table_name.replace(" ", "_"), True
+
+
+def check_table_exists(table_name: str) -> bool:
+    table_name, ok = sanitize_table_name(table_name)
+    if not ok:
+        echo(
+            style(
+                "Error: Table name is not valid, please use only alphanumeric characters or underscores."
+                + "Maybe you are not a developer?",
+                fg="red",
+            ),
+        )
+    return table_name in application.list_tables(), table_name

@@ -1,46 +1,36 @@
 import json
-
-from click import echo
-from click import style
+import sys
 
 from .__version__ import VERSION
 
 
 def check_unicode_support():
-    try:
-        echo(
-            style(
-                text="✔️ Unicode Supported",
-                fg="yellow",
-            ),
-        )
-        return True
-    except UnicodeEncodeError:
-        echo(
-            style(
-                text="Unicode Unsupported",
-                fg="yellow",
-            ),
-        )
-        return False
+    return sys.stdout.encoding.lower() == "utf-8"
 
 
-def initialize_config(path):
-    with open(path, "w") as file:
+def initialize_config(
+    path,
+    theme="light",
+    default_output="table",
+    version=VERSION,
+    pretty_tree=True,
+    current_table="tasks",
+    **kwargs,
+):
+    with open(path, "w+") as file:
         config = {
-            "theme": "light",
-            "default_output": "table",
-            "unicode": check_unicode_support(),
-            "version": VERSION,
-            "pretty_tree": True,
+            "theme": theme,
+            "default_output": default_output,
+            "version": version,
+            "pretty_tree": pretty_tree,
+            "current_table": current_table,
         }
         json.dump(config, file, indent=4)
         return config
 
 
 def update_config(path, config):
-    with open(path, "w") as file:
-        json.dump(config, file, indent=4)
+    initialize_config(path, **config)
 
 
 def get_config(path):

@@ -10,22 +10,23 @@ from app.application import add_tasks
 from app.application import update_task
 
 
-def update_issues(url, email):
+def update_issues(url, email, table):
     new_issues = fetch_issues(url, email)
     for issue in parse_issues(new_issues):
-        old_issue = jira.database.search_task(issue["title"])
-        parent = jira.database.search_task(issue["parent"])
+        old_issue = jira.database.search_task(issue["title"], table)
+        parent = jira.database.search_task(issue["parent"], table)
         if old_issue:
             old_issue["title"] = issue["title"]
             old_issue["priority"] = issue["priority"]
             old_issue["label"] = issue["label"]
             old_issue["parent_id"] = parent.get("id", None)
             old_issue["status"] = issue["status"]
-            update_task(old_issue)
+            update_task(old_issue, table)
 
         else:
             add_tasks(
                 title=issue["title"],
+                table=table,
                 priority=issue["priority"],
                 description=issue["description"],
                 label=issue["label"],

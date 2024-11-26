@@ -1,9 +1,5 @@
 import datetime
 
-import click
-from click import echo
-from click import style
-
 from . import database
 from app.utility import convert_to_console_date
 from app.utility import convert_to_db_date
@@ -12,6 +8,7 @@ from app.utility import sanitize_text
 
 
 def list_tasks(
+    table="tasks",
     priority=None,
     today=None,
     week=None,
@@ -56,7 +53,7 @@ def list_tasks(
 
     try:
         results = database.list_table(
-            table="tasks",
+            table=table,
             columns=[
                 "id",
                 "title",
@@ -98,7 +95,8 @@ def list_tasks(
 
 
 def add_tasks(
-    title,
+    title: str,
+    table="tasks",
     description=None,
     priority=None,
     today=False,
@@ -146,19 +144,19 @@ def add_tasks(
         columns.append("parent_id")
         values.append(str(parent["id"]))
     try:
-        database.insert_into_table(table="tasks", columns=columns, values=values)
+        database.insert_into_table(table, columns=columns, values=values)
     except:
         generate_migration_error()
         return
     # Insert the record then increment the count of the parent task.
     if parent:
         database.update_table(
-            "tasks",
+            table,
             {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
         )
 
 
-def search_task(task_id) -> dict | None:
+def search_task(task_id, table: str) -> dict | None:
     """
     Search a task by its id.
     :param task_id:
@@ -166,7 +164,7 @@ def search_task(task_id) -> dict | None:
     """
     try:
         task = database.list_table(
-            table="tasks",
+            table=table,
             columns=[
                 "id",
                 "title",
@@ -203,10 +201,10 @@ def search_task(task_id) -> dict | None:
     return task_details
 
 
-def get_subtasks(task_id: int):
+def get_subtasks(task_id: int, table: str):
     try:
         results = database.list_table(
-            table="tasks",
+            table=table,
             columns=[
                 "id",
                 "title",
@@ -246,19 +244,18 @@ def get_subtasks(task_id: int):
     return final_results
 
 
-def get_subtasks_recursive(task: dict):
+def get_subtasks_recursive(task: dict, table: str):
     if task["subtasks"] == 0:
         return []
-    task["parent_id"] = -1  # For subtasks, the parent of the parent node is irrelevant
-    # Parent_id cannot be -1, therefore functions ahead can recognize this node as root.
+
     final_results = [task]
-    for child in get_subtasks(task["id"]):
+    for child in get_subtasks(task["id"], table):
         final_results.append(child)
-        final_results.extend(get_subtasks_recursive(child))
+        final_results.extend(get_subtasks_recursive(child), table)
     return final_results
 
 
-def update_task(updated_data: dict):
+def update_task(updated_data: dict, table: str):
     """If marked as completed then set datetime as now else retain prev value"""
 
     if updated_data["deadline"] == "week":
@@ -287,35 +284,35 @@ def update_task(updated_data: dict):
         final_data[key] = updated_data[key]
 
     try:
-        database.update_table("tasks", final_data)
+        database.update_table(table, final_data)
     except Exception as e:
         print(e)
         generate_migration_error()
         return
     if updated_data["subtasks"] != 0 and updated_data["status"] == "'Completed'":
-        children = get_subtasks(updated_data["id"])
+        children = get_subtasks(updated_data["id"], table)
         for child in children:
             child["status"] = "Completed"
             try:
-                update_task(child)
+                update_task(child, table)
             except Exception:
                 generate_migration_error()
 
 
-def handle_delete(current_task: dict):
+def handle_delete(current_task: dict, table: str):
     """
     Delete a task from the database
     """
-    database.delete_task(current_task["id"])
+    database.delete_task(table, current_task["id"])
     children = database.list_table(
-        table="tasks",
+        table=table,
         columns=["id", "parent_id"],
         where_clause=f"WHERE parent_id = {current_task['id']}",
     )
     for child in children:
-        handle_delete({"id": child[0], "parent_id": child[1]})
+        handle_delete({"id": child[0], "parent_id": child[1]}, table)
     if current_task["parent_id"]:
-        parent = search_task(current_task["parent_id"])
+        parent = search_task(current_task["parent_id"], table)
         if parent and parent["subtasks"] > 0:
             try:
                 database.update_table(
@@ -324,3 +321,57 @@ def handle_delete(current_task: dict):
                 )
             except:
                 generate_migration_error()
+
+
+def list_tables() -> list:
+    """
+    List all the tables in the database.
+    """
+    try:
+        res = database.list_tables()
+    except:
+        generate_migration_error()
+        return []
+
+    result = []
+    for table in res:
+        if table[0] != "sqlite_sequence":
+            result.append(table[0])
+    return result
+
+
+def add_table(table_name: str) -> bool:
+    """
+    Add a table to the database.
+    """
+    try:
+        database.initialize(table_name)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+def delete_table(table_name: str) -> bool:
+    """
+    Delete a table from the database.
+    """
+    try:
+        database.delete_table(table_name)
+        return True
+
+    except Exception as e:
+        print(e)
+        return False
+
+
+def rename_table(old_name: str, new_name: str) -> bool:
+    """
+    Rename a table in the database.
+    """
+    try:
+        database.rename_table(old_name, new_name)
+        return True
+    except Exception as e:
+        print(e)
+        return False
