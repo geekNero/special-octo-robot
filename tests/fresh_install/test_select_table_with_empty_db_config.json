@@ -2,5 +2,5 @@
     "theme": "light",
     "version": "0.2.0",
     "pretty_tree": true,
-    "current_table": "tasks"
+    "current_table": "test_table"
 }
