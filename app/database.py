@@ -1,5 +1,7 @@
 import sqlite3
 
+from docutils.nodes import table
+
 from app.constants import db_path
 
 
@@ -28,7 +30,7 @@ def initialize(table_name: str) -> None:
         AFTER INSERT ON {table_name}
         FOR EACH ROW
         BEGIN
-            UPDATE tasks SET completed = NEW.deadline WHERE id = NEW.id;
+            UPDATE {table_name} SET completed = NEW.deadline WHERE id = NEW.id;
         END;
     """,
     )

@@ -529,7 +529,7 @@ def jira(ctx, sync=False, token=False, url=False, email=False):
         set_organization_email(ctx.obj["config"])
 
     if sync:
-        exists, _ = sanitize_table_name("jira")
+        exists, _ = check_table_exists("jira")
         if not exists:
             application.add_table("jira")
 

@@ -2,13 +2,13 @@ import app.database as db
 from app.utility import generate_migration_error
 
 
-def search_task(title):
+def search_task(key):
     """
     Search a task by it's title.
     """
     try:
         task = db.list_table(
-            table="tasks",
+            table="jira",
             columns=[
                 "id",
                 "title",
@@ -21,10 +21,10 @@ def search_task(title):
                 "parent_id",
                 "subtasks",
             ],
-            where_clause=f"WHERE title = '{title}'",
+            where_clause=f"WHERE title LIKE '{key}%'",
         )
-    except:
-        generate_migration_error()
+    except Exception as e:
+        print(e)
         return {}
     task_details = {}
     if task:

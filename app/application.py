@@ -68,8 +68,8 @@ def list_tasks(
             where_clause=where_clause,
             order_by=f"ORDER BY {order_by}",
         )
-    except:
-        generate_migration_error()
+    except Exception as e:
+        print(e)
         return None
 
     final_results = []
@@ -145,8 +145,8 @@ def add_tasks(
         values.append(str(parent["id"]))
     try:
         database.insert_into_table(table, columns=columns, values=values)
-    except:
-        generate_migration_error()
+    except Exception as e:
+        print(e)
         return
     # Insert the record then increment the count of the parent task.
     if parent:
