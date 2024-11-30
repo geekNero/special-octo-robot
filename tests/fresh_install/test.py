@@ -10,7 +10,9 @@ def create_db_and_config():
     os.makedirs(path, exist_ok=True)
     if os.path.exists(db_path):
         os.remove(db_path)
+    if os.path.exists(config_path):
         os.remove(config_path)
+
     initialize("tasks")
 
 class TestFreshInstall(unittest.TestCase):
