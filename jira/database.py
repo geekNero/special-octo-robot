@@ -1,5 +1,4 @@
 import app.database as db
-from app.utility import generate_migration_error
 
 
 def search_task(key):

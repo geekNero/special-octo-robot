@@ -1,7 +1,5 @@
 import sqlite3
 
-from docutils.nodes import table
-
 from app.constants import db_path
 
 
