@@ -151,6 +151,8 @@ def tasks(
             click.echo('Example: "01/01/2020"')
             return
 
+    if list:
+
         task_list = application.list_tasks(
             table=table,
             priority=priority,
@@ -163,17 +165,16 @@ def tasks(
             subtasks=subtask,
         )
 
-        if list:
-            if (
-                priority is not None
-                or today
-                or week
-                or inprogress
-                or completed
-                or pending
-                or label
-            ):
-                subtask = False
+        if (
+            priority is not None
+            or today
+            or week
+            or inprogress
+            or completed
+            or pending
+            or label
+        ):
+            subtask = False
 
         if task_list:
             print_tasks(
