@@ -479,6 +479,9 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
         ok = application.rename_table(name, new_name)
 
         if ok:
+            if name == ctx.obj["config"]["current_table"]:
+                ctx.obj.config["current_table"] = new_name
+                update_config(config_path, ctx.obj.config)
             click.echo(
                 click.style(
                     "Success: ",
