@@ -19,7 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/geekNero/special-octo-robot.git",
-    py_modules=["devcord", "app"],
+    py_modules=["devcord", "app", "jira"],
     packages=find_packages(),
     install_requires=[requirements],
     python_requires=">=3.10",

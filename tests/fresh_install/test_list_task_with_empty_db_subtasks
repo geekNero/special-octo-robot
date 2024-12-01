@@ -1,0 +1,9 @@
+
+tasks
+
+┗━━  parent
+    Priority: 0 | None | Pending | None
+    
+    ┗━━  child
+        Priority: 0 | None | Pending | None
+        

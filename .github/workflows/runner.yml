@@ -33,6 +33,7 @@ jobs:
     - name: Test with pytest
       run: |
         export PYTHONPATH=$(pwd)
+        chmod +x tests/verify_debug.sh
         cd tests && bash tests.sh
 
     - name: Linting

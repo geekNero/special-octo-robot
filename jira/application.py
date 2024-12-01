@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import click
@@ -13,20 +14,23 @@ from app.application import update_task
 def update_issues(url, email, table):
     new_issues = fetch_issues(url, email)
     for issue in parse_issues(new_issues):
-        old_issue = jira.database.search_task(issue["title"], table)
-        parent = jira.database.search_task(issue["parent"], table)
+        old_issue = jira.database.search_task(issue["key"])
+        parent = jira.database.search_task(issue["parent"])
         if old_issue:
-            old_issue["title"] = issue["title"]
+            old_issue["title"] = issue["key"] + ": " + issue["title"]
             old_issue["priority"] = issue["priority"]
             old_issue["label"] = issue["label"]
             old_issue["parent_id"] = parent.get("id", None)
             old_issue["status"] = issue["status"]
+            old_issue["deadline"] = issue["deadline"]
+            old_issue["description"] = issue["description"]
             update_task(old_issue, table)
 
         else:
             add_tasks(
-                title=issue["title"],
+                title=issue["key"] + ": " + issue["title"],
                 table=table,
+                deadline=issue["deadline"],
                 priority=issue["priority"],
                 description=issue["description"],
                 label=issue["label"],
@@ -41,10 +45,12 @@ def parse_issues(issues):
     new_issues = []
     for issue in issues:
         issue_details = {
-            "title": issue["key"],
-            "description": issue["fields"]["summary"],
+            "key": issue["key"],
+            "title": issue["fields"]["summary"],
+            "description": issue["fields"]["description"],
+            "deadline": issue["fields"].get("duedate", None),
             "priority": int(issue["fields"]["priority"]["id"]),
-            "label": "Jira/" + issue["fields"]["issuetype"]["name"],
+            "label": issue["fields"]["issuetype"]["name"],
             "parent": issue["fields"].get("parent", {}).get("key", ""),
         }
         if issue["fields"]["status"]["name"] == "Open":
@@ -53,6 +59,10 @@ def parse_issues(issues):
             issue_details["status"] = "In Progress"
         else:
             issue_details["status"] = "Completed"
+
+        if issue_details["deadline"]:
+            date_obj = datetime.datetime.strptime(issue_details["deadline"], "%Y-%m-%d")
+            issue_details["deadline"] = date_obj.strftime("%d/%m/%Y")
         new_issues.append(issue_details)
     return new_issues
 
@@ -75,7 +85,7 @@ def fetch_issues(url, email) -> list:
     try:
         response = requests.get(
             url
-            + "rest/api/2/search?jql=assignee=currentUser()&fields=summary,status,priority,issuetype,parent",
+            + "rest/api/2/search?jql=assignee=currentUser()&fields=summary,status,priority,issuetype,parent,description,duedate",
             headers=headers,
             auth=auth,
         )

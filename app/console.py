@@ -80,7 +80,7 @@ def print_tree(tasks, table_name="Tasks", pretty_tree=True):
         else:
             return f"{task['title']}\nPriority: | {task['deadline']}| {task['status']} | {task['label']}"
 
-    root = Tree(table_name, style="bold")
+    root = Tree("\n" + table_name + "\n", style="bold")
     root.guide_style = "bold blue"
     existing_node = {}
 

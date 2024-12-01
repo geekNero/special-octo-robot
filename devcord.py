@@ -130,6 +130,15 @@ def tasks(
     if not table:
         table = ctx.obj["config"].get("current_table", "tasks")
 
+    if not add and not list:
+        click.echo(
+            click.style(
+                "Error: Please specify an action.",
+                fg="red",
+            ),
+        )
+        return
+
     if deadline:
         try:
             deadline = convert_to_db_date(deadline)
@@ -144,6 +153,17 @@ def tasks(
             return
 
     if list:
+        if (
+            priority is not None
+            or today
+            or week
+            or inprogress
+            or completed
+            or pending
+            or label
+        ):
+            subtask = False
+
         task_list = application.list_tasks(
             table=table,
             priority=priority,
@@ -165,6 +185,13 @@ def tasks(
                 subtask,
                 table,
                 pretty_tree=ctx.obj["config"].get("pretty_tree", True),
+            )
+        else:
+            click.echo(
+                click.style(
+                    "Info: No tasks found.",
+                    fg="yellow",
+                ),
             )
 
     elif add:
@@ -374,8 +401,8 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                     "Success: ",
                     fg="green",
                 )
-                + "Table stored as: "
-                + click.style(add, fg="yellow"),
+                + "Table stored as "
+                + add,
             )
 
     elif select:
@@ -397,8 +424,8 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                 "Success: ",
                 fg="green",
             )
-            + "Table selected: "
-            + click.style(select, fg="yellow"),
+            + "Table selected "
+            + select,
         )
 
     elif delete:
@@ -429,7 +456,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                     fg="green",
                 )
                 + "Table deleted: "
-                + click.style(delete, fg="yellow"),
+                + delete,
             )
 
     elif name:
@@ -457,7 +484,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
                     "Success: ",
                     fg="green",
                 )
-                + "Table renamed from: "
+                + "Table renamed from "
                 + click.style(name, fg="yellow")
                 + " to: "
                 + click.style(new_name, fg="yellow"),
@@ -502,7 +529,7 @@ def jira(ctx, sync=False, token=False, url=False, email=False):
         set_organization_email(ctx.obj["config"])
 
     if sync:
-        exists, _ = sanitize_table_name("jira")
+        exists, _ = check_table_exists("jira")
         if not exists:
             application.add_table("jira")
 
