@@ -88,6 +88,7 @@ def fetch_issues(url, email) -> list:
             + "rest/api/2/search?jql=assignee=currentUser()&fields=summary,status,priority,issuetype,parent,description,duedate",
             headers=headers,
             auth=auth,
+            timeout=30,
         )
     except Exception as e:
         click.echo(
