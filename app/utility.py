@@ -21,10 +21,7 @@ def convert_to_console_date(date_str, title=None):
 
 def convert_to_db_date(date_str):
     # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
-    if "-" in date_str:
-        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-    else:
-        date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
     return date_obj.strftime("%Y-%m-%d")
 
 
