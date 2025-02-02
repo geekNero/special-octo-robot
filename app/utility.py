@@ -30,6 +30,11 @@ def sanitize_text(text):
 
 
 def fuzzy_search_task(table, completed=False, current_task_id=-1):
+    current_task_title = application.search_task(current_task_id, table).get(
+        "title",
+        "No Title",
+    )
+
     if current_task_id == -1:  # root level
         tasks = application.list_tasks(table, subtasks=False, completed=completed)
     else:
@@ -40,8 +45,9 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
 
     if tasks is None:
         # previously selected task was leaf node and has no subtasks
+
         select_task_title = prompt(
-            ". To select current task or press enter to go back one level\n",
+            f"Currently Selected Task : {current_task_title}\nEnter . To select current task or Press Enter to go back one level\n",
         )
         if select_task_title.strip() == ".":
             return current_task_id
@@ -54,7 +60,7 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
     task_titles = [each_task["title"] for each_task in tasks]
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
     select_task_title = prompt(
-        "Enter any part from title of the task OR press enter to go back one level OR . to quit\n",
+        f"Currently Selected Task : {current_task_title}\nEnter any part from title of the task OR press enter to go back one level OR . to quit\n",
         completer=task_completer,
     )
 
