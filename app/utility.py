@@ -21,7 +21,10 @@ def convert_to_console_date(date_str, title=None):
 
 def convert_to_db_date(date_str):
     # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
-    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
+    if "-" in date_str:
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+    else:
+        date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
     return date_obj.strftime("%Y-%m-%d")
 
 
@@ -29,78 +32,62 @@ def sanitize_text(text):
     return text.strip().replace("'", '"')
 
 
-def fuzzy_search_task(table, completed=False, current_task_id=-1, ctx={}) -> dict:
-
-    def search_task_recur(tasks, table):
-        task_titles = [each_task["title"] for each_task in tasks]
-        task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-        select_task_title = prompt(
-            "Enter any part from title of the task OR -1 to go back one level\n",
-            completer=task_completer,
-        )
-
-        # go back one level
-        if select_task_title.strip() == "-1":
-            return -1
-
-        current_task = next(
-            (
-                each_task
-                for each_task in tasks
-                if each_task["title"] == select_task_title
-            ),
-            None,
-        )
-
-        if current_task is not None and current_task.get("subtasks", 0):
-            proceed = (
-                prompt("Do you want to search within the subtasks? (y/n): ")
-                .strip()
-                .lower()
-            )
-            if proceed == "y":
-                val = search_task_recur(
-                    application.get_subtasks(current_task["id"], table),
-                    table,
-                )
-                if val == -1:
-                    return search_task_recur(tasks, table)
-                return val
-        return current_task
-
-    if current_task_id == -1:  # if -1 then list tasks from root level
-        all_tasks = application.list_tasks(table, subtasks=False, completed=completed)
+def fuzzy_search_task(table, completed=False, current_task_id=-1):
+    if current_task_id == -1:  # root level
+        tasks = application.list_tasks(table, subtasks=False, completed=completed)
     else:
-        all_tasks = application.get_subtasks(
+        tasks = application.get_subtasks(
             current_task_id,
             table,
-        )  # if not -1 then list subtasks of current task
+        )  # subtasks of current task
 
-    task = search_task_recur(all_tasks, table)  # proceed with the search
+    if tasks is None:
+        # previously selected task was leaf node and has no subtasks
+        select_task_title = prompt(
+            ". To select current task or press enter to go back one level\n",
+        )
+        if select_task_title.strip() == ".":
+            return current_task_id
+        return fuzzy_search_task(
+            table,
+            completed,
+            application.search_task(current_task_id, table).get("parent_id", -1),
+        )
 
-    copy_of_current_task = current_task_id
-    while (
-        task == -1
-    ):  # already at root position or user wants to go back from any node to parent node.
-        copy_of_current_task = application.search_task(copy_of_current_task, table).get(
+    task_titles = [each_task["title"] for each_task in tasks]
+    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
+    select_task_title = prompt(
+        "Enter any part from title of the task OR press enter to go back one level OR . to quit\n",
+        completer=task_completer,
+    )
+
+    if select_task_title.strip() == ".":
+        if current_task_id == -1:
+            return fuzzy_search_task(
+                table,
+                completed,
+                current_task_id,
+            )  # search continues
+        return current_task_id
+
+    if select_task_title.strip() == "":
+        # user pressed enter without selecting any task
+        parent_task = application.search_task(current_task_id, table).get(
             "parent_id",
         )
-        if copy_of_current_task is None:
-            all_tasks = application.list_tasks(
-                table,
-                subtasks=False,
-                completed=completed,
-            )
-            copy_of_current_task = -1  # came back to root level so mark it as -1
-        else:
-            all_tasks = application.get_subtasks(copy_of_current_task, table)
-        task = search_task_recur(all_tasks, table)
+        if parent_task is None:
+            parent_task = -1
 
-    if task is not None and task["id"] != current_task_id:
-        ctx.obj["config"]["current_task"] = task["id"]
-        update_config(config_path, ctx.obj["config"])
+        return fuzzy_search_task(table, completed, parent_task)
 
-    return task
+    current_task = next(
+        (each_task for each_task in tasks if each_task["title"] == select_task_title),
+        None,
+    )
+
+    if current_task is not None and current_task.get("subtasks", 0):
+        return fuzzy_search_task(table, completed, current_task["id"])
+    return current_task["id"]  # if leaf task
 
 
 def generate_migration_error():
