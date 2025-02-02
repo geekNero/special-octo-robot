@@ -30,9 +30,10 @@ def sanitize_text(text):
 
 
 def fuzzy_search_task(table, completed=False, current_task_id=-1):
-    current_task_title = application.search_task(current_task_id, table).get(
+    current_task = application.search_task(current_task_id, table)
+    current_task_title = current_task.get(
         "title",
-        "No Title",
+        "Root",
     )
 
     if current_task_id == -1:  # root level
@@ -43,20 +44,6 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
             table,
         )  # subtasks of current task
 
-    if tasks is None:
-        # previously selected task was leaf node and has no subtasks
-
-        select_task_title = prompt(
-            f"Currently Selected Task : {current_task_title}\nEnter . To select current task or Press Enter to go back one level\n",
-        )
-        if select_task_title.strip() == ".":
-            return current_task_id
-        return fuzzy_search_task(
-            table,
-            completed,
-            application.search_task(current_task_id, table).get("parent_id", -1),
-        )
-
     task_titles = [each_task["title"] for each_task in tasks]
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
     select_task_title = prompt(
@@ -65,32 +52,27 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
     )
 
     if select_task_title.strip() == ".":
-        if current_task_id == -1:
-            return fuzzy_search_task(
-                table,
-                completed,
-                current_task_id,
-            )  # search continues
         return current_task_id
-
-    if select_task_title.strip() == "":
+    elif select_task_title.strip() == "":
         # user pressed enter without selecting any task
-        parent_task = application.search_task(current_task_id, table).get(
+        parent_task_id = current_task.get(
             "parent_id",
         )
-        if parent_task is None:
-            parent_task = -1
 
-        return fuzzy_search_task(table, completed, parent_task)
+        current_task_id = parent_task_id if parent_task_id is not None else -1
 
-    current_task = next(
-        (each_task for each_task in tasks if each_task["title"] == select_task_title),
-        None,
-    )
+    else:
+        current_task = next(
+            (
+                each_task
+                for each_task in tasks
+                if each_task["title"] == select_task_title
+            ),
+            None,
+        )
+        current_task_id = current_task.get("id", -1)
 
-    if current_task is not None and current_task.get("subtasks", 0):
-        return fuzzy_search_task(table, completed, current_task["id"])
-    return current_task["id"]  # if leaf task
+    return fuzzy_search_task(table, completed, current_task_id)  # if leaf task
 
 
 def generate_migration_error():
