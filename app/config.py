@@ -15,6 +15,7 @@ def initialize_config(
     pretty_tree=True,
     current_table="tasks",
     jira={},
+    current_task=-1,
     **kwargs,
 ):
     with open(path, "w+") as file:
@@ -24,6 +25,7 @@ def initialize_config(
             "pretty_tree": pretty_tree,
             "current_table": current_table,
             "jira": jira,
+            "current_task": current_task,
         }
         json.dump(config, file, indent=4)
         return config

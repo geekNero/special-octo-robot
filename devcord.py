@@ -200,7 +200,11 @@ def tasks(
         if desc:
             description = click.edit()
         if subtask:
-            parent = fuzzy_search_task(table)
+            parent = fuzzy_search_task(
+                table=table,
+                current_task_id=ctx.obj["config"].get("current_task", -1),
+            )
+
             if parent is None:
                 click.echo(
                     click.style(
@@ -296,7 +300,12 @@ def task(
     if table is None:
         table = ctx.obj["config"].get("current_table", "tasks")
 
-    current_task = fuzzy_search_task(table, archive)
+    current_task = fuzzy_search_task(
+        table=table,
+        completed=archive,
+        current_task_id=ctx.obj["config"].get("current_task", -1),
+    )
+
     if current_task is None:
         click.echo(
             click.style(
@@ -305,6 +314,9 @@ def task(
             ),
         )
         return
+
+    ctx.obj["config"]["current_task"] = current_task["id"]
+    update_config(config_path, ctx.obj["config"])
 
     if inprogress:
         current_task["status"] = "In Progress"
@@ -417,6 +429,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             return
 
         ctx.obj["config"]["current_table"] = select
+        ctx.obj["config"]["current_task"] = -1
         update_config(config_path, ctx.obj["config"])
 
         click.echo(
