@@ -299,8 +299,6 @@ def task(
 
     if table is None:
         table = ctx.obj["config"].get("current_table", "tasks")
-    if ctx.obj["config"].get("current_task", -1) is None:
-        ctx.obj["config"]["current_task"] = -1
 
     current_task = fuzzy_search_task(
         table=table,
