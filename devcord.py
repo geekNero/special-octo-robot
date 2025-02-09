@@ -18,7 +18,6 @@ from app.migrations import update_version
 from app.utility import check_table_exists
 from app.utility import convert_to_db_date
 from app.utility import fuzzy_search_task
-from app.utility import sanitize_table_name
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -153,16 +152,6 @@ def tasks(
             return
 
     if list:
-        if (
-            priority is not None
-            or today
-            or week
-            or inprogress
-            or completed
-            or pending
-            or label
-        ):
-            subtask = False
 
         task_list = application.list_tasks(
             table=table,
@@ -175,6 +164,17 @@ def tasks(
             label=label,
             subtasks=subtask,
         )
+
+        if (
+            priority is not None
+            or today
+            or week
+            or inprogress
+            or completed
+            or pending
+            or label
+        ):
+            subtask = False
 
         if task_list:
             print_tasks(
@@ -492,6 +492,9 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
         ok = application.rename_table(name, new_name)
 
         if ok:
+            if name == ctx.obj["config"]["current_table"]:
+                ctx.obj.config["current_table"] = new_name
+                update_config(config_path, ctx.obj.config)
             click.echo(
                 click.style(
                     "Success: ",

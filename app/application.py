@@ -134,6 +134,8 @@ def add_tasks(
     elif completed:
         columns.append("status")
         values.append("'Completed'")
+        columns.append("completed")
+        values.append("date('now')")
     elif pending:
         columns.append("status")
         values.append("'Pending'")
