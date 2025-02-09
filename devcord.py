@@ -200,15 +200,11 @@ def tasks(
         if desc:
             description = click.edit()
         if subtask:
-            if ctx.obj["config"].get("current_task", -1) is None:
-                ctx.obj["config"]["current_task"] = -1
-            current_task_id = fuzzy_search_task(
+            parent = fuzzy_search_task(
                 table=table,
                 current_task_id=ctx.obj["config"].get("current_task", -1),
             )
-            ctx.obj["config"]["current_task"] = current_task_id
-            update_config(config_path, ctx.obj["config"])
-            parent = application.search_task(current_task_id, table)
+
             if parent is None:
                 click.echo(
                     click.style(
@@ -306,15 +302,12 @@ def task(
     if ctx.obj["config"].get("current_task", -1) is None:
         ctx.obj["config"]["current_task"] = -1
 
-    current_task_id = fuzzy_search_task(
+    current_task = fuzzy_search_task(
         table=table,
         completed=archive,
         current_task_id=ctx.obj["config"].get("current_task", -1),
     )
-    ctx.obj["config"]["current_task"] = current_task_id
-    update_config(config_path, ctx.obj["config"])
 
-    current_task = application.search_task(current_task_id, table)
     if current_task is None:
         click.echo(
             click.style(
@@ -323,6 +316,9 @@ def task(
             ),
         )
         return
+
+    ctx.obj["config"]["current_task"] = current_task["id"]
+    update_config(config_path, ctx.obj["config"])
 
     if inprogress:
         current_task["status"] = "In Progress"

@@ -30,7 +30,9 @@ def sanitize_text(text):
 
 
 def fuzzy_search_task(table, completed=False, current_task_id=-1):
-    current_task = application.search_task(current_task_id, table)
+    current_task = (
+        application.search_task(current_task_id, table) if current_task_id > 0 else {}
+    )
     current_task_title = current_task.get(
         "title",
         "Root",
@@ -46,13 +48,25 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
 
     task_titles = [each_task["title"] for each_task in tasks]
     task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
+    if len(current_task_title) > 30:
+        current_task_title = current_task_title[:30] + "..."
     select_task_title = prompt(
-        f"Currently Selected Task : {current_task_title}\nEnter any part from title of the task OR press enter to go back one level OR . to quit\n",
+        f"\nCurrently selected Task : {current_task_title}, "
+        + "press: \nAny part of the title, OR\nPress ↵ to go back one level, OR\nPress . to select current task\n\n",
         completer=task_completer,
     )
 
     if select_task_title.strip() == ".":
-        return current_task_id
+        if current_task_id == -1:
+            echo(
+                style(
+                    "Error: Cannot select root task.",
+                    fg="red",
+                ),
+            )
+        else:
+            return current_task
+
     elif select_task_title.strip() == "":
         # user pressed enter without selecting any task
         parent_task_id = current_task.get(
@@ -70,7 +84,15 @@ def fuzzy_search_task(table, completed=False, current_task_id=-1):
             ),
             None,
         )
-        current_task_id = current_task.get("id", -1)
+        if current_task == None:
+            echo(
+                style(
+                    "Error: Task not found. Please select a valid task",
+                    fg="red",
+                ),
+            )
+        else:
+            current_task_id = current_task["id"]
 
     return fuzzy_search_task(table, completed, current_task_id)  # if leaf task
 
