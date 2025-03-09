@@ -73,7 +73,7 @@ def cli(ctx):
 @click.option(
     "-dd",
     "--deadline",
-    help='Set the deadline of a task, date format: "dd/mm/yyyy/"',
+    help='Set the deadline of a task, example date format: "dd/mm/yyyy/"',
     type=str,
 )
 @click.option(
