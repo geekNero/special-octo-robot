@@ -1,9 +1,11 @@
 import datetime
 
 from . import database
-from app.utility import convert_to_console_date
-from app.utility import convert_to_db_date
+from app.utility import convert_epoch_to_time
+from app.utility import convert_time_to_epoch
 from app.utility import generate_migration_error
+from app.utility import get_week_start
+from app.utility import get_weekend
 from app.utility import sanitize_text
 
 
@@ -26,11 +28,16 @@ def list_tasks(
     if not subtasks:
         where_clause.append("parent_id ISNULL")
     if week:
+        mond = convert_time_to_epoch(get_week_start(), False)
+        sund = convert_time_to_epoch(get_weekend())
         where_clause.append(
-            "(completed > date('now', 'weekday 0', '-7 days') AND completed < date('now', 'weekday 1'))",
+            f"(completed >= {mond} AND completed <= {sund})",
         )
     elif today:
-        where_clause.append("(completed = date('now'))")
+        today = get_deadline("today")
+        where_clause.append(
+            f"(completed >= {convert_time_to_epoch(today, False)} AND completed <= {convert_time_to_epoch(today)})",
+        )
     if inprogress or completed or pending:
         clause = []
         if inprogress:
@@ -80,11 +87,7 @@ def list_tasks(
                 "title": result[1],
                 "parent_id": result[2],
                 "status": result[3],
-                "deadline": (
-                    result[4]
-                    if str(result[4]) == "None"
-                    else convert_to_console_date(result[4])
-                ),
+                "deadline": (convert_epoch_to_time(result[4])),
                 "priority": result[5],
                 "label": result[6] if result[6] else "None",
                 "description": result[7],
@@ -121,13 +124,15 @@ def add_tasks(
         values.append(str(priority))
     if today:
         columns.append("deadline")
-        values.append("date('now')")
+        deadline = get_deadline("today")
+        values.append(f"{convert_time_to_epoch(deadline)}")
     elif week:
         columns.append("deadline")
-        values.append("date('now', 'weekday 0')")
+        deadline = get_deadline("week")
+        values.append(f"{convert_time_to_epoch(deadline)}")
     elif deadline:
         columns.append("deadline")
-        values.append(f"'{deadline}'")
+        values.append(f"{convert_time_to_epoch(deadline)}")
     if inprogress:
         columns.append("status")
         values.append("'In Progress'")
@@ -193,10 +198,10 @@ def search_task(task_id, table: str) -> dict | None:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": task[4],
+            "deadline": convert_epoch_to_time(task[4]),
             "priority": task[5],
             "label": task[6] if task[6] else "None",
-            "completed": (task[7]),
+            "completed": convert_epoch_to_time(task[7]),
             "parent_id": task[8],
             "subtasks": task[9],
         }
@@ -231,11 +236,7 @@ def get_subtasks(task_id: int, table: str):
                 "id": result[0],
                 "title": result[1],
                 "status": result[2],
-                "deadline": (
-                    result[3]
-                    if str(result[3]) == "None"
-                    else convert_to_console_date(result[3])
-                ),
+                "deadline": (convert_epoch_to_time(result[3])),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
                 "description": result[6],
@@ -260,19 +261,15 @@ def get_subtasks_recursive(task: dict, table: str):
 def update_task(updated_data: dict, table: str):
     """If marked as completed then set datetime as now else retain prev value"""
 
-    if updated_data["deadline"] == "week":
-        today = datetime.date.today()
-        weekend = today + datetime.timedelta(days=6 - today.weekday())
-        updated_data["deadline"] = str(weekend)
-    elif updated_data["deadline"] == "today":
-        updated_data["deadline"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-    elif updated_data["deadline"] not in [None, "None"]:
-        updated_data["deadline"] = str(convert_to_db_date(updated_data["deadline"]))
+    updated_data["deadline"] = get_deadline(updated_data["deadline"])
 
     if updated_data["status"] == "Completed":
         updated_data["completed"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     else:
         updated_data["completed"] = updated_data["deadline"]
+
+    updated_data["deadline"] = convert_time_to_epoch(updated_data["deadline"])
+    updated_data["completed"] = convert_time_to_epoch(updated_data["completed"])
 
     final_data = {}
 
@@ -377,3 +374,12 @@ def rename_table(old_name: str, new_name: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def get_deadline(deadline):
+    if deadline == "week":
+        deadline = str(get_weekend())
+    elif deadline == "today":
+        deadline = str(datetime.datetime.now().strftime("%Y-%m-%d"))
+
+    return deadline

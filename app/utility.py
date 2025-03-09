@@ -1,100 +1,63 @@
-import datetime
+import time
+from datetime import datetime
+from datetime import timedelta
 
 from click import echo
 from click import style
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import FuzzyWordCompleter
-from prompt_toolkit.completion import ThreadedCompleter
-
-from app import application
-from app.config import update_config
-from app.constants import config_path
 
 
-def convert_to_console_date(date_str, title=None):
-    """
-    Convert date from "YYYY-MM-DD" to "dd/mm/yyyy"
-    """
-    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-    return date_obj.strftime("%d/%m/%Y")
+def convert_time_to_epoch(time_str, eod=True):
+    if time_str == "None":
+        return 0
+    separator_list = [":", ".", "-", "/", "\\", "|", "_", ","]
+    for separator in separator_list:
+        if separator in time_str:
+            date_list = time_str.split(separator)
+            break
+    else:
+        return "No separator found"
+    if len(date_list) != 3:
+        return "Length not 3"
+
+    if len(date_list[0]) != 4:
+        date_list = date_list[::-1]
+
+    if eod == True:
+        hr = 23
+        minute = 59
+        sec = 59
+    else:
+        hr = 0
+        minute = 0
+        sec = 0
+
+    try:
+        date_obj = datetime(
+            int(date_list[0]),
+            int(date_list[1]),
+            int(date_list[2]),
+            hour=hr,
+            minute=minute,
+            second=sec,
+        )
+        epoch_time = int(time.mktime(date_obj.timetuple()))
+        return epoch_time
+    except Exception as e:
+        return e.__str__()
 
 
-def convert_to_db_date(date_str):
-    # Convert date from "dd/mm/yyyy" to "YYYY-MM-DD"
-    date_obj = datetime.datetime.strptime(date_str, "%d/%m/%Y")
-    return date_obj.strftime("%Y-%m-%d")
+def convert_epoch_to_time(epoch_time):
+    if epoch_time == 0:
+        return "None"
+    try:
+        date_obj = datetime.fromtimestamp(epoch_time)
+        return date_obj.strftime("%d-%m-%Y")
+    except Exception as e:
+        return e.__str__()
 
 
 def sanitize_text(text):
     return text.strip().replace("'", '"')
-
-
-def fuzzy_search_task(table, completed=False, current_task_id=-1):
-    current_task = (
-        application.search_task(current_task_id, table) if current_task_id > 0 else {}
-    )
-    current_task_title = current_task.get(
-        "title",
-        "Root",
-    )
-
-    if current_task_id == -1:  # root level
-        tasks = application.list_tasks(table, subtasks=False, completed=completed)
-    else:
-        tasks = application.get_subtasks(
-            current_task_id,
-            table,
-        )  # subtasks of current task
-
-    task_titles = [each_task["title"] for each_task in tasks]
-    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-    if len(current_task_title) > 30:
-        current_task_title = current_task_title[:30] + "..."
-    select_task_title = prompt(
-        f"\nCurrently selected Task : {current_task_title}, "
-        + "press: \nAny part of the title, OR\nPress ↵ to go back one level, OR\nPress . to select current task\n\n",
-        completer=task_completer,
-    )
-
-    if select_task_title.strip() == ".":
-        if current_task_id == -1:
-            echo(
-                style(
-                    "Error: Cannot select root task.",
-                    fg="red",
-                ),
-            )
-        else:
-            return current_task
-
-    elif select_task_title.strip() == "":
-        # user pressed enter without selecting any task
-        parent_task_id = current_task.get(
-            "parent_id",
-        )
-
-        current_task_id = parent_task_id if parent_task_id is not None else -1
-
-    else:
-        current_task = next(
-            (
-                each_task
-                for each_task in tasks
-                if each_task["title"] == select_task_title
-            ),
-            None,
-        )
-        if current_task == None:
-            echo(
-                style(
-                    "Error: Task not found. Please select a valid task",
-                    fg="red",
-                ),
-            )
-        else:
-            current_task_id = current_task["id"]
-
-    return fuzzy_search_task(table, completed, current_task_id)  # if leaf task
 
 
 def generate_migration_error():
@@ -116,14 +79,21 @@ def sanitize_table_name(table_name: str) -> (str, bool):
     return table_name.replace(" ", "_"), True
 
 
-def check_table_exists(table_name: str) -> bool:
-    table_name, ok = sanitize_table_name(table_name)
-    if not ok:
-        echo(
-            style(
-                "Error: Table name is not valid, please use only alphanumeric characters or underscores."
-                + "Maybe you are not a developer?",
-                fg="red",
-            ),
-        )
-    return table_name in application.list_tables(), table_name
+def get_weekend() -> str:
+    """
+    Get the date of the current week's end (Sunday).
+    """
+    today = datetime.now()
+    days_until_sunday = 6 - today.weekday()
+    sunday = today + timedelta(days=days_until_sunday)
+    return sunday.strftime("%d-%m-%Y")
+
+
+def get_week_start() -> str:
+    """
+    Get the date of the current week's start (Monday).
+    """
+    today = datetime.now()
+    days_since_monday = today.weekday()
+    monday = today - timedelta(days=days_since_monday)
+    return monday.strftime("%d-%m-%Y")

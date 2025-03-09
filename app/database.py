@@ -2,6 +2,8 @@ import sqlite3
 
 from app.constants import db_path
 
+# we should have separate functions to create triggers and indexes
+
 
 def initialize(table_name: str) -> None:
     """
@@ -15,10 +17,10 @@ def initialize(table_name: str) -> None:
         title VARCHAR NOT NULL, parent_id INTEGER,
         description TEXT DEFAULT 'None',
         status VARCHAR DEFAULT 'Pending',
-        deadline DATE DEFAULT 'None',
+        deadline INTEGER DEFAULT 0,
         priority INTEGER DEFAULT 0,
         label VARCHAR DEFAULT 'None',
-        completed DATE,
+        completed INTEGER DEFAULT 0,
         subtasks INTEGER DEFAULT 0
         )""",
     )
@@ -32,6 +34,8 @@ def initialize(table_name: str) -> None:
         END;
     """,
     )
+    cur.execute(f"CREATE INDEX title_{table_name} on {table_name}(title);")
+    conn.commit()
 
 
 def list_tables() -> list:
@@ -41,6 +45,7 @@ def list_tables() -> list:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     res = cur.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
+    conn.commit()
     return res
 
 
@@ -58,6 +63,7 @@ def list_table(
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     res = cur.execute(query).fetchall()
+    conn.commit()
     return res
 
 
@@ -101,10 +107,12 @@ def delete_table(table_name: str) -> None:
     """
     Delete Table From Database
     """
-    query = f"DROP TABLE {table_name}"
+    query = f"DROP TABLE {table_name}; "
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)
+    cur.execute(f"DROP INDEX IF EXISTS title_{table_name}")
+    cur.execute(f"DROP TRIGGER IF EXISTS initialize_completed_column_{table_name};")
     conn.commit()
 
 
@@ -116,4 +124,15 @@ def rename_table(old_table_name: str, new_table_name: str) -> None:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute(query)
+    try:
+        cur.execute(
+            f"ALTER INDEX title_{old_table_name} RENAME TO title_{new_table_name};",
+        )
+        cur.execute(
+            f"ALTER TRIGGER initialize_completed_column_{old_table_name} RENAME TO initialize_completed_column_{new_table_name};",
+        )
+    except:
+        # the code will reach here probably because of the index, so for now as a temp fix we will create the index instead of throwing an error.
+        # will remove this in the later versions
+        cur.execute(f"CREATE INDEX title_{new_table_name} on {new_table_name}(title);")
     conn.commit()

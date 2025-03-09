@@ -14,10 +14,10 @@ from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
 from app.database import initialize
+from app.helper import check_table_exists
+from app.helper import fuzzy_search_task
 from app.migrations import update_version
-from app.utility import check_table_exists
-from app.utility import convert_to_db_date
-from app.utility import fuzzy_search_task
+from app.utility import convert_time_to_epoch
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -139,12 +139,12 @@ def tasks(
         return
 
     if deadline:
-        try:
-            deadline = convert_to_db_date(deadline)
-        except ValueError:
+
+        err = convert_time_to_epoch(deadline)
+        if type(err) == str:
             click.echo(
                 click.style(
-                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    f"Error: {deadline}",
                     fg="red",
                 ),
             )
@@ -336,17 +336,17 @@ def task(
     elif today:
         current_task["deadline"] = "today"
     elif deadline:
-        try:
-            convert_to_db_date(deadline)
-            current_task["deadline"] = deadline
-        except ValueError:
+        convert_time_to_epoch(deadline)
+        if type(deadline) == str:
             click.echo(
                 click.style(
-                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    f"Error: {deadline}",
                     fg="red",
                 ),
             )
+            click.echo('Example: "01/01/2020"')
             return
+        current_task["deadline"] = deadline
 
     if subtasks:
         task_list = application.get_subtasks_recursive(current_task, table)
