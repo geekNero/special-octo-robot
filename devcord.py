@@ -15,7 +15,7 @@ from app.constants import db_path
 from app.constants import path
 from app.database import initialize
 from app.helper import check_table_exists
-from app.helper import fuzzy_search_task
+from app.helper import lister
 from app.migrations import update_version
 from app.utility import convert_time_to_epoch
 from jira.application import update_issues
@@ -101,7 +101,7 @@ def cli(ctx):
     type=str,
 )
 @click.option("-o", "--output", help="Specify Output Format", type=str)
-@click.option("--path", help="Specify Output File", type=str)
+@click.option("--path", help="Specify Output File", type=click.Path(exists=True))
 @click.option("-st", "--subtask", is_flag=True, help="List or add subtasks")
 @click.option("-tb", "--table", help="Specify Table", type=str)
 def tasks(
@@ -200,9 +200,8 @@ def tasks(
         if desc:
             description = click.edit()
         if subtask:
-            parent = fuzzy_search_task(
+            parent = lister(
                 table=table,
-                current_task_id=ctx.obj["config"].get("current_task", -1),
             )
 
             if parent is None:
@@ -213,6 +212,21 @@ def tasks(
                     ),
                 )
                 return
+
+            children = [
+                item["title"] for item in application.get_subtasks(parent["id"], table)
+            ]
+        else:
+            children = [item["title"] for item in application.list_tasks(table=table)]
+
+        if add in children:
+            click.echo(
+                click.style(
+                    "Error: Task with same name already exists on this level.",
+                    fg="red",
+                ),
+            )
+            return
 
         application.add_tasks(
             add,
@@ -300,10 +314,9 @@ def task(
     if table is None:
         table = ctx.obj["config"].get("current_table", "tasks")
 
-    current_task = fuzzy_search_task(
+    current_task = lister(
         table=table,
         completed=archive,
-        current_task_id=ctx.obj["config"].get("current_task", -1),
     )
 
     if current_task is None:
@@ -315,7 +328,6 @@ def task(
         )
         return
 
-    ctx.obj["config"]["current_task"] = current_task["id"]
     update_config(config_path, ctx.obj["config"])
 
     if inprogress:
@@ -327,6 +339,22 @@ def task(
 
     if name:
         current_task["title"] = name
+        parent_id = current_task.get("parent_id", -1)
+        if parent_id:
+            children = [
+                item["title"] for item in application.get_subtasks(parent_id, table)
+            ]
+        else:
+            children = [item["title"] for item in application.list_tasks(table=table)]
+        if name in children:
+            click.echo(
+                click.style(
+                    "Error: Task with same name already exists on this level.",
+                    fg="red",
+                ),
+            )
+            return
+
     if priority:
         current_task["priority"] = priority
     if label:
@@ -375,7 +403,8 @@ def task(
     application.update_task(current_task, table)
 
     if delete:
-        application.handle_delete(current_task, table)
+        application.handle_delete(current_task, table=table)
+        update_config(config_path, ctx.obj["config"])
         return
 
 
@@ -429,7 +458,6 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             return
 
         ctx.obj["config"]["current_table"] = select
-        ctx.obj["config"]["current_task"] = -1
         update_config(config_path, ctx.obj["config"])
 
         click.echo(
@@ -460,6 +488,14 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             )
             return
 
+        if ctx.obj["config"].get("current_table", "tasks") == delete:
+            click.echo(
+                click.style(
+                    "Error: Cannot delete curently selected table.",
+                    fg="red",
+                ),
+            )
+            return
         ok = application.delete_table(delete)
 
         if ok:

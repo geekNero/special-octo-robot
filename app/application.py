@@ -302,6 +302,7 @@ def handle_delete(current_task: dict, table: str):
     """
     Delete a task from the database
     """
+
     database.delete_task(table, current_task["id"])
     children = database.list_table(
         table=table,
@@ -315,11 +316,11 @@ def handle_delete(current_task: dict, table: str):
         if parent and parent["subtasks"] > 0:
             try:
                 database.update_table(
-                    "tasks",
+                    table,
                     {"subtasks": "subtasks - 1", "id": f"{current_task['parent_id']}"},
                 )
-            except:
-                generate_migration_error()
+            except Exception as e:
+                print(e)
 
 
 def list_tables() -> list:

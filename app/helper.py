@@ -1,3 +1,5 @@
+import curses
+
 from click import echo
 from click import style
 from prompt_toolkit import prompt
@@ -5,75 +7,10 @@ from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.completion import ThreadedCompleter
 
 from app import application
+from app.console_helper import treeify
+from app.constants import CR_ENTER
+from app.constants import LF_ENTER
 from app.utility import sanitize_table_name
-
-
-def fuzzy_search_task(table, completed=False, current_task_id=-1):
-    current_task = (
-        application.search_task(current_task_id, table) if current_task_id > 0 else {}
-    )
-    current_task_title = current_task.get(
-        "title",
-        "Root",
-    )
-
-    if current_task_id == -1:  # root level
-        tasks = application.list_tasks(table, subtasks=False, completed=completed)
-    else:
-        tasks = application.get_subtasks(
-            current_task_id,
-            table,
-        )  # subtasks of current task
-
-    task_titles = [each_task["title"] for each_task in tasks]
-    task_completer = ThreadedCompleter(FuzzyWordCompleter(task_titles))
-    if len(current_task_title) > 30:
-        current_task_title = current_task_title[:30] + "..."
-    select_task_title = prompt(
-        f"\nCurrently selected Task : {current_task_title}, "
-        + "press: \nAny part of the title, OR\nPress ↵ to go back one level, OR\nPress . to select current task\n\n",
-        completer=task_completer,
-    )
-
-    if select_task_title.strip() == ".":
-        if current_task_id == -1:
-            echo(
-                style(
-                    "Error: Cannot select root task.",
-                    fg="red",
-                ),
-            )
-        else:
-            return current_task
-
-    elif select_task_title.strip() == "":
-        # user pressed enter without selecting any task
-        parent_task_id = current_task.get(
-            "parent_id",
-        )
-
-        current_task_id = parent_task_id if parent_task_id is not None else -1
-
-    else:
-        current_task = next(
-            (
-                each_task
-                for each_task in tasks
-                if each_task["title"] == select_task_title
-            ),
-            None,
-        )
-        if current_task == None:
-            echo(
-                style(
-                    "Error: Task not found. Please select a valid task",
-                    fg="red",
-                ),
-            )
-        else:
-            current_task_id = current_task["id"]
-
-    return fuzzy_search_task(table, completed, current_task_id)  # if leaf task
 
 
 def check_table_exists(table_name: str) -> bool:
@@ -87,3 +24,98 @@ def check_table_exists(table_name: str) -> bool:
             ),
         )
     return table_name in application.list_tables(), table_name
+
+
+def lister(table, completed=False):
+    tasks = application.list_tasks(table, subtasks=True, completed=completed)
+
+    if len(tasks) == 0:
+        return None
+
+    tree = treeify(tasks)
+
+    def get_tasks(task_id):
+        if task_id == None:
+            return {}, []
+        if task_id == -1:
+            return {"title": table, "id": -1}, tree[-1]["children"]
+        return tree[task_id]["data"], tree[task_id]["children"]
+
+    return curses.wrapper(menu, -1, get_tasks)
+
+
+def menu(stdscr, current: int, get_tasks) -> dict:
+    """
+    'current' is the id of the current task;
+    'get_tasks' is a function that takes an id and returns the task and its subtasks.
+    If id is None, it returns None, and empty list.
+    If id is -1, it returns root task and its subtasks.
+    """
+    curses.curs_set(0)
+    stdscr.keypad(1)
+
+    selected = 0
+    current_task, _ = get_tasks(current)  # get initial list of tasks
+    parent, options_left = get_tasks(
+        current_task.get("parent_id", None),
+    )  # for one page of tasks, parent is the same so get them once before hand
+
+    while True:
+        stdscr.clear()
+        current_task, options = get_tasks(current)
+        title = current_task["title"]
+
+        if len(title) > 30:
+            title = title[:30] + "..."
+
+        start_y = 1
+        start_x = 1
+        stdscr.addstr(start_y, start_x, f"{title}:")
+        if len(options_left) > 0:
+            stdscr.addstr(start_y + 1, start_x + 1, "<<-- prev")
+
+        if len(options) > 0:
+            _, options_right = get_tasks(options[selected]["data"]["id"])
+            if len(options_right) > 0:
+                stdscr.addstr(start_y + 1, start_x + 15, "next -->>")
+
+        delta_x = 2
+        delta_y = start_y + 3
+
+        for idx, option in enumerate(options):
+            if idx == selected:
+                stdscr.addstr(
+                    idx + delta_y,
+                    delta_x,
+                    option["data"]["title"],
+                    curses.A_REVERSE,
+                )
+            else:
+                stdscr.addstr(idx + delta_y, delta_x, option["data"]["title"])
+
+        key = stdscr.getch()
+
+        if key == curses.KEY_UP and selected > 0:
+            selected -= 1
+
+        elif key == curses.KEY_DOWN and selected < len(options) - 1:
+            selected += 1
+
+        elif key == curses.KEY_RIGHT and len(options_right) > 0:
+            current = options[selected]["data"]["id"]
+            options_left = options
+            parent = current_task
+            options = options_right
+            selected = 0
+
+        elif key == curses.KEY_LEFT and len(options_left) > 0:
+            options = options_left
+            for idx, option in enumerate(options):
+                if option["data"]["id"] == current:
+                    selected = idx
+                    break
+            current = parent["id"]
+            parent, options_left = get_tasks(current_task.get("parent_id", None))
+
+        elif key in [curses.KEY_ENTER, LF_ENTER, CR_ENTER] and len(options) > 0:
+            return options[selected]["data"]

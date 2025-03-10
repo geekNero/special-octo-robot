@@ -24,3 +24,6 @@ if path:
 else:
     db_path = None
     config_path = None
+
+LF_ENTER = 10
+CR_ENTER = 13

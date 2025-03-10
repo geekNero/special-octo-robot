@@ -80,4 +80,5 @@ def treeify(tasks, title="Tasks"):
             existing_node[task["parent_id"]]["children"].append(
                 existing_node[task["id"]],
             )
-    return root
+    existing_node[-1] = root
+    return existing_node
