@@ -95,11 +95,11 @@ def menu(stdscr, current: int, get_tasks) -> dict:
 
         key = stdscr.getch()
 
-        if key == curses.KEY_UP and selected > 0:
-            selected -= 1
+        if key == curses.KEY_UP:
+            selected = (selected - 1) % len(options)
 
-        elif key == curses.KEY_DOWN and selected < len(options) - 1:
-            selected += 1
+        elif key == curses.KEY_DOWN:
+            selected = (selected + 1) % len(options)
 
         elif key == curses.KEY_RIGHT and len(options_right) > 0:
             current = options[selected]["data"]["id"]

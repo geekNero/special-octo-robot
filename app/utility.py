@@ -7,7 +7,7 @@ from click import style
 
 
 def convert_time_to_epoch(time_str, eod=True):
-    if time_str == "None":
+    if time_str in ("None", None):
         return 0
     separator_list = [":", ".", "-", "/", "\\", "|", "_", ","]
     for separator in separator_list:
@@ -69,7 +69,7 @@ def generate_migration_error():
     )
 
 
-def sanitize_table_name(table_name: str) -> (str, bool):
+def sanitize_table_name(table_name: str) -> (str, bool):  # type: ignore
     for ch in table_name:
         if ch.isalnum() or ch == " " or ch == "_":
             continue
