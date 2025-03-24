@@ -65,6 +65,11 @@ def menu(stdscr, current: int, get_tasks) -> dict:
         current_task, options = get_tasks(current)
         title = current_task["title"]
 
+        height, width = stdscr.getmaxyx()
+        # Leave space for top/bottom margins
+        height -= 2
+        width -= 1
+
         if len(title) > 30:
             title = title[:30] + "..."
 
@@ -82,16 +87,31 @@ def menu(stdscr, current: int, get_tasks) -> dict:
         delta_x = 2
         delta_y = start_y + 3
 
-        for idx, option in enumerate(options):
+        max_page_size = height - delta_y + 1
+
+        idx = 0
+        page_size = min(max_page_size, len(options))
+        if len(options) > max_page_size:
+            idx = selected
+            page_size = min(max_page_size, len(options) - selected) + selected
+            delta_y -= selected
+
+        while idx < page_size:
+            option = options[idx]
+            title = option["data"]["title"]
+            if len(title) > width - 2:
+                title = title[: width - 5] + "..."
+
             if idx == selected:
                 stdscr.addstr(
                     idx + delta_y,
                     delta_x,
-                    option["data"]["title"],
+                    title,
                     curses.A_REVERSE,
                 )
             else:
-                stdscr.addstr(idx + delta_y, delta_x, option["data"]["title"])
+                stdscr.addstr(idx + delta_y, delta_x, title)
+            idx += 1
 
         key = stdscr.getch()
 
