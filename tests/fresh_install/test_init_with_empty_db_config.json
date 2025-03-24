@@ -1,7 +1,7 @@
 {
     "theme": "light",
     "jira": {},
-    "version": "0.6.1",
+    "version": "0.6.2",
     "pretty_tree": false,
     "current_table": "tasks"
 }
