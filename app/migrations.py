@@ -6,11 +6,12 @@ from .constants import db_path
 from app.__version__ import VERSION
 from app.config import update_config
 from app.constants import config_path
-from app.db_upgrade.upgrades import upgrade_0_5_1
+from app.db_upgrade import upgrades
 
 
 migration_list = [
-    ("0.5.1", "", upgrade_0_5_1),
+    ("0.5.1", "", upgrades.upgrade_0_5_1),
+    ("0.6.3", "", upgrades.upgrade_0_6_3),
 ]
 
 

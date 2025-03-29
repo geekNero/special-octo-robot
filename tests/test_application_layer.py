@@ -1,7 +1,8 @@
 import os
 import unittest
 from app.constants import path, db_path
-from app.database import initialize
+from app.utility import convert_time_to_epoch, get_relative_date_string
+from app.database import initialize, insert_into_table
 from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete, update_task
 from datetime import datetime, timedelta
 
@@ -23,7 +24,7 @@ def fill_db():
     add_tasks(title = "Task 8", priority=3, deadline='2000-09-11')
     add_tasks(title='Child of task 1', parent={"id":1}, label='Label1')
     add_tasks(title='Child of child task 1', parent={"id": 9}, week=True)
-
+    insert_into_table(table="tasks", columns=["title", "completed", "status"], values=["'Task 9'", str(convert_time_to_epoch("2024-08-25")), "'Completed'"])
 
 class ListTasks(unittest.TestCase):
     def test_list_task_with_empty_db(self):
@@ -225,30 +226,42 @@ class ListTasks(unittest.TestCase):
         # set test environment
         create_db()
         fill_db()
+        self.maxDiff = None
 
         self.assertEqual(list_tasks(inprogress=True, completed=True), [
-                {
-                    "id": 5,
-                    "title": "Task 5",
-                    "parent_id": None,
-                    "status": "Completed",
-                    "deadline": "None",
-                    "priority": 5,
-                    "label": "None",
-                    "description": "Description 5",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 6,
-                    "title": "Task 6",
-                    "parent_id": None,
-                    "status": "In Progress",
-                    "deadline": "None",
-                    "priority": 0,
-                    "label": "None",
-                    "description": "Description 6",
-                    "subtasks": 0,
-                },
+            {
+                "id": 6,
+                "title": "Task 6",
+                "parent_id": None,
+                "status": "In Progress",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 6",
+                "subtasks": 0,
+            },
+            {
+                "id": 11,
+                "title": "Task 9",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            },
+            {
+                "id": 5,
+                "title": "Task 5",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 5,
+                "label": "None",
+                "description": "Description 5",
+                "subtasks": 0,
+            },
             ]
         )
 
@@ -271,6 +284,28 @@ class ListTasks(unittest.TestCase):
                     "description": "None",
                     "subtasks": 1,
                 }
+            ]
+        )
+    
+    def test_list_task_with_relative_deadline(self) -> None:
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+        
+        self.assertEqual(list_tasks(date=get_relative_date_string(-6), completed=True), [
+                 {
+                "id": 11,
+                "title": "Task 9",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            }
             ]
         )
 

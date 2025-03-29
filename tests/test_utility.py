@@ -1,7 +1,7 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
-from app.utility import convert_time_to_epoch, convert_epoch_to_time, get_week_start, get_weekend
+from app.utility import convert_time_to_epoch, convert_epoch_to_time, get_week_start, get_weekend, get_relative_date_string, check_if_relative_deadline
 
 class ConvertToEpoch(unittest.TestCase):
     def test_positive(self):
@@ -42,3 +42,46 @@ class GetWeekEnds(unittest.TestCase):
     def test_positive(self):
         self.assertEqual(get_weekend(), "01-09-2024")
         self.assertEqual(get_week_start(), "26-08-2024")
+        
+class TestGetRelativeDateString(unittest.TestCase):
+    def test_positive_days(self):
+        today = datetime.now()
+        expected_date = (today + timedelta(days=5)).strftime("%d-%m-%Y")
+        self.assertEqual(get_relative_date_string(5), expected_date)
+
+    def test_negative_days(self):
+        today = datetime.now()
+        expected_date = (today - timedelta(days=3)).strftime("%d-%m-%Y")
+        self.assertEqual(get_relative_date_string(-3), expected_date)
+
+    def test_zero_days(self):
+        today = datetime.now().strftime("%d-%m-%Y")
+        self.assertEqual(get_relative_date_string(0), today)
+
+
+class TestCheckIfRelativeDeadline(unittest.TestCase):
+    def test_positive_relative_deadline(self):
+
+        deadline = "+5"
+        result = check_if_relative_deadline(deadline=deadline)
+        expected_date = (datetime.now() + timedelta(days=5)).strftime("%d-%m-%Y")
+        self.assertEqual(result, expected_date)
+
+    def test_negative_relative_deadline(self):
+
+        deadline = "-3"
+        result = check_if_relative_deadline(deadline=deadline)
+        expected_date = (datetime.now() - timedelta(days=3)).strftime("%d-%m-%Y")
+        self.assertEqual(result, expected_date)
+
+    def test_invalid_relative_deadline(self):
+
+        deadline = "+abc"
+        result = check_if_relative_deadline(deadline=deadline)
+        self.assertFalse(result)
+
+    def test_non_relative_deadline(self):
+
+        deadline = "31-12-2025"
+        result = check_if_relative_deadline(deadline=deadline)
+        self.assertEqual(result, "31-12-2025")

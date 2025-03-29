@@ -30,7 +30,7 @@ def initialize(table_name: str) -> None:
         AFTER INSERT ON {table_name}
         FOR EACH ROW
         BEGIN
-            UPDATE {table_name} SET completed = NEW.deadline WHERE id = NEW.id;
+            UPDATE {table_name} SET completed = NEW.deadline WHERE id = NEW.id AND NEW.completed == 0;
         END;
     """,
     )

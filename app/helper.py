@@ -2,9 +2,6 @@ import curses
 
 from click import echo
 from click import style
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import FuzzyWordCompleter
-from prompt_toolkit.completion import ThreadedCompleter
 
 from app import application
 from app.console_helper import treeify

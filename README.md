@@ -33,7 +33,7 @@ alias task  = "devcord task"
 |:--------------------------------------------|:------------------------------------------|
 | Add a simple task                               | `devcord tasks -a "task name"`<br/> `devcord tasks --add "task name"`                                      |
 | Add a task with a description <br/> (Opens scrollable text box to enter description)| `devcord tasks -a "task name" -d` <br /> `devcord tasks --add "task name" --desc`                          |
-| Add a task with a due date                      | `devcord tasks -a "task name" -dd "dd/mm/yyyy"`<br /> `devcord tasks --add "task name" --due "dd/mm/yyyy"` |
+| Add a task with a due date                      | `devcord tasks -a "task name" -dt "dd/mm/yyyy"`<br /> `devcord tasks --add "task name" --due "dd/mm/yyyy"` |
 | Add a task to be completed by today             | `devcord tasks -a "task name" -t`<br /> `devcord tasks --add "task name" --today`                          |
 | Add a task to be completed within the current week | `devcord tasks -a "task name" -w` <br /> `devcord tasks --add "task name" --week`                       |
 | Add a task with priority (1-5)                  | `devcord tasks -a "task name" -p 3`  <br /> `devcord tasks --add "task name" --priority 3`                 |

@@ -14,6 +14,7 @@ def list_tasks(
     priority=None,
     today=None,
     week=None,
+    date=None,
     inprogress=None,
     completed=None,
     pending=None,
@@ -37,6 +38,10 @@ def list_tasks(
         today = get_deadline("today")
         where_clause.append(
             f"(completed >= {convert_time_to_epoch(today, False)} AND completed <= {convert_time_to_epoch(today)})",
+        )
+    elif date:
+        where_clause.append(
+            f"(completed >= {convert_time_to_epoch(date, False)} AND completed <= {convert_time_to_epoch(date)})",
         )
     if inprogress or completed or pending:
         clause = []
@@ -124,12 +129,10 @@ def add_tasks(
         values.append(str(priority))
     if today:
         columns.append("deadline")
-        deadline = get_deadline("today")
-        values.append(f"{convert_time_to_epoch(deadline)}")
+        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
     elif week:
         columns.append("deadline")
-        deadline = get_deadline("week")
-        values.append(f"{convert_time_to_epoch(deadline)}")
+        values.append(f"{convert_time_to_epoch(get_deadline('week'))}")
     elif deadline:
         columns.append("deadline")
         values.append(f"{convert_time_to_epoch(deadline)}")
@@ -140,7 +143,7 @@ def add_tasks(
         columns.append("status")
         values.append("'Completed'")
         columns.append("completed")
-        values.append("date('now')")
+        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
     elif pending:
         columns.append("status")
         values.append("'Pending'")
@@ -382,5 +385,7 @@ def get_deadline(deadline):
         deadline = str(get_weekend())
     elif deadline == "today":
         deadline = str(datetime.datetime.now().strftime("%Y-%m-%d"))
+    else:
+        deadline = str(deadline)
 
     return deadline

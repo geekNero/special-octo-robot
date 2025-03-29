@@ -17,7 +17,9 @@ from app.database import initialize
 from app.helper import check_table_exists
 from app.helper import lister
 from app.migrations import update_version
+from app.utility import check_if_relative_deadline
 from app.utility import convert_time_to_epoch
+from app.utility import get_relative_date_string
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -71,9 +73,9 @@ def cli(ctx):
     help="Perform for all the tasks for this week",
 )
 @click.option(
-    "-dd",
-    "--deadline",
-    help='Set the deadline of a task, example date format: "dd/mm/yyyy/"',
+    "-dt",
+    "--date",
+    help='Perform for all the tasks for this date, example date format: "dd/mm/yyyy/"',
     type=str,
 )
 @click.option(
@@ -112,7 +114,7 @@ def tasks(
     priority=None,
     today=False,
     week=False,
-    deadline=None,
+    date=None,
     inprogress=None,
     completed=None,
     pending=None,
@@ -138,13 +140,16 @@ def tasks(
         )
         return
 
-    if deadline:
+    if date:
+        date = check_if_relative_deadline(date)
+        if date is False:
+            return
 
-        err = convert_time_to_epoch(deadline)
+        err = convert_time_to_epoch(date)
         if type(err) == str:
             click.echo(
                 click.style(
-                    f"Error: {deadline}",
+                    f"Error: {date}",
                     fg="red",
                 ),
             )
@@ -163,6 +168,7 @@ def tasks(
             pending=pending,
             label=label,
             subtasks=subtask,
+            date=date,
         )
 
         if (
@@ -235,7 +241,7 @@ def tasks(
             priority,
             today,
             week,
-            deadline,
+            date,
             inprogress,
             completed,
             pending,
@@ -364,11 +370,16 @@ def task(
     elif today:
         current_task["deadline"] = "today"
     elif deadline:
-        convert_time_to_epoch(deadline)
-        if type(deadline) == str:
+
+        deadline = check_if_relative_deadline(deadline)
+        if deadline is False:
+            return
+
+        err = convert_time_to_epoch(deadline)
+        if type(err) == str:
             click.echo(
                 click.style(
-                    f"Error: {deadline}",
+                    f"Error: {err}",
                     fg="red",
                 ),
             )
@@ -380,9 +391,8 @@ def task(
         task_list = application.get_subtasks_recursive(current_task, table)
         if task_list:
             temp = current_task.copy()
-            temp["parent_id"] = (
-                -1
-            )  # For subtasks, the parent of the parent node is irrelevant
+            temp["parent_id"] = -1
+            # For subtasks, the parent of the parent node is irrelevant
             # Parent_id cannot be -1, therefore functions ahead can recognize this node as root.
             task_list.append(temp)
             print_tasks(

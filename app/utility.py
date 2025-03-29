@@ -97,3 +97,33 @@ def get_week_start() -> str:
     days_since_monday = today.weekday()
     monday = today - timedelta(days=days_since_monday)
     return monday.strftime("%d-%m-%Y")
+
+
+def get_relative_date_string(relative_days: int) -> str:
+    """
+    Get the date string for today + relative_days.
+
+    Args:
+        relative_days (int): Number of days relative to today. Can be positive or negative.
+
+    Returns:
+        str: Date string in the format "dd-mm-yyyy".
+    """
+    target_date = datetime.now() + timedelta(days=relative_days)
+    return target_date.strftime("%d-%m-%Y")
+
+
+def check_if_relative_deadline(deadline: str) -> str:
+    if deadline[0] == "+" or deadline[0] == "-":
+        if deadline[1:].isdigit():
+            deadline = get_relative_date_string(int(deadline))
+        else:
+            echo(
+                style(
+                    f"Error: ",
+                    fg="red",
+                ),
+            )
+            echo('Example: "+4"')
+            return False
+    return deadline

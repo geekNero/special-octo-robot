@@ -60,3 +60,24 @@ def upgrade_0_5_1(cur):
 
         delete_table(table)
         rename_table(temp_table, table)
+
+
+def upgrade_0_6_3(cur):
+    """
+    Upgrade the database to version 0.6.3
+    """
+    for table in list_tables():
+        # Drop the existing trigger
+        cur.execute(f"DROP TRIGGER IF EXISTS initialize_completed_column_{table};")
+
+        # Add a new trigger to check the value of completed before updating it
+        cur.execute(
+            f"""
+            CREATE TRIGGER initialize_completed_column_{table}
+            AFTER INSERT ON {table}
+            FOR EACH ROW
+            BEGIN
+                UPDATE {table} SET completed = NEW.deadline WHERE id = NEW.id AND NEW.completed == 0;
+            END;
+            """,
+        )
