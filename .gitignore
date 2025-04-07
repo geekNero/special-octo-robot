@@ -6,3 +6,5 @@ dist
 special_octo_robot.egg-info
 test_commands/
 __pycache__/
+.idea
+.vscode

@@ -1,7 +1,8 @@
 import os
 import unittest
 from app.constants import path, db_path
-from app.database import initialize
+from app.utility import convert_time_to_epoch, get_relative_date_string
+from app.database import initialize, insert_into_table
 from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete, update_task
 from datetime import datetime, timedelta
 
@@ -23,7 +24,7 @@ def fill_db():
     add_tasks(title = "Task 8", priority=3, deadline='2000-09-11')
     add_tasks(title='Child of task 1', parent={"id":1}, label='Label1')
     add_tasks(title='Child of child task 1', parent={"id": 9}, week=True)
-
+    insert_into_table(table="tasks", columns=["title", "completed", "status"], values=["'Task 9'", str(convert_time_to_epoch("2024-08-25")), "'Completed'"])
 
 class ListTasks(unittest.TestCase):
     def test_list_task_with_empty_db(self):
@@ -42,51 +43,7 @@ class ListTasks(unittest.TestCase):
         fill_db()
 
         self.assertEqual(list_tasks(), [
-                {
-                    "id": 8,
-                    "title": "Task 8",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "11/09/2000",
-                    "priority": 3,
-                    "label": "None",
-                    "description": "None",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 2,
-                    "title": "Task 2",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "31/08/2024",
-                    "priority": 4,
-                    "label": "None",
-                    "description": "Description 2",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 3,
-                    "title": "Task 3",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "01/09/2024",
-                    "priority": 2,
-                    "label": "None",
-                    "description": "Description 3",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 4,
-                    "title": "Task 4",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "10/09/2024",
-                    "priority": 3,
-                    "label": "None",
-                    "description": "Description 4",
-                    "subtasks": 0,
-                },
-                {
+            {
                     "id": 6,
                     "title": "Task 6",
                     "parent_id": None,
@@ -117,6 +74,50 @@ class ListTasks(unittest.TestCase):
                     "priority": 0,
                     "label": "None",
                     "description": "Description 7",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 8,
+                    "title": "Task 8",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "11-09-2000",
+                    "priority": 3,
+                    "label": "None",
+                    "description": "None",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 2,
+                    "title": "Task 2",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "31-08-2024",
+                    "priority": 4,
+                    "label": "None",
+                    "description": "Description 2",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 3,
+                    "title": "Task 3",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "01-09-2024",
+                    "priority": 2,
+                    "label": "None",
+                    "description": "Description 3",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 4,
+                    "title": "Task 4",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "10-09-2024",
+                    "priority": 3,
+                    "label": "None",
+                    "description": "Description 4",
                     "subtasks": 0,
                 },
             ]
@@ -165,7 +166,7 @@ class ListTasks(unittest.TestCase):
                     "title": "Task 2",
                     "parent_id": None,
                     "status": "Pending",
-                    "deadline": "31/08/2024",
+                    "deadline": "31-08-2024",
                     "priority": 4,
                     "label": "None",
                     "description": "Description 2",
@@ -180,6 +181,7 @@ class ListTasks(unittest.TestCase):
         # set test environment
         create_db()
         fill_db()
+        self.maxDiff = None
 
         self.assertEqual(list_tasks(week=True, subtasks=True), [
                 {
@@ -187,7 +189,7 @@ class ListTasks(unittest.TestCase):
                     "title": "Task 2",
                     "parent_id": None,
                     "status": "Pending",
-                    "deadline": "31/08/2024",
+                    "deadline": "31-08-2024",
                     "priority": 4,
                     "label": "None",
                     "description": "Description 2",
@@ -198,7 +200,7 @@ class ListTasks(unittest.TestCase):
                     "title": "Task 3",
                     "parent_id": None,
                     "status": "Pending",
-                    "deadline": "01/09/2024",
+                    "deadline": "01-09-2024",
                     "priority": 2,
                     "label": "None",
                     "description": "Description 3",
@@ -209,7 +211,7 @@ class ListTasks(unittest.TestCase):
                     "title": "Child of child task 1",
                     "parent_id": 9,
                     "status": "Pending",
-                    "deadline": "01/09/2024",
+                    "deadline": "01-09-2024",
                     "priority": 0,
                     "label": "None",
                     "description": "None",
@@ -224,30 +226,42 @@ class ListTasks(unittest.TestCase):
         # set test environment
         create_db()
         fill_db()
+        self.maxDiff = None
 
         self.assertEqual(list_tasks(inprogress=True, completed=True), [
-                {
-                    "id": 5,
-                    "title": "Task 5",
-                    "parent_id": None,
-                    "status": "Completed",
-                    "deadline": "None",
-                    "priority": 5,
-                    "label": "None",
-                    "description": "Description 5",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 6,
-                    "title": "Task 6",
-                    "parent_id": None,
-                    "status": "In Progress",
-                    "deadline": "None",
-                    "priority": 0,
-                    "label": "None",
-                    "description": "Description 6",
-                    "subtasks": 0,
-                },
+            {
+                "id": 6,
+                "title": "Task 6",
+                "parent_id": None,
+                "status": "In Progress",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 6",
+                "subtasks": 0,
+            },
+            {
+                "id": 11,
+                "title": "Task 9",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            },
+            {
+                "id": 5,
+                "title": "Task 5",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 5,
+                "label": "None",
+                "description": "Description 5",
+                "subtasks": 0,
+            },
             ]
         )
 
@@ -270,6 +284,28 @@ class ListTasks(unittest.TestCase):
                     "description": "None",
                     "subtasks": 1,
                 }
+            ]
+        )
+    
+    def test_list_task_with_relative_deadline(self) -> None:
+        # check if DEBUG is set to True
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        # set test environment
+        create_db()
+        fill_db()
+        
+        self.assertEqual(list_tasks(date=get_relative_date_string(-6), completed=True), [
+                 {
+                "id": 11,
+                "title": "Task 9",
+                "parent_id": None,
+                "status": "Completed",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            }
             ]
         )
 
@@ -381,51 +417,7 @@ class HandleDelete(unittest.TestCase):
         # test with valid id
         handle_delete({"id": 1, "parent_id": None}, "tasks")
         self.assertEqual(list_tasks(), [
-            {
-                "id": 8,
-                "title": "Task 8",
-                "parent_id": None,
-                "status": "Pending",
-                "deadline": "11/09/2000",
-                "priority": 3,
-                "label": "None",
-                "description": "None",
-                "subtasks": 0,
-            },
-            {
-                "id": 2,
-                "title": "Task 2",
-                "parent_id": None,
-                "status": "Pending",
-                "deadline": "31/08/2024",
-                "priority": 4,
-                "label": "None",
-                "description": "Description 2",
-                "subtasks": 0,
-            },
-            {
-                "id": 3,
-                "title": "Task 3",
-                "parent_id": None,
-                "status": "Pending",
-                "deadline": "01/09/2024",
-                "priority": 2,
-                "label": "None",
-                "description": "Description 3",
-                "subtasks": 0,
-            },
-            {
-                "id": 4,
-                "title": "Task 4",
-                "parent_id": None,
-                "status": "Pending",
-                "deadline": "10/09/2024",
-                "priority": 3,
-                "label": "None",
-                "description": "Description 4",
-                "subtasks": 0,
-            },
-            {
+              {
                 "id": 6,
                 "title": "Task 6",
                 "parent_id": None,
@@ -447,14 +439,23 @@ class HandleDelete(unittest.TestCase):
                 "description": "Description 7",
                 "subtasks": 0,
             },
-        ])
-        self.assertEqual(list_tasks(week=True, subtasks=True), [
+            {
+                "id": 8,
+                "title": "Task 8",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "11-09-2000",
+                "priority": 3,
+                "label": "None",
+                "description": "None",
+                "subtasks": 0,
+            },
             {
                 "id": 2,
                 "title": "Task 2",
                 "parent_id": None,
                 "status": "Pending",
-                "deadline": "31/08/2024",
+                "deadline": "31-08-2024",
                 "priority": 4,
                 "label": "None",
                 "description": "Description 2",
@@ -465,7 +466,42 @@ class HandleDelete(unittest.TestCase):
                 "title": "Task 3",
                 "parent_id": None,
                 "status": "Pending",
-                "deadline": "01/09/2024",
+                "deadline": "01-09-2024",
+                "priority": 2,
+                "label": "None",
+                "description": "Description 3",
+                "subtasks": 0,
+            },
+            {
+                "id": 4,
+                "title": "Task 4",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "10-09-2024",
+                "priority": 3,
+                "label": "None",
+                "description": "Description 4",
+                "subtasks": 0,
+            },
+        ])
+        self.assertEqual(list_tasks(week=True, subtasks=True), [
+            {
+                "id": 2,
+                "title": "Task 2",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "31-08-2024",
+                "priority": 4,
+                "label": "None",
+                "description": "Description 2",
+                "subtasks": 0,
+            },
+            {
+                "id": 3,
+                "title": "Task 3",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "01-09-2024",
                 "priority": 2,
                 "label": "None",
                 "description": "Description 3",
@@ -505,9 +541,9 @@ class HandleModify(unittest.TestCase):
         task = search_task(1, "tasks")
         task['status'] = 'Completed'
         update_task(task, "tasks")   # cascading update
-        self.assertEqual(search_task(1, "tasks"), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '2024-08-31', 'parent_id': None, 'subtasks': 1})
+        self.assertEqual(search_task(1, "tasks"), {'id': 1, 'title': 'Task 1', 'description': 'Description 1', 'status': 'Completed', 'deadline': 'None', 'priority': 1, 'label': 'None', 'completed': '31-08-2024', 'parent_id': None, 'subtasks': 1})
         self.assertEqual(get_subtasks(1, "tasks"), [{'id': 9, 'title': 'Child of task 1', 'status': 'Completed', 'deadline': 'None', 'priority': 0, 'label': 'Label1', 'description': 'None', 'subtasks': 1, 'parent_id': 1}])
-        self.assertEqual(get_subtasks(9, "tasks"), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01/09/2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0, 'parent_id': 9}])
+        self.assertEqual(get_subtasks(9, "tasks"), [{'id': 10, 'title': 'Child of child task 1', 'status': 'Completed', 'deadline': '01-09-2024', 'priority': 0, 'label': 'None', 'description': 'None', 'subtasks': 0, 'parent_id': 9}])
 
 
 if __name__ == '__main__':

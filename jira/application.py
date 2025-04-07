@@ -1,4 +1,3 @@
-import datetime
 import json
 
 import click
@@ -60,9 +59,6 @@ def parse_issues(issues):
         else:
             issue_details["status"] = "Completed"
 
-        if issue_details["deadline"]:
-            date_obj = datetime.datetime.strptime(issue_details["deadline"], "%Y-%m-%d")
-            issue_details["deadline"] = date_obj.strftime("%d/%m/%Y")
         new_issues.append(issue_details)
     return new_issues
 

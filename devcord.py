@@ -14,10 +14,12 @@ from app.constants import config_path
 from app.constants import db_path
 from app.constants import path
 from app.database import initialize
+from app.helper import check_table_exists
+from app.helper import lister
 from app.migrations import update_version
-from app.utility import check_table_exists
-from app.utility import convert_to_db_date
-from app.utility import fuzzy_search_task
+from app.utility import check_if_relative_deadline
+from app.utility import convert_time_to_epoch
+from app.utility import get_relative_date_string
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -71,9 +73,9 @@ def cli(ctx):
     help="Perform for all the tasks for this week",
 )
 @click.option(
-    "-dd",
-    "--deadline",
-    help='Set the deadline of a task, date format: "dd/mm/yyyy/"',
+    "-dt",
+    "--date",
+    help='Perform for all the tasks for this date, example date format: "dd/mm/yyyy/"',
     type=str,
 )
 @click.option(
@@ -101,7 +103,7 @@ def cli(ctx):
     type=str,
 )
 @click.option("-o", "--output", help="Specify Output Format", type=str)
-@click.option("--path", help="Specify Output File", type=str)
+@click.option("--path", help="Specify Output File", type=click.Path(exists=True))
 @click.option("-st", "--subtask", is_flag=True, help="List or add subtasks")
 @click.option("-tb", "--table", help="Specify Table", type=str)
 def tasks(
@@ -112,7 +114,7 @@ def tasks(
     priority=None,
     today=False,
     week=False,
-    deadline=None,
+    date=None,
     inprogress=None,
     completed=None,
     pending=None,
@@ -138,13 +140,16 @@ def tasks(
         )
         return
 
-    if deadline:
-        try:
-            deadline = convert_to_db_date(deadline)
-        except ValueError:
+    if date:
+        date = check_if_relative_deadline(date)
+        if date is False:
+            return
+
+        err = convert_time_to_epoch(date)
+        if type(err) == str:
             click.echo(
                 click.style(
-                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    f"Error: {date}",
                     fg="red",
                 ),
             )
@@ -163,6 +168,7 @@ def tasks(
             pending=pending,
             label=label,
             subtasks=subtask,
+            date=date,
         )
 
         if (
@@ -200,9 +206,8 @@ def tasks(
         if desc:
             description = click.edit()
         if subtask:
-            parent = fuzzy_search_task(
+            parent = lister(
                 table=table,
-                current_task_id=ctx.obj["config"].get("current_task", -1),
             )
 
             if parent is None:
@@ -214,6 +219,21 @@ def tasks(
                 )
                 return
 
+            children = [
+                item["title"] for item in application.get_subtasks(parent["id"], table)
+            ]
+        else:
+            children = [item["title"] for item in application.list_tasks(table=table)]
+
+        if add in children:
+            click.echo(
+                click.style(
+                    "Error: Task with same name already exists on this level.",
+                    fg="red",
+                ),
+            )
+            return
+
         application.add_tasks(
             add,
             table,
@@ -221,7 +241,7 @@ def tasks(
             priority,
             today,
             week,
-            deadline,
+            date,
             inprogress,
             completed,
             pending,
@@ -300,10 +320,9 @@ def task(
     if table is None:
         table = ctx.obj["config"].get("current_table", "tasks")
 
-    current_task = fuzzy_search_task(
+    current_task = lister(
         table=table,
         completed=archive,
-        current_task_id=ctx.obj["config"].get("current_task", -1),
     )
 
     if current_task is None:
@@ -315,7 +334,6 @@ def task(
         )
         return
 
-    ctx.obj["config"]["current_task"] = current_task["id"]
     update_config(config_path, ctx.obj["config"])
 
     if inprogress:
@@ -327,6 +345,22 @@ def task(
 
     if name:
         current_task["title"] = name
+        parent_id = current_task.get("parent_id", -1)
+        if parent_id:
+            children = [
+                item["title"] for item in application.get_subtasks(parent_id, table)
+            ]
+        else:
+            children = [item["title"] for item in application.list_tasks(table=table)]
+        if name in children:
+            click.echo(
+                click.style(
+                    "Error: Task with same name already exists on this level.",
+                    fg="red",
+                ),
+            )
+            return
+
     if priority:
         current_task["priority"] = priority
     if label:
@@ -336,25 +370,29 @@ def task(
     elif today:
         current_task["deadline"] = "today"
     elif deadline:
-        try:
-            convert_to_db_date(deadline)
-            current_task["deadline"] = deadline
-        except ValueError:
+
+        deadline = check_if_relative_deadline(deadline)
+        if deadline is False:
+            return
+
+        err = convert_time_to_epoch(deadline)
+        if type(err) == str:
             click.echo(
                 click.style(
-                    'Error: Invalid date format, please use "dd/mm/yyyy".',
+                    f"Error: {err}",
                     fg="red",
                 ),
             )
+            click.echo('Example: "01/01/2020"')
             return
+        current_task["deadline"] = deadline
 
     if subtasks:
         task_list = application.get_subtasks_recursive(current_task, table)
         if task_list:
             temp = current_task.copy()
-            temp["parent_id"] = (
-                -1
-            )  # For subtasks, the parent of the parent node is irrelevant
+            temp["parent_id"] = -1
+            # For subtasks, the parent of the parent node is irrelevant
             # Parent_id cannot be -1, therefore functions ahead can recognize this node as root.
             task_list.append(temp)
             print_tasks(
@@ -375,7 +413,8 @@ def task(
     application.update_task(current_task, table)
 
     if delete:
-        application.handle_delete(current_task, table)
+        application.handle_delete(current_task, table=table)
+        update_config(config_path, ctx.obj["config"])
         return
 
 
@@ -429,7 +468,6 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             return
 
         ctx.obj["config"]["current_table"] = select
-        ctx.obj["config"]["current_task"] = -1
         update_config(config_path, ctx.obj["config"])
 
         click.echo(
@@ -460,6 +498,14 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             )
             return
 
+        if ctx.obj["config"].get("current_table", "tasks") == delete:
+            click.echo(
+                click.style(
+                    "Error: Cannot delete curently selected table.",
+                    fg="red",
+                ),
+            )
+            return
         ok = application.delete_table(delete)
 
         if ok:

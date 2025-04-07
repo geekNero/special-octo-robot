@@ -133,7 +133,7 @@ def print_tasks(
 ):
     if subtasks:
         if output == "json":
-            result = console_helper.treeify(tasks)
+            result = console_helper.treeify(tasks)[-1]
         elif output or path or pretty_tree == False:
             # passing result ahead as rich can print its own object
             result = print_tree(tasks, table_name, False)
