@@ -94,7 +94,7 @@ def fetch_issues(url, email) -> list:
 
     else:
         display_error_message(
-            "Respone from Jira was in-correct. Make sure the token is correct.",
+            "Response from Jira was in-correct. Make sure the token is correct.",
         )
         exit(1)
     return issues["issues"]

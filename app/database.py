@@ -35,7 +35,6 @@ def initialize(table_name: str) -> None:
     """,
     )
     cur.execute(f"CREATE INDEX title_{table_name} on {table_name}(title);")
-    cur.execute(f"""""")
     cur.execute(
         f"""
         CREATE TABLE IF NOT EXISTS sessions (
