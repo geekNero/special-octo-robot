@@ -12,6 +12,7 @@ from app.db_upgrade import upgrades
 migration_list = [
     ("0.5.1", "", upgrades.upgrade_0_5_1),
     ("0.6.3", "", upgrades.upgrade_0_6_3),
+    ("1.0.0", "", upgrades.upgrade_1_0_0),
 ]
 
 
@@ -22,6 +23,7 @@ def run_migrations(previous_version):
     for migration in migration_list:
         if Version(migration[0]) > previous_version:
             migration[2](cur)
+    conn.commit()
     conn.close()
 
 

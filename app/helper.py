@@ -7,18 +7,16 @@ from app import application
 from app.console_helper import treeify
 from app.constants import CR_ENTER
 from app.constants import LF_ENTER
+from app.utility import display_error_message
 from app.utility import sanitize_table_name
 
 
 def check_table_exists(table_name: str) -> bool:
     table_name, ok = sanitize_table_name(table_name)
     if not ok:
-        echo(
-            style(
-                "Error: Table name is not valid, please use only alphanumeric characters or underscores."
-                + "Maybe you are not a developer?",
-                fg="red",
-            ),
+        display_error_message(
+            "Table name is not valid, please use only alphanumeric characters or underscores."
+            + "Maybe you are not a developer?",
         )
     return table_name in application.list_tables(), table_name
 

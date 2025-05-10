@@ -1,9 +1,15 @@
 import datetime
+import json
+import time
 
 from . import database
+from app.sessions.linux import session_end as linux_session_end
+from app.sessions.linux import session_start as linux_session_start
 from app.utility import convert_epoch_to_time
 from app.utility import convert_time_to_epoch
+from app.utility import display_error_message
 from app.utility import generate_migration_error
+from app.utility import get_os
 from app.utility import get_week_start
 from app.utility import get_weekend
 from app.utility import sanitize_text
@@ -338,7 +344,7 @@ def list_tables() -> list:
 
     result = []
     for table in res:
-        if table[0] != "sqlite_sequence":
+        if table[0] not in ("sqlite_sequence", "sessions", "session_data"):
             result.append(table[0])
     return result
 
@@ -389,3 +395,84 @@ def get_deadline(deadline):
         deadline = str(deadline)
 
     return deadline
+
+
+def start_session(task_id: int, table: str, session_data: dict):
+    """
+    Start a session for a task.
+    """
+    # TODO: Write database calls
+    if session_data.get("pid", 0) > 0:
+        # If a session is already active, end it first
+        end_session(session_data)
+
+    if get_os() == "Linux":
+        try:
+            pid, filehandle = linux_session_start()
+            session_data["pid"] = pid
+            session_data["file_handle"] = filehandle
+        except Exception as e:
+            display_error_message(f"Error starting session: {e}")
+            return None
+
+    # Start a new session
+    session_data["start_time"] = int(datetime.datetime.now().timestamp())
+    session_data["task_id"] = task_id
+    session_data["table"] = table
+
+    return session_data
+
+
+def end_session(session_data: dict):
+    """
+    End the current session.
+    """
+    if session_data.get("pid", 0) == 0:
+        return
+
+    data = {}
+
+    if get_os() == "Linux":
+        try:
+            ok, err = linux_session_end(session_data["pid"])
+            if not ok:
+                if err is not None:
+                    display_error_message(f"Failed to end session: {err}")
+                return None
+            with open(session_data["file_handle"], "r") as f:
+                time.sleep(1)
+                content = f.read().strip()
+                if not content:
+                    display_error_message("Session file is empty.")
+                    return None
+                data = json.loads(content)
+
+        except Exception as e:
+            display_error_message(f"Failed to end session: {e}")
+            return None
+
+    session_data["end_time"] = int(datetime.datetime.now().timestamp())
+
+    session_id = database.add_session(
+        task_id=session_data["task_id"],
+        table_name=session_data["table"],
+        start_datetime=session_data["start_time"],
+        end_datetime=session_data["end_time"],
+    )
+    session_data["session_id"] = session_id
+    mapped_data = {}
+    for value in data.values():
+        if value["name_list"]:
+            name = "-".join(value["name_list"])
+            if mapped_data.get(name, None) is None:
+                mapped_data[name] = value["time"]
+            else:
+                mapped_data[name] += value["time"]
+    for key, value in mapped_data.items():
+        database.add_session_data(
+            session_id=session_id,
+            application_name=key,
+            duration=value,
+        )
+
+    return {"session_id": session_id, "session_data": session_data}

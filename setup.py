@@ -1,3 +1,5 @@
+import platform
+
 from setuptools import find_packages
 from setuptools import setup
 
@@ -5,8 +7,12 @@ from app.__version__ import VERSION
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = fh.read()
+if platform.system() == "Linux":
+    with open("requirements_linux.txt", "r", encoding="utf-8") as fh:
+        requirements = fh.read()
+else:
+    with open("requirements.txt", "r", encoding="utf-8") as fh:
+        requirements = fh.read()
 
 
 setup(

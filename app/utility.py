@@ -1,3 +1,4 @@
+import platform
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -61,9 +62,18 @@ def sanitize_text(text):
 
 
 def generate_migration_error():
+    display_error_message(
+        "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+    )
+
+
+def display_error_message(message: str):
+    """
+    Display an error message in red style with an error prefix.
+    """
     echo(
         style(
-            "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+            f"Error: {message}",
             fg="red",
         ),
     )
@@ -118,12 +128,18 @@ def check_if_relative_deadline(deadline: str) -> str:
         if deadline[1:].isdigit():
             deadline = get_relative_date_string(int(deadline))
         else:
-            echo(
-                style(
-                    f"Error: ",
-                    fg="red",
-                ),
-            )
-            echo('Example: "+4"')
+            display_error_message("Example: '+4'")
             return False
     return deadline
+
+
+def get_os():
+    system = platform.system()
+    if system == "Linux":
+        return "Linux"
+    elif system == "Darwin":
+        return "MacOS"
+    elif system == "Windows":
+        return "Windows"
+    else:
+        return "Unknown"
