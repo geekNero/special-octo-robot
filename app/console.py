@@ -238,3 +238,16 @@ def print_sessions(sessions):
             f"[#FFFFFF]{session['duration']}",
         )
     console.print(table)
+
+
+def print_session_data(session_data):
+    console = Console()
+    table = Table(title=session_data["title"], highlight=True, leading=True)
+    table.add_column("Application Name", justify="left", style="white")
+    table.add_column("Duration", justify="left", style="white")
+    for session in session_data["data"]:
+        table.add_row(
+            f"[#FFFFFF]{session['application_name']}",
+            f"[#FFFFFF]{session['duration']}",
+        )
+    console.print(table)

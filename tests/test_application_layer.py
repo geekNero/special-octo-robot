@@ -2,8 +2,8 @@ import os
 import unittest
 from app.constants import path, db_path
 from app.utility import convert_time_to_epoch, get_relative_date_string
-from app.database import initialize, insert_into_table, add_session
-from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete, update_task, list_sessions
+from app.database import add_session_data, initialize, insert_into_table, add_session
+from app.application import list_tasks, add_tasks, search_task, get_subtasks, handle_delete, update_task, list_sessions, get_session_data
 from datetime import datetime, timedelta
 
 def create_db():
@@ -29,6 +29,10 @@ def fill_db():
     add_session(task_id=2,table_name="tasks", start_datetime=1724989000, end_datetime=1724990000)
     add_session(task_id=5, table_name="tasks", start_datetime=1725985000, end_datetime=1725985900)
     add_session(task_id=6, table_name="tasks", start_datetime=1726989000, end_datetime=1726990000)
+    add_session_data(session_id=1, application_name="Pomodoro", duration=900)
+    add_session_data(session_id=1, application_name="Pomodoro-2", duration=903)
+    add_session_data(session_id=2, application_name="CODE", duration=50)
+    add_session_data(session_id=2, application_name="WhatsAPP", duration=90)
 
 class ListTasks(unittest.TestCase):
     def test_list_task_with_empty_db(self):
@@ -566,35 +570,34 @@ class ListSessions(unittest.TestCase):
         fill_db()
         sessions = list_sessions("tasks")
         self.assertTrue(isinstance(sessions, list))
-        self.assertGreaterEqual(len(sessions), 1)
         expected_sessions = [
             {
-                "session_id": 1,
-                "task_name": "Task 2",
-                "start_datetime": "08:00, 30/8/2024",
-                "end_datetime": "08:15, 30/8/2024",
-                "duration": "15 mins",
+            "session_id": 4,
+            "task_name": "Task 6",
+            "start_datetime": "12:40, 22/9/2024",
+            "end_datetime": "12:56, 22/9/2024",
+            "duration": "16 mins, 40 secs",
             },
             {
-                "session_id": 2,
-                "task_name": "Task 2",
-                "start_datetime": "09:06, 30/8/2024",
-                "end_datetime": "09:23, 30/8/2024",
-                "duration": "16 mins, 40 secs",
+            "session_id": 3,
+            "task_name": "Task 5",
+            "start_datetime": "21:46, 10/9/2024",
+            "end_datetime": "22:01, 10/9/2024",
+            "duration": "15 mins",
             },
             {
-                "session_id": 3,
-                "task_name": "Task 5",
-                "start_datetime": "21:46, 10/9/2024",
-                "end_datetime": "22:01, 10/9/2024",
-                "duration": "15 mins",
+            "session_id": 2,
+            "task_name": "Task 2",
+            "start_datetime": "09:06, 30/8/2024",
+            "end_datetime": "09:23, 30/8/2024",
+            "duration": "16 mins, 40 secs",
             },
             {
-                "session_id": 4,
-                "task_name": "Task 6",
-                "start_datetime": "12:40, 22/9/2024",
-                "end_datetime": "12:56, 22/9/2024",
-                "duration": "16 mins, 40 secs",
+            "session_id": 1,
+            "task_name": "Task 2",
+            "start_datetime": "08:00, 30/8/2024",
+            "end_datetime": "08:15, 30/8/2024",
+            "duration": "15 mins",
             },
         ]
         # Only check the first 4 sessions for exact match (since fill_db inserts 4 sessions)
@@ -623,6 +626,43 @@ class ListSessions(unittest.TestCase):
         fill_db()
         sessions = list_sessions("tasks", task_id=999)
         self.assertEqual(sessions, [])
+
+class GetSessionData(unittest.TestCase):
+    def test_get_session_data_with_valid_session_id(self):
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        create_db()
+        fill_db()
+        session_data = get_session_data(1)
+        self.assertIsInstance(session_data, dict)
+        self.assertIn("data", session_data)
+        self.assertIsInstance(session_data["data"], list)
+        expected = [
+            {"application_name": "Pomodoro", "duration": "15 mins"},
+            {"application_name": "Pomodoro-2", "duration": "15 mins, 3 secs"},
+        ]
+        self.assertEqual(session_data["data"], expected)
+
+    def test_get_session_data_with_valid_session_id_2(self):
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        create_db()
+        fill_db()
+        session_data = get_session_data(2)
+        self.assertIsInstance(session_data, dict)
+        self.assertIn("data", session_data)
+        self.assertIsInstance(session_data["data"], list)
+        expected = [
+            {"application_name": "CODE", "duration": "50 secs"},
+            {"application_name": "WhatsAPP", "duration": "1 mins, 30 secs"},
+        ]
+        self.assertEqual(session_data["data"], expected)
+
+    def test_get_session_data_with_invalid_session_id(self):
+        self.assertTrue(os.environ.get("DEBUG", "") == "True")
+        create_db()
+        fill_db()
+        session_data = get_session_data(9999)
+        self.assertIsInstance(session_data, dict)
+        self.assertEqual(session_data["data"], [])
 
 
 if __name__ == '__main__':

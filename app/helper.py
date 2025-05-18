@@ -39,6 +39,34 @@ def lister(table, completed=False):
     return curses.wrapper(menu, -1, get_tasks)
 
 
+def session_lister(table):
+    sessions = application.list_sessions(table)
+    if len(sessions) == 0:
+        return None
+
+    def get_sessions(id: int = -1):
+        if id == -1:
+            return_list = []
+            for session in sessions:
+                task_name = session["task_name"]
+                if len(session["task_name"]) > 20:
+                    task_name = session["task_name"][:20] + "..."
+                return_list.append(
+                    {
+                        "data": {
+                            "id": session["session_id"],
+                            "title": f"{task_name} {session['start_datetime']} -> {session['end_datetime']}",
+                        },
+                        "children": [],
+                    },
+                )
+            return {"title": "Sessions", "id": -1}, return_list
+        else:
+            return {}, []
+
+    return curses.wrapper(menu, -1, get_sessions)
+
+
 def menu(stdscr, current: int, get_tasks) -> dict:
     """
     'current' is the id of the current task;

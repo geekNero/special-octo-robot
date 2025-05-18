@@ -509,3 +509,25 @@ def list_sessions(table: str, task_id: int = None) -> list:
         )
 
     return session_list
+
+
+def get_session_data(session_id: int) -> dict:
+    """
+    Get session data for a given session ID.
+    """
+    try:
+        session_data = database.get_session_data(session_id)
+        data = {
+            "data": [],
+        }
+        for session_item in session_data:
+            data["data"].append(
+                {
+                    "application_name": session_item[2],
+                    "duration": convert_seconds_delta_to_time(session_item[3]),
+                },
+            )
+        return data
+    except Exception as e:
+        print(e)
+        return {}

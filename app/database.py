@@ -206,15 +206,29 @@ def add_session_data(
 
 def list_sessions(table_name: str, task_id: int = None) -> list:
     """
-    List sessions from the sessions table, optionally filtered by task_id.
+    List sessions from the sessions table, optionally filtered by task_id, ordered by end_datetime.
     """
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     if task_id is not None:
-        query = f"SELECT * FROM sessions WHERE table_name = ? AND task_id = ?"
+        query = f"SELECT * FROM sessions WHERE table_name = ? AND task_id = ? ORDER BY end_datetime DESC"
         res = cur.execute(query, (table_name, task_id)).fetchall()
     else:
-        query = f"SELECT * FROM sessions WHERE table_name = ?"
+        query = (
+            f"SELECT * FROM sessions WHERE table_name = ? ORDER BY end_datetime DESC"
+        )
         res = cur.execute(query, (table_name,)).fetchall()
+    conn.commit()
+    return res
+
+
+def get_session_data(session_id: int) -> list:
+    """
+    Get session data from the session_data table.
+    """
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    query = f"SELECT * FROM session_data WHERE session_id = ?"
+    res = cur.execute(query, (session_id,)).fetchall()
     conn.commit()
     return res

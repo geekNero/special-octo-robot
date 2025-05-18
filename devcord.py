@@ -8,6 +8,7 @@ from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
+from app.console import print_session_data
 from app.console import print_sessions
 from app.console import print_tables
 from app.console import print_tasks
@@ -17,6 +18,7 @@ from app.constants import path
 from app.database import initialize
 from app.helper import check_table_exists
 from app.helper import lister
+from app.helper import session_lister
 from app.migrations import update_version
 from app.utility import check_if_relative_deadline
 from app.utility import convert_time_to_epoch
@@ -577,7 +579,7 @@ def init(ctx, migrate=False, pretty_tree=None):
 @cli.command()
 @click.pass_context
 @click.option("-st", "--start", is_flag=True, help="Start a session for a task")
-@click.option("-et", "--end", is_flag=True, help="End the current session")
+@click.option("-ed", "--end", is_flag=True, help="End the current session")
 @click.option("-l", "--list", is_flag=True, help="List all the sessions")
 @click.option("-sl", "--select", is_flag=True, help="Select a session to view")
 @click.option("-fl", "--filter", help="Filter sessions by task")
@@ -590,7 +592,7 @@ def session(ctx, start, end, list, select, filter):
     if start:
         current_task = lister(table=table)
         if current_task is None:
-            display_error_message("No task selected to start a session.")
+            display_error_message("No tasks available to start a session.")
             return
 
         session_data = ctx.obj["config"].get("session_data", {})
@@ -632,6 +634,37 @@ def session(ctx, start, end, list, select, filter):
                     fg="yellow",
                 ),
             )
+    elif filter:
+        current_task = lister(table=table)
+        if current_task is None:
+            display_error_message("No task selected to start a session.")
+            return
+
+        sessions = application.list_sessions(
+            table=table,
+            task_id=current_task["id"],
+        )
+        if sessions:
+            print_sessions(sessions)
+        else:
+            click.echo(
+                click.style(
+                    "Info: No sessions found.",
+                    fg="yellow",
+                ),
+            )
+    elif select:
+        session = session_lister(table=table)
+        if session is None:
+            display_error_message("No session exists.")
+            return
+
+        session_data = application.get_session_data(session_id=session["id"])
+        if session_data is None:
+            display_error_message("No session data exists.")
+            return
+        session_data["title"] = session["title"]
+        print_session_data(session_data)
 
     else:
         display_error_message("Please specify an action (--start or --end).")
