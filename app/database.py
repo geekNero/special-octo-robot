@@ -34,7 +34,7 @@ def initialize(table_name: str) -> None:
         END;
     """,
     )
-    cur.execute(f"CREATE INDEX title_{table_name} on {table_name}(title);")
+    cur.execute(f"CREATE IF NOT EXISTS index_{table_name} ON {table_name}(id, title);")
     cur.execute(
         f"""
         CREATE TABLE IF NOT EXISTS sessions (
@@ -200,3 +200,19 @@ def add_session_data(
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
+
+
+def list_sessions(table_name: str, task_id: int = None) -> list:
+    """
+    List sessions from the sessions table, optionally filtered by task_id.
+    """
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    if task_id is not None:
+        query = f"SELECT * FROM sessions WHERE table_name = ? AND task_id = ?"
+        res = cur.execute(query, (table_name, task_id)).fetchall()
+    else:
+        query = f"SELECT * FROM sessions WHERE table_name = ?"
+        res = cur.execute(query, (table_name,)).fetchall()
+    conn.commit()
+    return res

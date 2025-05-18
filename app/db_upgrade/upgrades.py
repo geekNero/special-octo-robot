@@ -112,3 +112,14 @@ def upgrade_1_0_0(cur):
     cur.execute(
         f"CREATE INDEX IF NOT EXISTS session_id_data on session_data(session_id);",
     )
+    tables = list_tables()
+    for table in tables:
+        # Drop the existing trigger
+        cur.execute(f"DROP INDEX IF EXISTS title_{table};")
+
+        # Add a new trigger to check the value of completed before updating it
+        cur.execute(
+            f"""
+            CREATE IF NOT EXISTS index_{table} ON {table}(id, title);
+            """,
+        )
