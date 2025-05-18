@@ -8,6 +8,7 @@ from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
+from app.console import print_sessions
 from app.console import print_tables
 from app.console import print_tasks
 from app.constants import config_path
@@ -20,7 +21,6 @@ from app.migrations import update_version
 from app.utility import check_if_relative_deadline
 from app.utility import convert_time_to_epoch
 from app.utility import display_error_message
-from app.utility import get_relative_date_string
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -578,7 +578,10 @@ def init(ctx, migrate=False, pretty_tree=None):
 @click.pass_context
 @click.option("-st", "--start", is_flag=True, help="Start a session for a task")
 @click.option("-et", "--end", is_flag=True, help="End the current session")
-def session(ctx, start, end):
+@click.option("-l", "--list", is_flag=True, help="List all the sessions")
+@click.option("-sl", "--select", is_flag=True, help="Select a session to view")
+@click.option("-fl", "--filter", help="Filter sessions by task")
+def session(ctx, start, end, list, select, filter):
     """
     Manage sessions for tasks.
     """
@@ -598,7 +601,7 @@ def session(ctx, start, end):
         )
         if session_data is not None:
             ctx.obj["config"]["session_data"] = session_data
-            update_config(config_path, ctx.obj["config"])
+            update_config(config_path, config=ctx.obj["config"])
             click.echo(
                 click.style(
                     f"Session started for task: {current_task['title']}",
@@ -614,6 +617,21 @@ def session(ctx, start, end):
         session_data = ctx.obj["config"].get("session_data", {})
         session_data = application.end_session(session_data)
         ctx.obj["config"]["session_data"] = session_data
+
+    elif list:
+        sessions = application.list_sessions(
+            table=table,
+            task_id=filter,
+        )
+        if sessions:
+            print_sessions(sessions)
+        else:
+            click.echo(
+                click.style(
+                    "Info: No sessions found.",
+                    fg="yellow",
+                ),
+            )
 
     else:
         display_error_message("Please specify an action (--start or --end).")

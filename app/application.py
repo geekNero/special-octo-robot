@@ -5,7 +5,9 @@ import time
 from . import database
 from app.sessions.linux import session_end as linux_session_end
 from app.sessions.linux import session_start as linux_session_start
-from app.utility import convert_epoch_to_time
+from app.utility import convert_epoch_to_date
+from app.utility import convert_epoch_to_datetime
+from app.utility import convert_seconds_delta_to_time
 from app.utility import convert_time_to_epoch
 from app.utility import display_error_message
 from app.utility import generate_migration_error
@@ -98,7 +100,7 @@ def list_tasks(
                 "title": result[1],
                 "parent_id": result[2],
                 "status": result[3],
-                "deadline": (convert_epoch_to_time(result[4])),
+                "deadline": (convert_epoch_to_date(result[4])),
                 "priority": result[5],
                 "label": result[6] if result[6] else "None",
                 "description": result[7],
@@ -207,10 +209,10 @@ def search_task(task_id, table: str) -> dict | None:
             "title": task[1],
             "description": task[2],
             "status": task[3],
-            "deadline": convert_epoch_to_time(task[4]),
+            "deadline": convert_epoch_to_date(task[4]),
             "priority": task[5],
             "label": task[6] if task[6] else "None",
-            "completed": convert_epoch_to_time(task[7]),
+            "completed": convert_epoch_to_date(task[7]),
             "parent_id": task[8],
             "subtasks": task[9],
         }
@@ -245,7 +247,7 @@ def get_subtasks(task_id: int, table: str):
                 "id": result[0],
                 "title": result[1],
                 "status": result[2],
-                "deadline": (convert_epoch_to_time(result[3])),
+                "deadline": (convert_epoch_to_date(result[3])),
                 "priority": result[4],
                 "label": result[5] if result[5] else "None",
                 "description": result[6],
@@ -476,3 +478,34 @@ def end_session(session_data: dict):
         )
 
     return {"session_id": session_id, "session_data": session_data}
+
+
+def list_sessions(table: str, task_id: int = None) -> list:
+    """
+    List all the sessions, filter by task_id.
+    """
+    try:
+        sessions = database.list_sessions(table, task_id)
+    except Exception as e:
+        print(e)
+        return []
+
+    session_list = []
+
+    for session in sessions:
+        task = search_task(session[1], table)
+        duration = session[4] - session[3]
+        if duration < 0:
+            duration = 0
+
+        session_list.append(
+            {
+                "session_id": session[0],
+                "task_name": task["title"],
+                "start_datetime": convert_epoch_to_datetime(session[3]),
+                "end_datetime": convert_epoch_to_datetime(session[4]),
+                "duration": convert_seconds_delta_to_time(duration),
+            },
+        )
+
+    return session_list

@@ -120,6 +120,6 @@ def upgrade_1_0_0(cur):
         # Add a new trigger to check the value of completed before updating it
         cur.execute(
             f"""
-            CREATE IF NOT EXISTS index_{table} ON {table}(id, title);
+            CREATE INDEX IF NOT EXISTS index_{table} ON {table}(id, title);
             """,
         )

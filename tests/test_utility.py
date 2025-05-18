@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 import time
-from app.utility import convert_time_to_epoch, convert_epoch_to_time, get_week_start, get_weekend, get_relative_date_string, check_if_relative_deadline
+from app.utility import convert_time_to_epoch, convert_epoch_to_date, get_week_start, get_weekend, get_relative_date_string, check_if_relative_deadline
 
 class ConvertToEpoch(unittest.TestCase):
     def test_positive(self):
@@ -32,11 +32,11 @@ class ConvertEpochToTime(unittest.TestCase):
     def test_positive(self):
         date_str = "31-12-2020"
         epoch = convert_time_to_epoch(date_str)
-        self.assertEqual(convert_epoch_to_time(epoch), date_str)
+        self.assertEqual(convert_epoch_to_date(epoch), date_str)
     
     def test_negative(self):
-        self.assertEqual(convert_epoch_to_time(0), "None")
-        self.assertEqual(convert_epoch_to_time("abc"), "'str' object cannot be interpreted as an integer")
+        self.assertEqual(convert_epoch_to_date(0), "None")
+        self.assertEqual(convert_epoch_to_date("abc"), "'str' object cannot be interpreted as an integer")
         
 class GetWeekEnds(unittest.TestCase):
     def test_positive(self):

@@ -47,7 +47,7 @@ def convert_time_to_epoch(time_str, eod=True):
         return e.__str__()
 
 
-def convert_epoch_to_time(epoch_time):
+def convert_epoch_to_date(epoch_time):
     if epoch_time == 0:
         return "None"
     try:
@@ -55,6 +55,31 @@ def convert_epoch_to_time(epoch_time):
         return date_obj.strftime("%d-%m-%Y")
     except Exception as e:
         return e.__str__()
+
+
+def convert_epoch_to_datetime(epoch_time):
+    if epoch_time == 0:
+        return "None"
+    try:
+        date_obj = datetime.fromtimestamp(epoch_time)
+        return date_obj.strftime("%H:%M, %-d/%-m/%Y")
+    except Exception as e:
+        return str(e)
+
+
+def convert_seconds_delta_to_time(seconds):
+    seconds = int(seconds)
+    hrs = seconds // 3600
+    mins = (seconds % 3600) // 60
+    secs = seconds % 60
+    parts = []
+    if hrs > 0:
+        parts.append(f"{hrs} hrs")
+    if mins > 0:
+        parts.append(f"{mins} mins")
+    if secs > 0 or not parts:
+        parts.append(f"{secs} secs")
+    return ", ".join(parts)
 
 
 def sanitize_text(text):
