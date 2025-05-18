@@ -63,8 +63,8 @@ def convert_epoch_to_datetime(epoch_time):
     try:
         date_obj = datetime.fromtimestamp(epoch_time)
         return date_obj.strftime("%H:%M, %-d/%-m/%Y")
-    except Exception as e:
-        return str(e)
+    except Exception:
+        return "invalid"
 
 
 def convert_seconds_delta_to_time(seconds):
