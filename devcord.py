@@ -582,18 +582,20 @@ def init(ctx, migrate=False, pretty_tree=None):
 @click.option("-ed", "--end", is_flag=True, help="End the current session")
 @click.option("-l", "--list", is_flag=True, help="List all the sessions")
 @click.option("-sl", "--select", is_flag=True, help="Select a session to view")
-@click.option("-fl", "--filter", help="Filter sessions by task")
-def session(ctx, start, end, list, select, filter):
+@click.option("-fl", "--filter", is_flag=True, help="Filter sessions by task")
+@click.option("-dl", "--delete", is_flag=True, help="Delete a session")
+def session(ctx, start, end, list, select, filter, delete):
     """
     Manage sessions for tasks.
     """
     table = ctx.obj["config"].get("current_table", "tasks")
-
-    if start:
+    if filter:
         current_task = lister(table=table)
         if current_task is None:
             display_error_message("No tasks available to start a session.")
             return
+
+    if start:
 
         session_data = ctx.obj["config"].get("session_data", {})
         session_data = application.start_session(
@@ -623,26 +625,7 @@ def session(ctx, start, end, list, select, filter):
     elif list:
         sessions = application.list_sessions(
             table=table,
-            task_id=filter,
-        )
-        if sessions:
-            print_sessions(sessions)
-        else:
-            click.echo(
-                click.style(
-                    "Info: No sessions found.",
-                    fg="yellow",
-                ),
-            )
-    elif filter:
-        current_task = lister(table=table)
-        if current_task is None:
-            display_error_message("No task selected to start a session.")
-            return
-
-        sessions = application.list_sessions(
-            table=table,
-            task_id=current_task["id"],
+            task_id=current_task["id"] if filter else None,
         )
         if sessions:
             print_sessions(sessions)
@@ -654,7 +637,10 @@ def session(ctx, start, end, list, select, filter):
                 ),
             )
     elif select:
-        session = session_lister(table=table)
+        session = session_lister(
+            table=table,
+            task_id=current_task["id"] if filter else None,
+        )
         if session is None:
             display_error_message("No session exists.")
             return
@@ -665,6 +651,23 @@ def session(ctx, start, end, list, select, filter):
             return
         session_data["title"] = session["title"]
         print_session_data(session_data)
+
+    elif delete:
+        session = session_lister(
+            table=table,
+            task_id=current_task["id"] if filter else None,
+        )
+        if session is None:
+            display_error_message("No session exists.")
+            return
+
+        application.delete_session(session_id=session["id"])
+        click.echo(
+            click.style(
+                f"Session {session['title']} deleted successfully.",
+                fg="green",
+            ),
+        )
 
     else:
         display_error_message("Please specify an action (--start or --end).")

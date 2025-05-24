@@ -39,8 +39,8 @@ def lister(table, completed=False):
     return curses.wrapper(menu, -1, get_tasks)
 
 
-def session_lister(table):
-    sessions = application.list_sessions(table)
+def session_lister(table, task_id=None):
+    sessions = application.list_sessions(table, task_id=task_id)
     if len(sessions) == 0:
         return None
 

@@ -533,3 +533,15 @@ def get_session_data(session_id: int) -> dict:
     except Exception as e:
         print(e)
         return {}
+
+
+def delete_session(session_id: int) -> bool:
+    """
+    Delete a session by its ID.
+    """
+    try:
+        database.delete_session(session_id)
+        return True
+    except Exception as e:
+        display_error_message(f"Failed to delete session: {e}")
+        return False

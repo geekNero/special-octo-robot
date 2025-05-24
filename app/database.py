@@ -234,3 +234,14 @@ def get_session_data(session_id: int) -> list:
     res = cur.execute(query, (session_id,)).fetchall()
     conn.commit()
     return res
+
+
+def delete_session(session_id: int) -> None:
+    """
+    Delete a session from the sessions table.
+    """
+    query = f"DELETE FROM sessions WHERE session_id = ?"
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(query, (session_id,))
+    conn.commit()
