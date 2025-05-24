@@ -589,6 +589,7 @@ def session(ctx, start, end, list, select, filter, delete):
     Manage sessions for tasks.
     """
     table = ctx.obj["config"].get("current_table", "tasks")
+    current_task = None
     if filter:
         current_task = lister(table=table)
         if current_task is None:
@@ -596,6 +597,11 @@ def session(ctx, start, end, list, select, filter, delete):
             return
 
     if start:
+        if not current_task:
+            current_task = lister(table=table)
+        if current_task is None:
+            display_error_message("No tasks available to start a session.")
+            return
 
         session_data = ctx.obj["config"].get("session_data", {})
         session_data = application.start_session(
