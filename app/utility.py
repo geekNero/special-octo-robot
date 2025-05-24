@@ -104,6 +104,30 @@ def display_error_message(message: str):
     )
 
 
+def display_info_message(message: str):
+    """
+    Display an informational message in green style with an info prefix.
+    """
+    echo(
+        style(
+            f"Info: {message}",
+            fg="yellow",
+        ),
+    )
+
+
+def display_success_message(message: str):
+    """
+    Display a success message in green style with a success prefix.
+    """
+    echo(
+        style(
+            f"Success: {message}",
+            fg="green",
+        ),
+    )
+
+
 def sanitize_table_name(table_name: str) -> (str, bool):  # type: ignore
     for ch in table_name:
         if ch.isalnum() or ch == " " or ch == "_":

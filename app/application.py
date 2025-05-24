@@ -10,6 +10,7 @@ from app.utility import convert_epoch_to_datetime
 from app.utility import convert_seconds_delta_to_time
 from app.utility import convert_time_to_epoch
 from app.utility import display_error_message
+from app.utility import display_info_message
 from app.utility import generate_migration_error
 from app.utility import get_os
 from app.utility import get_week_start
@@ -407,6 +408,7 @@ def start_session(task_id: int, table: str, session_data: dict):
     if session_data.get("pid", 0) > 0:
         # If a session is already active, end it first
         end_session(session_data)
+        display_info_message("A session was already active, ending it.")
 
     if get_os() == "Linux":
         try:
@@ -421,7 +423,7 @@ def start_session(task_id: int, table: str, session_data: dict):
     session_data["start_time"] = int(datetime.datetime.now().timestamp())
     session_data["task_id"] = task_id
     session_data["table"] = table
-
+    display_info_message("Session started.")
     return session_data
 
 
