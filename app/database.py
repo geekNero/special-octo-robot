@@ -53,7 +53,9 @@ def initialize(table_name: str) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,
             application_name VARCHAR NOT NULL,
-            duration INTEGER NOT NULL
+            duration INTEGER NOT NULL,
+            FOREIGN KEY(session_id) REFERENCES sessions(session_id)
+            ON DELETE CASCADE
         )""",
     )
     cur.execute(

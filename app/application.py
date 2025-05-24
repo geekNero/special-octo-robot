@@ -416,7 +416,7 @@ def start_session(task_id: int, table: str, session_data: dict):
             session_data["pid"] = pid
             session_data["file_handle"] = filehandle
         except Exception as e:
-            display_error_message(f"Error starting session: {e}")
+            display_error_message(f"Failed to start session: {e}")
             return None
 
     # Start a new session
