@@ -81,3 +81,47 @@ def upgrade_0_6_3(cur):
             END;
             """,
         )
+
+
+def upgrade_1_0_0(cur):
+    """
+    Upgrade the database to version 1.0.0
+    """
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sessions (
+            session_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id INTEGER,
+            table_name VARCHAR NOT NULL,
+            start_datetime INTEGER NOT NULL,
+            end_datetime INTEGER NOT NULL
+        )""",
+    )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS session_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            application_name VARCHAR NOT NULL,
+            duration INTEGER NOT NULL,
+            FOREIGN KEY(session_id) REFERENCES sessions(session_id)
+            ON DELETE CASCADE
+        )""",
+    )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS session_id_session on sessions(session_id);",
+    )
+    cur.execute(
+        f"CREATE INDEX IF NOT EXISTS session_id_data on session_data(session_id);",
+    )
+    tables = list_tables()
+    for table in tables:
+        # Drop the existing trigger
+        cur.execute(f"DROP INDEX IF EXISTS title_{table};")
+
+        # Add a new trigger to check the value of completed before updating it
+        cur.execute(
+            f"""
+            CREATE INDEX IF NOT EXISTS index_{table} ON {table}(id, title);
+            """,
+        )

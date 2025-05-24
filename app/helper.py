@@ -7,18 +7,16 @@ from app import application
 from app.console_helper import treeify
 from app.constants import CR_ENTER
 from app.constants import LF_ENTER
+from app.utility import display_error_message
 from app.utility import sanitize_table_name
 
 
 def check_table_exists(table_name: str) -> bool:
     table_name, ok = sanitize_table_name(table_name)
     if not ok:
-        echo(
-            style(
-                "Error: Table name is not valid, please use only alphanumeric characters or underscores."
-                + "Maybe you are not a developer?",
-                fg="red",
-            ),
+        display_error_message(
+            "Table name is not valid, please use only alphanumeric characters or underscores."
+            + "Maybe you are not a developer?",
         )
     return table_name in application.list_tables(), table_name
 
@@ -39,6 +37,34 @@ def lister(table, completed=False):
         return tree[task_id]["data"], tree[task_id]["children"]
 
     return curses.wrapper(menu, -1, get_tasks)
+
+
+def session_lister(table, task_id=None):
+    sessions = application.list_sessions(table, task_id=task_id)
+    if len(sessions) == 0:
+        return None
+
+    def get_sessions(id: int = -1):
+        if id == -1:
+            return_list = []
+            for session in sessions:
+                task_name = session["task_name"]
+                if len(session["task_name"]) > 20:
+                    task_name = session["task_name"][:20] + "..."
+                return_list.append(
+                    {
+                        "data": {
+                            "id": session["session_id"],
+                            "title": f"{task_name} {session['start_datetime']} -> {session['end_datetime']}",
+                        },
+                        "children": [],
+                    },
+                )
+            return {"title": "Sessions", "id": -1}, return_list
+        else:
+            return {}, []
+
+    return curses.wrapper(menu, -1, get_sessions)
 
 
 def menu(stdscr, current: int, get_tasks) -> dict:

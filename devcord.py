@@ -8,6 +8,8 @@ from app.config import get_config
 from app.config import initialize_config
 from app.config import update_config
 from app.console import print_legend
+from app.console import print_session_data
+from app.console import print_sessions
 from app.console import print_tables
 from app.console import print_tasks
 from app.constants import config_path
@@ -16,10 +18,11 @@ from app.constants import path
 from app.database import initialize
 from app.helper import check_table_exists
 from app.helper import lister
+from app.helper import session_lister
 from app.migrations import update_version
 from app.utility import check_if_relative_deadline
 from app.utility import convert_time_to_epoch
-from app.utility import get_relative_date_string
+from app.utility import display_error_message
 from jira.application import update_issues
 from jira.console import set_jira_config
 from jira.console import set_organization_email
@@ -37,11 +40,8 @@ def cli(ctx):
     """
     ctx.ensure_object(dict)
     if not path:
-        click.echo(
-            click.style(
-                "Error: Could not find the path to the database, raise an issue with the developers.",
-                fg="red",
-            ),
+        display_error_message(
+            "Could not find the path to the database, raise an issue with the developers.",
         )
         ctx.abort()
         return
@@ -132,12 +132,7 @@ def tasks(
         table = ctx.obj["config"].get("current_table", "tasks")
 
     if not add and not list:
-        click.echo(
-            click.style(
-                "Error: Please specify an action.",
-                fg="red",
-            ),
-        )
+        display_error_message("Please specify an action.")
         return
 
     if date:
@@ -147,12 +142,7 @@ def tasks(
 
         err = convert_time_to_epoch(date)
         if type(err) == str:
-            click.echo(
-                click.style(
-                    f"Error: {date}",
-                    fg="red",
-                ),
-            )
+            display_error_message(date)
             click.echo('Example: "01/01/2020"')
             return
 
@@ -211,12 +201,7 @@ def tasks(
             )
 
             if parent is None:
-                click.echo(
-                    click.style(
-                        "Error: Parent task does not exist.",
-                        fg="red",
-                    ),
-                )
+                display_error_message("Parent task does not exist.")
                 return
 
             children = [
@@ -226,12 +211,7 @@ def tasks(
             children = [item["title"] for item in application.list_tasks(table=table)]
 
         if add in children:
-            click.echo(
-                click.style(
-                    "Error: Task with same name already exists on this level.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Task with same name already exists on this level.")
             return
 
         application.add_tasks(
@@ -326,12 +306,7 @@ def task(
     )
 
     if current_task is None:
-        click.echo(
-            click.style(
-                "Error: Task does not exist.",
-                fg="red",
-            ),
-        )
+        display_error_message("Task does not exist.")
         return
 
     update_config(config_path, ctx.obj["config"])
@@ -353,12 +328,7 @@ def task(
         else:
             children = [item["title"] for item in application.list_tasks(table=table)]
         if name in children:
-            click.echo(
-                click.style(
-                    "Error: Task with same name already exists on this level.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Task with same name already exists on this level.")
             return
 
     if priority:
@@ -377,12 +347,7 @@ def task(
 
         err = convert_time_to_epoch(deadline)
         if type(err) == str:
-            click.echo(
-                click.style(
-                    f"Error: {err}",
-                    fg="red",
-                ),
-            )
+            display_error_message(err)
             click.echo('Example: "01/01/2020"')
             return
         current_task["deadline"] = deadline
@@ -436,12 +401,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     elif add:
         exists, add = check_table_exists(add)
         if exists:
-            click.echo(
-                click.style(
-                    "Error: Table already exists.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Table already exists.")
             return
 
         ok = application.add_table(add)
@@ -459,12 +419,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     elif select:
         exists, select = check_table_exists(select)
         if not exists:
-            click.echo(
-                click.style(
-                    "Error: Table does not exist.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Table does not exist.")
             return
 
         ctx.obj["config"]["current_table"] = select
@@ -482,29 +437,14 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     elif delete:
         exists, delete = check_table_exists(delete)
         if not exists:
-            click.echo(
-                click.style(
-                    "Error: Table does not exist.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Table does not exist.")
             return
         if application.list_tables() == 1:
-            click.echo(
-                click.style(
-                    "Error: Cannot delete the only table.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Cannot delete the only table.")
             return
 
         if ctx.obj["config"].get("current_table", "tasks") == delete:
-            click.echo(
-                click.style(
-                    "Error: Cannot delete curently selected table.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Cannot delete curently selected table.")
             return
         ok = application.delete_table(delete)
 
@@ -521,12 +461,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     elif name:
         exists, name = check_table_exists(name)
         if not exists:
-            click.echo(
-                click.style(
-                    "Error: Table does not exist.",
-                    fg="red",
-                ),
-            )
+            display_error_message("Table does not exist.")
             return
 
         new_name = click.prompt(
@@ -639,3 +574,106 @@ def init(ctx, migrate=False, pretty_tree=None):
                 fg="yellow",
             ),
         )
+
+
+@cli.command()
+@click.pass_context
+@click.option("-st", "--start", is_flag=True, help="Start a session for a task")
+@click.option("-ed", "--end", is_flag=True, help="End the current session")
+@click.option("-l", "--list", is_flag=True, help="List all the sessions")
+@click.option("-sl", "--select", is_flag=True, help="Select a session to view")
+@click.option("-fl", "--filter", is_flag=True, help="Filter sessions by task")
+@click.option("-dl", "--delete", is_flag=True, help="Delete a session")
+def session(ctx, start, end, list, select, filter, delete):
+    """
+    Manage sessions for tasks.
+    """
+    table = ctx.obj["config"].get("current_table", "tasks")
+    current_task = None
+    if filter:
+        current_task = lister(table=table)
+        if current_task is None:
+            display_error_message("No tasks available to start a session.")
+            return
+
+    if start:
+        if not current_task:
+            current_task = lister(table=table)
+        if current_task is None:
+            display_error_message("No tasks available to start a session.")
+            return
+
+        session_data = ctx.obj["config"].get("session_data", {})
+        session_data = application.start_session(
+            current_task["id"],
+            table,
+            session_data,
+        )
+        if session_data is not None:
+            ctx.obj["config"]["session_data"] = session_data
+            update_config(config_path, config=ctx.obj["config"])
+            click.echo(
+                click.style(
+                    f"Session started for task: {current_task['title']}",
+                    fg="green",
+                ),
+            )
+            os._exit(0)
+        else:
+            display_error_message("Could not start session.")
+
+        # code to handle else
+    elif end:
+        session_data = ctx.obj["config"].get("session_data", {})
+        session_data = application.end_session(session_data)
+        ctx.obj["config"]["session_data"] = session_data
+
+    elif list:
+        sessions = application.list_sessions(
+            table=table,
+            task_id=current_task["id"] if filter else None,
+        )
+        if sessions:
+            print_sessions(sessions)
+        else:
+            click.echo(
+                click.style(
+                    "Info: No sessions found.",
+                    fg="yellow",
+                ),
+            )
+    elif select:
+        session = session_lister(
+            table=table,
+            task_id=current_task["id"] if filter else None,
+        )
+        if session is None:
+            display_error_message("No session exists.")
+            return
+
+        session_data = application.get_session_data(session_id=session["id"])
+        if session_data is None:
+            display_error_message("No session data exists.")
+            return
+        session_data["title"] = session["title"]
+        print_session_data(session_data)
+
+    elif delete:
+        session = session_lister(
+            table=table,
+            task_id=current_task["id"] if filter else None,
+        )
+        if session is None:
+            display_error_message("No session exists.")
+            return
+
+        application.delete_session(session_id=session["id"])
+        click.echo(
+            click.style(
+                f"Session {session['title']} deleted successfully.",
+                fg="green",
+            ),
+        )
+
+    else:
+        display_error_message("Please specify an action (--start or --end).")

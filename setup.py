@@ -1,3 +1,5 @@
+import platform
+
 from setuptools import find_packages
 from setuptools import setup
 
@@ -5,9 +7,11 @@ from app.__version__ import VERSION
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-with open("requirements.txt", "r", encoding="utf-8") as fh:
+file_name = (
+    "requirements_linux.txt" if platform.system() == "Linux" else "requirements.txt"
+)
+with open(file_name, "r", encoding="utf-8") as fh:
     requirements = fh.read()
-
 
 setup(
     name="special-octo-robot",

@@ -8,6 +8,7 @@ from requests.auth import HTTPBasicAuth
 import jira.database
 from app.application import add_tasks
 from app.application import update_task
+from app.utility import display_error_message
 
 
 def update_issues(url, email, table):
@@ -66,11 +67,8 @@ def parse_issues(issues):
 def fetch_issues(url, email) -> list:
     token = keyring.get_password("devcord", "token")
     if token is None:
-        click.echo(
-            click.style(
-                'Error: Please provide token, run "devcord jira --token".',
-                fg="red",
-            ),
+        display_error_message(
+            'Please provide token, run "devcord jira --token".',
         )
         exit(1)
     headers = {
@@ -87,22 +85,16 @@ def fetch_issues(url, email) -> list:
             timeout=30,
         )
     except Exception as e:
-        click.echo(
-            click.style(
-                f"Error: While making request to Jira - {e}",
-                fg="red",
-            ),
+        display_error_message(
+            f"While making request to Jira - {e}",
         )
         exit(1)
     if "application/json" in response.headers.get("Content-Type", ""):
         issues = json.loads(response.text)  # Parse JSON
 
     else:
-        click.echo(
-            click.style(
-                "Error: Respone from Jira was in-correct. Make sure the token is correct.",
-                fg="red",
-            ),
+        display_error_message(
+            "Response from Jira was in-correct. Make sure the token is correct.",
         )
         exit(1)
     return issues["issues"]

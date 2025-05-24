@@ -1,3 +1,4 @@
+import platform
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -46,7 +47,7 @@ def convert_time_to_epoch(time_str, eod=True):
         return e.__str__()
 
 
-def convert_epoch_to_time(epoch_time):
+def convert_epoch_to_date(epoch_time):
     if epoch_time == 0:
         return "None"
     try:
@@ -56,15 +57,73 @@ def convert_epoch_to_time(epoch_time):
         return e.__str__()
 
 
+def convert_epoch_to_datetime(epoch_time):
+    if epoch_time == 0:
+        return "None"
+    try:
+        date_obj = datetime.fromtimestamp(epoch_time)
+        return date_obj.strftime("%H:%M, %-d/%-m/%Y")
+    except Exception:
+        return "invalid"
+
+
+def convert_seconds_delta_to_time(seconds):
+    seconds = int(seconds)
+    hrs = seconds // 3600
+    mins = (seconds % 3600) // 60
+    secs = seconds % 60
+    parts = []
+    if hrs > 0:
+        parts.append(f"{hrs} hrs")
+    if mins > 0:
+        parts.append(f"{mins} mins")
+    if secs > 0 or not parts:
+        parts.append(f"{secs} secs")
+    return ", ".join(parts)
+
+
 def sanitize_text(text):
     return text.strip().replace("'", '"')
 
 
 def generate_migration_error():
+    display_error_message(
+        "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+    )
+
+
+def display_error_message(message: str):
+    """
+    Display an error message in red style with an error prefix.
+    """
     echo(
         style(
-            "Have You Run Migrations? Run 'devcord init --migrate' to run migrations",
+            f"Error: {message}",
             fg="red",
+        ),
+    )
+
+
+def display_info_message(message: str):
+    """
+    Display an informational message in green style with an info prefix.
+    """
+    echo(
+        style(
+            f"Info: {message}",
+            fg="yellow",
+        ),
+    )
+
+
+def display_success_message(message: str):
+    """
+    Display a success message in green style with a success prefix.
+    """
+    echo(
+        style(
+            f"Success: {message}",
+            fg="green",
         ),
     )
 
@@ -118,12 +177,18 @@ def check_if_relative_deadline(deadline: str) -> str:
         if deadline[1:].isdigit():
             deadline = get_relative_date_string(int(deadline))
         else:
-            echo(
-                style(
-                    f"Error: ",
-                    fg="red",
-                ),
-            )
-            echo('Example: "+4"')
+            display_error_message("Example: '+4'")
             return False
     return deadline
+
+
+def get_os():
+    system = platform.system()
+    if system == "Linux":
+        return "Linux"
+    elif system == "Darwin":
+        return "MacOS"
+    elif system == "Windows":
+        return "Windows"
+    else:
+        return "Unknown"

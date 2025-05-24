@@ -221,3 +221,33 @@ def print_tables(tables, current_table):
         else:
             table.add_row(f"[#FFFFFF]{table_name}")
     console.print(table)
+
+
+def print_sessions(sessions):
+    console = Console()
+    table = Table(title="Session", highlight=True, leading=True)
+    table.add_column("Task", justify="left", style="white")
+    table.add_column("Start Time", justify="left", style="white")
+    table.add_column("End Time", justify="left", style="white")
+    table.add_column("Duration", justify="left", style="white")
+    for session in sessions:
+        table.add_row(
+            f"[#FFFFFF]{session['task_name']}",
+            f"[#FFFFFF]{session['start_datetime']}",
+            f"[#FFFFFF]{session['end_datetime']}",
+            f"[#FFFFFF]{session['duration']}",
+        )
+    console.print(table)
+
+
+def print_session_data(session_data):
+    console = Console()
+    table = Table(title=session_data["title"], highlight=True, leading=True)
+    table.add_column("Application Name", justify="left", style="white")
+    table.add_column("Duration", justify="left", style="white")
+    for session in session_data["data"]:
+        table.add_row(
+            f"[#FFFFFF]{session['application_name']}",
+            f"[#FFFFFF]{session['duration']}",
+        )
+    console.print(table)
