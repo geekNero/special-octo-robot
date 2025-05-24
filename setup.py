@@ -7,13 +7,11 @@ from app.__version__ import VERSION
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-if platform.system() == "Linux":
-    with open("requirements_linux.txt", "r", encoding="utf-8") as fh:
-        requirements = fh.read()
-else:
-    with open("requirements.txt", "r", encoding="utf-8") as fh:
-        requirements = fh.read()
-
+file_name = (
+    "requirements_linux.txt" if platform.system() == "Linux" else "requirements.txt"
+)
+with open(file_name, "r", encoding="utf-8") as fh:
+    requirements = fh.read()
 
 setup(
     name="special-octo-robot",
