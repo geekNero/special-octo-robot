@@ -12,7 +12,9 @@ if platform.system() == "Windows":
         path = None
 else:
     # Path value can be None as there is a check in devcord.py
-    path = os.path.join(os.getenv("HOME"), ".devcord")
+    home = os.getenv("HOME")
+    if home is not None:
+        path = os.path.join(home, ".devcord")
 
 if path:
     if os.environ.get("DEBUG", "") == "True":
@@ -22,8 +24,8 @@ if path:
         db_path = os.path.join(path, "data.db")
         config_path = os.path.join(path, "config.json")
 else:
-    db_path = None
-    config_path = None
+    db_path = ""
+    config_path = ""
 
 LF_ENTER = 10
 CR_ENTER = 13
