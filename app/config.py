@@ -12,7 +12,6 @@ def initialize_config(
     path,
     theme="light",
     version=VERSION,
-    pretty_tree=True,
     current_table="tasks",
     jira={},
     session_data={},
@@ -22,7 +21,6 @@ def initialize_config(
         config = {
             "theme": theme,
             "version": version,
-            "pretty_tree": pretty_tree,
             "current_table": current_table,
             "jira": jira,
             "session_data": session_data,

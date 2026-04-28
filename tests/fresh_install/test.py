@@ -74,10 +74,6 @@ class TestFreshInstall(unittest.TestCase):
         p = subprocess.run(("../verify_debug.sh"), shell=True, capture_output=True)
         self.assertEqual(p.returncode, 0)
         
-        r = subprocess.run(("devcord init --pretty_tree False"), shell=True, capture_output=True, text=True)
-        # verify output
-        self.assertEqual(str(r.stdout).strip(), "Info: Pretty Tree setting updated")
-        
         with open("test_init_with_empty_db_config.json") as exp, open(config_path) as act:
             self.assertEqual(json.load(act), json.load(exp))
             

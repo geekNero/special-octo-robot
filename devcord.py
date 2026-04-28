@@ -180,7 +180,6 @@ def tasks(
                 ctx.obj["config"]["unicode"] is False,
                 subtask,
                 table,
-                pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
         else:
             click.echo(
@@ -365,7 +364,6 @@ def task(
                 plain=ctx.obj["config"]["unicode"] is False,
                 subtasks=subtasks,
                 table_name=table,
-                pretty_tree=ctx.obj["config"].get("pretty_tree", True),
             )
             return
 
@@ -558,23 +556,12 @@ def legend(ctx):
 @cli.command()
 @click.pass_context
 @click.option("--migrate", is_flag=True, help="Migrate database")
-@click.option("--pretty_tree", help="Change the name of the task", type=bool)
-def init(ctx, migrate=False, pretty_tree=None):
+def init(ctx, migrate=False):
     """
     Run after every install
     """
     if migrate:
         update_version(ctx.obj["config"])
-    if pretty_tree is not None:
-        ctx.obj["config"]["pretty_tree"] = pretty_tree
-        update_config(config_path, ctx.obj["config"])
-        click.echo(
-            click.style(
-                "Info: Pretty Tree setting updated",
-                fg="yellow",
-            ),
-        )
-
 
 @cli.command()
 @click.pass_context

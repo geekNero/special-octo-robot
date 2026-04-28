@@ -29,7 +29,7 @@ def list_tasks(
     pending=None,
     label=None,
     subtasks=False,
-) -> list | None:
+) -> list:
     """
     List all the tasks based on the filters.
     """
@@ -175,7 +175,7 @@ def add_tasks(
         )
 
 
-def search_task(task_id, table: str) -> dict | None:
+def search_task(task_id, table: str) :
     """
     Search a task by its id.
     :param task_id:

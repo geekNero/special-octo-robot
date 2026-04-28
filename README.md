@@ -95,12 +95,3 @@ you'd be asked to set up your configuration for Jira.
 
 ## Miscellaneous
 
-Use Rich Tree:
-``` bash
-devcord init --pretty_tree False
-```
-
-Use Pretty Tree:
-``` bash
-devcord init --pretty_tree True
-```

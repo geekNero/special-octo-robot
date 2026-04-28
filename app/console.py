@@ -1,10 +1,8 @@
 import json
 import os
 
-import PrettyPrint
 from click import echo
 from click import style
-from PrettyPrint import PrettyPrintTree
 from rich.console import Console
 from rich.panel import Panel
 from rich.style import Style
@@ -57,28 +55,25 @@ def get_table(tasks, plain=False):
     return table
 
 
-def print_tree(tasks, table_name="Tasks", pretty_tree=True):
+def print_tree(tasks, table_name="Tasks"):
 
     # TODO use the moved out the logic of forming the tree and have to only print it here
     def parse_subtask_string(task):
-        if pretty_tree == False:
-            text = Text()
-            text.append(f" {task['title']}\n", style="italic bold")
-            text.append("Priority: ", style="dim")
-            text.append(
-                f"{task['priority']} ",
-                style=f"{console_helper.get_priority_color(task['priority'])}",
-            )
-            text.append(f"| {task['deadline']} | ", style="dim")
-            text.append(
-                f"{task['status']} ",
-                style=console_helper.get_status_color(task["status"]) + " dim",
-            )
-            text.append(f"| {task['label']}\n", style="dim")
-            # return f" [italic]{task['title']}\n[bold]Priority: [white]{task['priority']} | {task['deadline']}| {task['status']} | {task['label']}\n"
-            return text
-        else:
-            return f"{task['title']}\nPriority: | {task['deadline']}| {task['status']} | {task['label']}"
+        text = Text()
+        text.append(f" {task['title']}\n", style="italic bold")
+        text.append("Priority: ", style="dim")
+        text.append(
+            f"{task['priority']} ",
+            style=f"{console_helper.get_priority_color(task['priority'])}",
+        )
+        text.append(f"| {task['deadline']} | ", style="dim")
+        text.append(
+            f"{task['status']} ",
+            style=console_helper.get_status_color(task["status"]) + " dim",
+        )
+        text.append(f"| {task['label']}\n", style="dim")
+        # return f" [italic]{task['title']}\n[bold]Priority: [white]{task['priority']} | {task['deadline']}| {task['status']} | {task['label']}\n"
+        return text
 
     root = Tree("\n" + table_name + "\n", style="bold")
     root.guide_style = "bold blue"
@@ -110,16 +105,7 @@ def print_tree(tasks, table_name="Tasks", pretty_tree=True):
             existing_node[task["id"]].guide_style = "yellow"
             existing_node[task["parent_id"]].children.append(existing_node[task["id"]])
 
-    if pretty_tree:
-        pt = PrettyPrintTree(
-            lambda x: x.children,
-            lambda x: x.label,
-            border=False,
-            orientation=PrettyPrintTree.Horizontal,
-        )
-        pt(root)
-    else:
-        return root
+    return root
 
 
 def print_tasks(
@@ -129,14 +115,13 @@ def print_tasks(
     plain=False,
     subtasks=False,
     table_name="Tasks",
-    pretty_tree=True,
 ):
     if subtasks:
         if output == "json":
             result = console_helper.treeify(tasks)[-1]
-        elif output or path or pretty_tree == False:
+        elif output or path :
             # passing result ahead as rich can print its own object
-            result = print_tree(tasks, table_name, False)
+            result = print_tree(tasks, table_name)
         else:
             print_tree(tasks, table_name)
             return
