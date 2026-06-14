@@ -119,12 +119,9 @@ def print_tasks(
     if subtasks:
         if output == "json":
             result = console_helper.treeify(tasks)[-1]
-        elif output or path :
+        else:
             # passing result ahead as rich can print its own object
             result = print_tree(tasks, table_name)
-        else:
-            print_tree(tasks, table_name)
-            return
 
     # Setting where the output will be sent
     file = None
