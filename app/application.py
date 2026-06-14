@@ -35,42 +35,58 @@ def list_tasks(
     """
     order_by = "completed ASC, status ASC, priority DESC"
     where_clause = []
+    params = []
+
     if not subtasks:
         where_clause.append("parent_id ISNULL")
+
     if week:
         mond = convert_time_to_epoch(get_week_start(), False)
         sund = convert_time_to_epoch(get_weekend())
         where_clause.append(
-            f"(completed >= {mond} AND completed <= {sund})",
+            "(completed >= ? AND completed <= ?)",
         )
+        params.extend([mond, sund])
     elif today:
-        today = get_deadline("today")
+        today_val = get_deadline("today")
         where_clause.append(
-            f"(completed >= {convert_time_to_epoch(today, False)} AND completed <= {convert_time_to_epoch(today)})",
+            "(completed >= ? AND completed <= ?)",
+        )
+        params.extend(
+            [convert_time_to_epoch(today_val, False), convert_time_to_epoch(today_val)],
         )
     elif date:
         where_clause.append(
-            f"(completed >= {convert_time_to_epoch(date, False)} AND completed <= {convert_time_to_epoch(date)})",
+            "(completed >= ? AND completed <= ?)",
         )
+        params.extend([convert_time_to_epoch(date, False), convert_time_to_epoch(date)])
+
     if inprogress or completed or pending:
         clause = []
         if inprogress:
-            clause.append("'In Progress'")
+            clause.append("?")
+            params.append("In Progress")
         if completed:
-            clause.append("'Completed'")
+            clause.append("?")
+            params.append("Completed")
         if pending:
-            clause.append("'Pending'")
+            clause.append("?")
+            params.append("Pending")
         where_clause.append("status in (" + ",".join(clause) + ")")
     else:
-        clause = ["'In Progress'", "'Pending'"]
+        clause = ["?", "?"]
+        params.extend(["In Progress", "Pending"])
         where_clause.append("status in (" + ",".join(clause) + ")")
 
     if priority:
-        where_clause.append(f"priority = {priority}")
+        where_clause.append("priority = ?")
+        params.append(priority)
 
     if label:
-        where_clause.append(f"label = '{label}'")
-    where_clause = "WHERE " + " AND ".join(where_clause)
+        where_clause.append("label = ?")
+        params.append(label)
+
+    where_clause_str = "WHERE " + " AND ".join(where_clause) if where_clause else ""
 
     try:
         results = database.list_table(
@@ -86,7 +102,8 @@ def list_tasks(
                 "description",
                 "subtasks",
             ],
-            where_clause=where_clause,
+            where_clause=where_clause_str,
+            params=tuple(params),
             order_by=f"ORDER BY {order_by}",
         )
     except Exception as e:
@@ -129,39 +146,39 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f"'{sanitize_text(title)}'"]
+    values = [title]
     if description:
         columns.append("description")
-        values.append(f"'{sanitize_text(description)}'")
+        values.append(description)
     if priority:
         columns.append("priority")
-        values.append(str(priority))
+        values.append(priority)
     if today:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
+        values.append(convert_time_to_epoch(get_deadline("today")))
     elif week:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(get_deadline('week'))}")
+        values.append(convert_time_to_epoch(get_deadline("week")))
     elif deadline:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(deadline)}")
+        values.append(convert_time_to_epoch(deadline))
     if inprogress:
         columns.append("status")
-        values.append("'In Progress'")
+        values.append("In Progress")
     elif completed:
         columns.append("status")
-        values.append("'Completed'")
+        values.append("Completed")
         columns.append("completed")
-        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
+        values.append(convert_time_to_epoch(get_deadline("today")))
     elif pending:
         columns.append("status")
-        values.append("'Pending'")
+        values.append("Pending")
     if label:
         columns.append("label")
-        values.append(f"'{sanitize_text(label)}'")
+        values.append(label)
     if parent:
         columns.append("parent_id")
-        values.append(str(parent["id"]))
+        values.append(parent["id"])
     try:
         database.insert_into_table(table, columns=columns, values=values)
     except Exception as e:
@@ -169,13 +186,14 @@ def add_tasks(
         return
     # Insert the record then increment the count of the parent task.
     if parent:
+        parent_subtasks = parent.get("subtasks", 0) + 1
         database.update_table(
             table,
-            {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
+            {"subtasks": parent_subtasks, "id": parent["id"]},
         )
 
 
-def search_task(task_id, table: str) :
+def search_task(task_id, table: str):
     """
     Search a task by its id.
     :param task_id:
@@ -196,7 +214,8 @@ def search_task(task_id, table: str) :
                 "parent_id",
                 "subtasks",
             ],
-            where_clause=f"WHERE id = {task_id}",
+            where_clause="WHERE id = ?",
+            params=(task_id,),
         )
     except:
         generate_migration_error()
@@ -235,7 +254,8 @@ def get_subtasks(task_id: int, table: str):
                 "subtasks",
                 "parent_id",
             ],
-            where_clause=f"WHERE parent_id = {task_id}",
+            where_clause="WHERE parent_id = ?",
+            params=(task_id,),
             order_by="ORDER BY completed ASC, status ASC, priority DESC",
         )
     except:
@@ -266,7 +286,7 @@ def get_subtasks_recursive(task: dict, table: str):
     final_results = [task]
     for child in get_subtasks(task["id"], table):
         final_results.append(child)
-        final_results.extend(get_subtasks_recursive(child), table)
+        final_results.extend(get_subtasks_recursive(child, table))
     return final_results
 
 
@@ -288,11 +308,7 @@ def update_task(updated_data: dict, table: str):
     for key, value in updated_data.items():
         if value is None:
             continue
-
-        if type(value) is str:
-            updated_data[key] = f"'{sanitize_text(value)}'"
-
-        final_data[key] = updated_data[key]
+        final_data[key] = value
 
     try:
         database.update_table(table, final_data)
@@ -300,7 +316,7 @@ def update_task(updated_data: dict, table: str):
         print(e)
         generate_migration_error()
         return
-    if updated_data["subtasks"] != 0 and updated_data["status"] == "'Completed'":
+    if updated_data["subtasks"] != 0 and updated_data["status"] == "Completed":
         children = get_subtasks(updated_data["id"], table)
         for child in children:
             child["status"] = "Completed"
@@ -319,7 +335,8 @@ def handle_delete(current_task: dict, table: str):
     children = database.list_table(
         table=table,
         columns=["id", "parent_id"],
-        where_clause=f"WHERE parent_id = {current_task['id']}",
+        where_clause="WHERE parent_id = ?",
+        params=(current_task["id"],),
     )
     for child in children:
         handle_delete({"id": child[0], "parent_id": child[1]}, table)
@@ -329,7 +346,10 @@ def handle_delete(current_task: dict, table: str):
             try:
                 database.update_table(
                     table,
-                    {"subtasks": "subtasks - 1", "id": f"{current_task['parent_id']}"},
+                    {
+                        "subtasks": parent["subtasks"] - 1,
+                        "id": current_task["parent_id"],
+                    },
                 )
             except Exception as e:
                 print(e)
