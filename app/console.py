@@ -46,17 +46,16 @@ def get_table(tasks, plain=False):
                 if not plain
                 else f"[{text_style}]{task['priority']}"
             ),
-            f'[{text_style}]{task["title"]}',
-            f'[{console_helper.get_status_color(task["status"])}][italic]{task["status"]}',
+            f"[{text_style}]{task['title']}",
+            f"[{console_helper.get_status_color(task['status'])}][italic]{task['status']}",
             task["deadline"],
-            f'[{bold_text_style if task["label"] != "None" else none_style}]{task["label"]}',
+            f"[{bold_text_style if task['label'] != 'None' else none_style}]{task['label']}",
             f"[{text_style}]{','.join(properties)}",
         )
     return table
 
 
 def print_tree(tasks, table_name="Tasks"):
-
     # TODO use the moved out the logic of forming the tree and have to only print it here
     def parse_subtask_string(task):
         text = Text()
@@ -80,7 +79,6 @@ def print_tree(tasks, table_name="Tasks"):
     existing_node = {}
 
     for task in tasks:
-
         if task["parent_id"] in (None, -1):
             if existing_node.get(task["id"], False):
                 existing_node[task["id"]].label = parse_subtask_string(task)
@@ -92,7 +90,6 @@ def print_tree(tasks, table_name="Tasks"):
                 existing_node[task["id"]].guide_style = "yellow"
                 root.children.append(existing_node[task["id"]])
         else:
-
             if task["id"] in existing_node:
                 existing_node[task["id"]].label = parse_subtask_string(task)
             else:
@@ -143,8 +140,8 @@ def print_tasks(
         plain = True
     if output == "json":
         if subtasks:
-            result = json.dumps(tasks, indent=4)
-        console.print_json(result)
+            result = json.dumps(result, indent=4)
+        console.print_json(data=tasks)
 
     elif output == "text":
         if subtasks:
