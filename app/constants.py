@@ -28,6 +28,7 @@ else:
 
 LF_ENTER = 10
 CR_ENTER = 13
+ESCAPE_KEY = 27
 
 STATUS_IN_PROGRESS = "In Progress"
 STATUS_COMPLETED = "Completed"

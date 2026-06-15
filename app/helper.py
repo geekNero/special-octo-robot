@@ -1,4 +1,7 @@
 import curses
+import os
+
+os.environ.setdefault("ESCDELAY", "25")
 
 from click import echo
 from click import style
@@ -6,6 +9,7 @@ from click import style
 from app import application
 from app.console_helper import treeify
 from app.constants import CR_ENTER
+from app.constants import ESCAPE_KEY
 from app.constants import LF_ENTER
 from app.utility import display_error_message
 from app.utility import sanitize_table_name
@@ -83,6 +87,8 @@ def menu(stdscr, current: int, get_tasks) -> dict:
         current_task.get("parent_id", None),
     )  # for one page of tasks, parent is the same so get them once before hand
 
+    search_string = ""
+
     while True:
         stdscr.clear()
         current_task, options = get_tasks(current)
@@ -99,6 +105,8 @@ def menu(stdscr, current: int, get_tasks) -> dict:
         start_y = 1
         start_x = 1
         stdscr.addstr(start_y, start_x, f"{title}:")
+        stdscr.addstr(start_y + 2, start_x, f"Search: {search_string}", curses.A_BOLD)
+
         if len(options_left) > 0:
             stdscr.addstr(start_y + 1, start_x + 1, "<<-- prev")
 
@@ -108,7 +116,7 @@ def menu(stdscr, current: int, get_tasks) -> dict:
                 stdscr.addstr(start_y + 1, start_x + 15, "next -->>")
 
         delta_x = 2
-        delta_y = start_y + 3
+        delta_y = start_y + 4
 
         max_page_size = height - delta_y + 1
 
@@ -150,6 +158,7 @@ def menu(stdscr, current: int, get_tasks) -> dict:
             parent = current_task
             options = options_right
             selected = 0
+            search_string = ""
 
         elif key == curses.KEY_LEFT and len(options_left) > 0:
             options = options_left
@@ -159,6 +168,40 @@ def menu(stdscr, current: int, get_tasks) -> dict:
                     break
             current = parent["id"]
             parent, options_left = get_tasks(current_task.get("parent_id", None))
+            search_string = ""
 
         elif key in [curses.KEY_ENTER, LF_ENTER, CR_ENTER] and len(options) > 0:
             return options[selected]["data"]
+
+        elif key == ESCAPE_KEY:  # Escape key
+            return {}
+
+        elif key in [curses.KEY_BACKSPACE, 127, 8]:
+            search_string = search_string[:-1]
+            if len(search_string) >= 3:
+                search_lower = search_string.lower()
+                match = next(
+                    (
+                        i
+                        for i, opt in enumerate(options)
+                        if search_lower in opt["data"]["title"].lower()
+                    ),
+                    None,
+                )
+                if match is not None:
+                    selected = match
+
+        elif 32 <= key <= 126:
+            search_string += chr(key)
+            if len(search_string) >= 3:
+                search_lower = search_string.lower()
+                match = next(
+                    (
+                        i
+                        for i, opt in enumerate(options)
+                        if search_lower in opt["data"]["title"].lower()
+                    ),
+                    None,
+                )
+                if match is not None:
+                    selected = match

@@ -203,6 +203,9 @@ def tasks(
                 table=table,
             )
 
+            if parent == {}:
+                return
+
             if parent is None:
                 display_error_message("Parent task does not exist.")
                 return
@@ -307,6 +310,9 @@ def task(
         table=table,
         completed=archive,
     )
+
+    if current_task == {}:
+        return
 
     if current_task is None:
         display_error_message("Task does not exist.")
@@ -584,6 +590,8 @@ def session(ctx, start, end, list, select, filter, delete):
     current_task = None
     if filter:
         current_task = lister(table=table)
+        if current_task == {}:
+            return
         if current_task is None:
             display_error_message("No tasks available to start a session.")
             return
@@ -591,6 +599,8 @@ def session(ctx, start, end, list, select, filter, delete):
     if start:
         if not current_task:
             current_task = lister(table=table)
+        if current_task == {}:
+            return
         if current_task is None:
             display_error_message("No tasks available to start a session.")
             return
@@ -639,6 +649,8 @@ def session(ctx, start, end, list, select, filter, delete):
             table=table,
             task_id=current_task["id"] if filter else None,
         )
+        if session == {}:
+            return
         if session is None:
             display_error_message("No session exists.")
             return
@@ -655,6 +667,8 @@ def session(ctx, start, end, list, select, filter, delete):
             table=table,
             task_id=current_task["id"] if filter else None,
         )
+        if session == {}:
+            return
         if session is None:
             display_error_message("No session exists.")
             return
