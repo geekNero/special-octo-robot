@@ -1,8 +1,14 @@
 import datetime
 import json
+import sqlite3
 import time
+from collections import defaultdict
 
 from . import database
+from app.constants import DEFAULT_TABLE
+from app.constants import STATUS_COMPLETED
+from app.constants import STATUS_IN_PROGRESS
+from app.constants import STATUS_PENDING
 from app.sessions.linux import session_end as linux_session_end
 from app.sessions.linux import session_start as linux_session_start
 from app.utility import convert_epoch_to_date
@@ -19,7 +25,7 @@ from app.utility import sanitize_text
 
 
 def list_tasks(
-    table="tasks",
+    table=DEFAULT_TABLE,
     priority=None,
     today=None,
     week=None,
@@ -29,48 +35,64 @@ def list_tasks(
     pending=None,
     label=None,
     subtasks=False,
-) -> list | None:
+) -> list:
     """
     List all the tasks based on the filters.
     """
-    order_by = "completed ASC, status ASC, priority DESC"
+    order_by = "status ASC, completed = 0 ASC, completed ASC, priority DESC"
     where_clause = []
+    params = []
+
     if not subtasks:
         where_clause.append("parent_id ISNULL")
+
     if week:
         mond = convert_time_to_epoch(get_week_start(), False)
         sund = convert_time_to_epoch(get_weekend())
         where_clause.append(
-            f"(completed >= {mond} AND completed <= {sund})",
+            "(completed >= ? AND completed <= ?)",
         )
+        params.extend([mond, sund])
     elif today:
-        today = get_deadline("today")
+        today_val = get_deadline("today")
         where_clause.append(
-            f"(completed >= {convert_time_to_epoch(today, False)} AND completed <= {convert_time_to_epoch(today)})",
+            "(completed >= ? AND completed <= ?)",
+        )
+        params.extend(
+            [convert_time_to_epoch(today_val, False), convert_time_to_epoch(today_val)],
         )
     elif date:
         where_clause.append(
-            f"(completed >= {convert_time_to_epoch(date, False)} AND completed <= {convert_time_to_epoch(date)})",
+            "(completed >= ? AND completed <= ?)",
         )
+        params.extend([convert_time_to_epoch(date, False), convert_time_to_epoch(date)])
+
     if inprogress or completed or pending:
         clause = []
         if inprogress:
-            clause.append("'In Progress'")
+            clause.append("?")
+            params.append(STATUS_IN_PROGRESS)
         if completed:
-            clause.append("'Completed'")
+            clause.append("?")
+            params.append(STATUS_COMPLETED)
         if pending:
-            clause.append("'Pending'")
+            clause.append("?")
+            params.append(STATUS_PENDING)
         where_clause.append("status in (" + ",".join(clause) + ")")
     else:
-        clause = ["'In Progress'", "'Pending'"]
+        clause = ["?", "?"]
+        params.extend([STATUS_IN_PROGRESS, STATUS_PENDING])
         where_clause.append("status in (" + ",".join(clause) + ")")
 
     if priority:
-        where_clause.append(f"priority = {priority}")
+        where_clause.append("priority = ?")
+        params.append(priority)
 
     if label:
-        where_clause.append(f"label = '{label}'")
-    where_clause = "WHERE " + " AND ".join(where_clause)
+        where_clause.append("label = ?")
+        params.append(label)
+
+    where_clause_str = "WHERE " + " AND ".join(where_clause) if where_clause else ""
 
     try:
         results = database.list_table(
@@ -86,12 +108,13 @@ def list_tasks(
                 "description",
                 "subtasks",
             ],
-            where_clause=where_clause,
+            where_clause=where_clause_str,
+            params=tuple(params),
             order_by=f"ORDER BY {order_by}",
         )
-    except Exception as e:
-        print(e)
-        return None
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
 
     final_results = []
     for result in results:
@@ -113,7 +136,7 @@ def list_tasks(
 
 def add_tasks(
     title: str,
-    table="tasks",
+    table=DEFAULT_TABLE,
     description=None,
     priority=None,
     today=False,
@@ -129,53 +152,54 @@ def add_tasks(
     Add a task to the database.
     """
     columns = ["title"]
-    values = [f"'{sanitize_text(title)}'"]
+    values = [title]
     if description:
         columns.append("description")
-        values.append(f"'{sanitize_text(description)}'")
+        values.append(description)
     if priority:
         columns.append("priority")
-        values.append(str(priority))
+        values.append(priority)
     if today:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
+        values.append(convert_time_to_epoch(get_deadline("today")))
     elif week:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(get_deadline('week'))}")
+        values.append(convert_time_to_epoch(get_deadline("week")))
     elif deadline:
         columns.append("deadline")
-        values.append(f"{convert_time_to_epoch(deadline)}")
+        values.append(convert_time_to_epoch(deadline))
     if inprogress:
         columns.append("status")
-        values.append("'In Progress'")
+        values.append(STATUS_IN_PROGRESS)
     elif completed:
         columns.append("status")
-        values.append("'Completed'")
+        values.append(STATUS_COMPLETED)
         columns.append("completed")
-        values.append(f"{convert_time_to_epoch(get_deadline('today'))}")
+        values.append(convert_time_to_epoch(get_deadline("today")))
     elif pending:
         columns.append("status")
-        values.append("'Pending'")
+        values.append(STATUS_PENDING)
     if label:
         columns.append("label")
-        values.append(f"'{sanitize_text(label)}'")
+        values.append(label)
     if parent:
         columns.append("parent_id")
-        values.append(str(parent["id"]))
+        values.append(parent["id"])
     try:
         database.insert_into_table(table, columns=columns, values=values)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return
     # Insert the record then increment the count of the parent task.
     if parent:
+        parent_subtasks = parent.get("subtasks", 0) + 1
         database.update_table(
             table,
-            {"subtasks": "subtasks + 1", "id": f"{parent['id']}"},
+            {"subtasks": parent_subtasks, "id": parent["id"]},
         )
 
 
-def search_task(task_id, table: str) -> dict | None:
+def search_task(task_id, table: str):
     """
     Search a task by its id.
     :param task_id:
@@ -196,9 +220,10 @@ def search_task(task_id, table: str) -> dict | None:
                 "parent_id",
                 "subtasks",
             ],
-            where_clause=f"WHERE id = {task_id}",
+            where_clause="WHERE id = ?",
+            params=(task_id,),
         )
-    except:
+    except sqlite3.Error:
         generate_migration_error()
         return None
 
@@ -235,12 +260,13 @@ def get_subtasks(task_id: int, table: str):
                 "subtasks",
                 "parent_id",
             ],
-            where_clause=f"WHERE parent_id = {task_id}",
-            order_by="ORDER BY completed ASC, status ASC, priority DESC",
+            where_clause="WHERE parent_id = ?",
+            params=(task_id,),
+            order_by="ORDER BY status ASC, completed = 0 ASC, completed ASC, priority DESC",
         )
-    except:
+    except sqlite3.Error:
         generate_migration_error()
-        return None
+        return []
     final_results = []
     for result in results:
         final_results.append(
@@ -263,10 +289,51 @@ def get_subtasks_recursive(task: dict, table: str):
     if task["subtasks"] == 0:
         return []
 
+    try:
+        all_subtasks = database.list_table(
+            table=table,
+            columns=[
+                "id",
+                "title",
+                "status",
+                "deadline",
+                "priority",
+                "label",
+                "description",
+                "subtasks",
+                "parent_id",
+            ],
+            where_clause="WHERE parent_id IS NOT NULL",
+            order_by="ORDER BY status ASC, completed = 0 ASC, completed ASC, priority DESC",
+        )
+    except sqlite3.Error:
+        generate_migration_error()
+        return []
+
+    children_map = defaultdict(list)
+    for row in all_subtasks:
+        child_dict = {
+            "id": row[0],
+            "title": row[1],
+            "status": row[2],
+            "deadline": convert_epoch_to_date(row[3]),
+            "priority": row[4],
+            "label": row[5] if row[5] else "None",
+            "description": row[6],
+            "subtasks": row[7],
+            "parent_id": row[8],
+        }
+        children_map[row[8]].append(child_dict)
+
     final_results = [task]
-    for child in get_subtasks(task["id"], table):
-        final_results.append(child)
-        final_results.extend(get_subtasks_recursive(child), table)
+
+    def traverse(node_id):
+        for child in children_map[node_id]:
+            final_results.append(child)
+            if child["subtasks"] > 0:
+                traverse(child["id"])
+
+    traverse(task["id"])
     return final_results
 
 
@@ -275,7 +342,7 @@ def update_task(updated_data: dict, table: str):
 
     updated_data["deadline"] = get_deadline(updated_data["deadline"])
 
-    if updated_data["status"] == "Completed":
+    if updated_data["status"] == STATUS_COMPLETED:
         updated_data["completed"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     else:
         updated_data["completed"] = updated_data["deadline"]
@@ -288,25 +355,21 @@ def update_task(updated_data: dict, table: str):
     for key, value in updated_data.items():
         if value is None:
             continue
-
-        if type(value) is str:
-            updated_data[key] = f"'{sanitize_text(value)}'"
-
-        final_data[key] = updated_data[key]
+        final_data[key] = value
 
     try:
         database.update_table(table, final_data)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         generate_migration_error()
         return
-    if updated_data["subtasks"] != 0 and updated_data["status"] == "'Completed'":
+    if updated_data["subtasks"] != 0 and updated_data["status"] == STATUS_COMPLETED:
         children = get_subtasks(updated_data["id"], table)
         for child in children:
-            child["status"] = "Completed"
+            child["status"] = STATUS_COMPLETED
             try:
                 update_task(child, table)
-            except Exception:
+            except sqlite3.Error:
                 generate_migration_error()
 
 
@@ -319,7 +382,8 @@ def handle_delete(current_task: dict, table: str):
     children = database.list_table(
         table=table,
         columns=["id", "parent_id"],
-        where_clause=f"WHERE parent_id = {current_task['id']}",
+        where_clause="WHERE parent_id = ?",
+        params=(current_task["id"],),
     )
     for child in children:
         handle_delete({"id": child[0], "parent_id": child[1]}, table)
@@ -329,10 +393,13 @@ def handle_delete(current_task: dict, table: str):
             try:
                 database.update_table(
                     table,
-                    {"subtasks": "subtasks - 1", "id": f"{current_task['parent_id']}"},
+                    {
+                        "subtasks": parent["subtasks"] - 1,
+                        "id": current_task["parent_id"],
+                    },
                 )
-            except Exception as e:
-                print(e)
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
 
 
 def list_tables() -> list:
@@ -341,7 +408,7 @@ def list_tables() -> list:
     """
     try:
         res = database.list_tables()
-    except:
+    except sqlite3.Error:
         generate_migration_error()
         return []
 
@@ -359,8 +426,8 @@ def add_table(table_name: str) -> bool:
     try:
         database.initialize(table_name)
         return True
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -372,8 +439,8 @@ def delete_table(table_name: str) -> bool:
         database.delete_table(table_name)
         return True
 
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -384,8 +451,8 @@ def rename_table(old_name: str, new_name: str) -> bool:
     try:
         database.rename_table(old_name, new_name)
         return True
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -418,6 +485,9 @@ def start_session(task_id: int, table: str, session_data: dict):
         except Exception as e:
             display_error_message(f"Failed to start session: {e}")
             return None
+    else:
+        display_error_message("Session tracking is only supported on Linux.")
+        return None
 
     # Start a new session
     session_data["start_time"] = int(datetime.datetime.now().timestamp())
@@ -457,12 +527,17 @@ def end_session(session_data: dict):
 
     session_data["end_time"] = int(datetime.datetime.now().timestamp())
 
-    session_id = database.add_session(
-        task_id=session_data["task_id"],
-        table_name=session_data["table"],
-        start_datetime=session_data["start_time"],
-        end_datetime=session_data["end_time"],
-    )
+    try:
+        session_id = database.add_session(
+            task_id=session_data["task_id"],
+            table_name=session_data["table"],
+            start_datetime=session_data["start_time"],
+            end_datetime=session_data["end_time"],
+        )
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return None
+
     session_data["session_id"] = session_id
     mapped_data = {}
     for value in data.values():
@@ -473,11 +548,14 @@ def end_session(session_data: dict):
             else:
                 mapped_data[name] += value["time"]
     for key, value in mapped_data.items():
-        database.add_session_data(
-            session_id=session_id,
-            application_name=key,
-            duration=value,
-        )
+        try:
+            database.add_session_data(
+                session_id=session_id,
+                application_name=key,
+                duration=value,
+            )
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
 
     return {"session_id": session_id, "session_data": session_data}
 
@@ -488,8 +566,8 @@ def list_sessions(table: str, task_id: int = None) -> list:
     """
     try:
         sessions = database.list_sessions(table, task_id)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return []
 
     session_list = []
@@ -530,8 +608,8 @@ def get_session_data(session_id: int) -> dict:
                 },
             )
         return data
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return {}
 
 
@@ -542,6 +620,6 @@ def delete_session(session_id: int) -> bool:
     try:
         database.delete_session(session_id)
         return True
-    except Exception as e:
+    except sqlite3.Error as e:
         display_error_message(f"Failed to delete session: {e}")
         return False

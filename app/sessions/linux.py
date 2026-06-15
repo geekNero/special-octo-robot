@@ -6,13 +6,14 @@ import tempfile
 from datetime import datetime
 from multiprocessing import Process
 
-from ewmh import EWMH
-from Xlib import display
-from Xlib import X
-from Xlib.protocol.event import PropertyNotify
+# if app.utility.get_os() == "Linux":
 
 
 def start_logging(file_handle: str):
+    from ewmh import EWMH
+    from Xlib import display
+    from Xlib import X
+    from Xlib.protocol.event import PropertyNotify
 
     # Dictionary to store window name and active time
     activity = {}

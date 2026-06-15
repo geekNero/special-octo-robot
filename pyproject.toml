@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "special-octo-robot"
+dynamic = ["version"]
+description = "Creating my own version of what a CLI Task manager and To-do-list would look like"
+readme = "README.md"
+authors = [
+    { name = "Jahan Chaware", email = "sg550js@gmail.com" },
+]
+license = { text = "GNU GENERAL PUBLIC LICENSE" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "click>=8.0.1",
+    "keyring>=25.0.0",
+    "packaging>=24.0",
+    "prompt-toolkit>=3.0.43",
+    "requests>=2.31.0",
+    "rich>=13.7.0",
+    "ewmh>=0.1.6; sys_platform == 'linux'",
+    "python-xlib>=0.33; sys_platform == 'linux'",
+]
+
+[project.urls]
+Homepage = "https://github.com/geekNero/special-octo-robot.git"
+
+[project.scripts]
+devcord = "devcord:cli"
+
+[tool.setuptools]
+py-modules = ["devcord"]
+packages = ["app", "jira"]
+
+[tool.setuptools.dynamic]
+version = { attr = "app.__version__.VERSION" }

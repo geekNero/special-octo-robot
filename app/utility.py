@@ -178,7 +178,7 @@ def check_if_relative_deadline(deadline: str) -> str:
             deadline = get_relative_date_string(int(deadline))
         else:
             display_error_message("Example: '+4'")
-            return False
+            return ""
     return deadline
 
 

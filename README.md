@@ -60,8 +60,7 @@ By default, in-progress and pending tasks are listed, with in-progress first fol
 
 ## For managing tasks
 
-Pass the keyword to perform required action on the task. The command will then prompt you through a fuzzy finder to enter
-the task title. The keyword action would be performed on the selected task.
+Pass the keyword to perform the required action on a task. The command will launch an interactive terminal UI menu where you can navigate through the task tree, or search for a task instantly by typing. The action will be performed on the selected task.
 
 | Description                                      | Command                                  |
 |:-------------------------------------------------|:------------------------------------------|
@@ -80,6 +79,31 @@ the task title. The keyword action would be performed on the selected task.
 | Modify Completed Task         | `devcord task -ar -n "new title"` <br/>`devcord task --archive --name "new title"`  |
 
 
+## For managing tables
+
+Tables allow you to segregate your tasks into different lists (e.g. personal, work, etc.).
+
+| Description                                      | Command                                  |
+|:-------------------------------------------------|:------------------------------------------|
+| List all tables                                 | `devcord tables -l` <br/> `devcord tables --list` |
+| Add a new table                                 | `devcord tables -a "table_name"` <br/> `devcord tables --add "table_name"` |
+| Select an active table                          | `devcord tables -sl "table_name"` <br/> `devcord tables --select "table_name"` |
+| Rename a table                                  | `devcord tables -n "table_name"` <br/> `devcord tables --name "table_name"` |
+| Delete a table                                  | `devcord tables -dl "table_name"` <br/> `devcord tables --delete "table_name"` |
+
+## For managing sessions
+
+Sessions allow you to track time spent on specific tasks.
+
+| Description                                      | Command                                  |
+|:-------------------------------------------------|:------------------------------------------|
+| Start a session for a task                      | `devcord session -st` <br/> `devcord session --start` |
+| End the current session                         | `devcord session -ed` <br/> `devcord session --end` |
+| List all sessions                               | `devcord session -l` <br/> `devcord session --list` |
+| Filter sessions by task                         | `devcord session -fl` <br/> `devcord session --filter` |
+| View details of a specific session              | `devcord session -sl` <br/> `devcord session --select` |
+| Delete a session                                | `devcord session -dl` <br/> `devcord session --delete` |
+
 ## Jira Integration
 
 With Jira integration you can view all your issues on devcord itself and sync
@@ -95,12 +119,3 @@ you'd be asked to set up your configuration for Jira.
 
 ## Miscellaneous
 
-Use Rich Tree:
-``` bash
-devcord init --pretty_tree False
-```
-
-Use Pretty Tree:
-``` bash
-devcord init --pretty_tree True
-```
