@@ -1,8 +1,7 @@
 {
     "theme": "light",
     "jira": {},
-    "version": "1.0.0",
+    "version": "1.0.1",
     "session_data": {},
-    "pretty_tree": false,
     "current_table": "tasks"
 }
