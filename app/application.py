@@ -39,7 +39,7 @@ def list_tasks(
     """
     List all the tasks based on the filters.
     """
-    order_by = "completed ASC, status ASC, priority DESC"
+    order_by = "status ASC, completed = 0 ASC, completed ASC, priority DESC"
     where_clause = []
     params = []
 
@@ -262,7 +262,7 @@ def get_subtasks(task_id: int, table: str):
             ],
             where_clause="WHERE parent_id = ?",
             params=(task_id,),
-            order_by="ORDER BY completed ASC, status ASC, priority DESC",
+            order_by="ORDER BY status ASC, completed = 0 ASC, completed ASC, priority DESC",
         )
     except sqlite3.Error:
         generate_migration_error()
@@ -304,7 +304,7 @@ def get_subtasks_recursive(task: dict, table: str):
                 "parent_id",
             ],
             where_clause="WHERE parent_id IS NOT NULL",
-            order_by="ORDER BY completed ASC, status ASC, priority DESC",
+            order_by="ORDER BY status ASC, completed = 0 ASC, completed ASC, priority DESC",
         )
     except sqlite3.Error:
         generate_migration_error()
