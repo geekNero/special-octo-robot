@@ -51,7 +51,7 @@ class ListTasks(unittest.TestCase):
         fill_db()
 
         self.assertEqual(list_tasks(), [
-            {
+                {
                     "id": 6,
                     "title": "Task 6",
                     "parent_id": None,
@@ -60,28 +60,6 @@ class ListTasks(unittest.TestCase):
                     "priority": 0,
                     "label": "None",
                     "description": "Description 6",
-                    "subtasks": 0,
-                },
-                {
-                    "id": 1,
-                    "title": "Task 1",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "None",
-                    "priority": 1,
-                    "label": "None",
-                    "description": "Description 1",
-                    "subtasks": 1,
-                },
-                {
-                    "id": 7,
-                    "title": "Task 7",
-                    "parent_id": None,
-                    "status": "Pending",
-                    "deadline": "None",
-                    "priority": 0,
-                    "label": "None",
-                    "description": "Description 7",
                     "subtasks": 0,
                 },
                 {
@@ -126,6 +104,28 @@ class ListTasks(unittest.TestCase):
                     "priority": 3,
                     "label": "None",
                     "description": "Description 4",
+                    "subtasks": 0,
+                },
+                {
+                    "id": 1,
+                    "title": "Task 1",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 1,
+                    "label": "None",
+                    "description": "Description 1",
+                    "subtasks": 1,
+                },
+                {
+                    "id": 7,
+                    "title": "Task 7",
+                    "parent_id": None,
+                    "status": "Pending",
+                    "deadline": "None",
+                    "priority": 0,
+                    "label": "None",
+                    "description": "Description 7",
                     "subtasks": 0,
                 },
             ]
@@ -238,17 +238,6 @@ class ListTasks(unittest.TestCase):
 
         self.assertEqual(list_tasks(inprogress=True, completed=True), [
             {
-                "id": 6,
-                "title": "Task 6",
-                "parent_id": None,
-                "status": "In Progress",
-                "deadline": "None",
-                "priority": 0,
-                "label": "None",
-                "description": "Description 6",
-                "subtasks": 0,
-            },
-            {
                 "id": 11,
                 "title": "Task 9",
                 "parent_id": None,
@@ -268,6 +257,17 @@ class ListTasks(unittest.TestCase):
                 "priority": 5,
                 "label": "None",
                 "description": "Description 5",
+                "subtasks": 0,
+            },
+            {
+                "id": 6,
+                "title": "Task 6",
+                "parent_id": None,
+                "status": "In Progress",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 6",
                 "subtasks": 0,
             },
             ]
@@ -437,17 +437,6 @@ class HandleDelete(unittest.TestCase):
                 "subtasks": 0,
             },
             {
-                "id": 7,
-                "title": "Task 7",
-                "parent_id": None,
-                "status": "Pending",
-                "deadline": "None",
-                "priority": 0,
-                "label": "None",
-                "description": "Description 7",
-                "subtasks": 0,
-            },
-            {
                 "id": 8,
                 "title": "Task 8",
                 "parent_id": None,
@@ -489,6 +478,17 @@ class HandleDelete(unittest.TestCase):
                 "priority": 3,
                 "label": "None",
                 "description": "Description 4",
+                "subtasks": 0,
+            },
+            {
+                "id": 7,
+                "title": "Task 7",
+                "parent_id": None,
+                "status": "Pending",
+                "deadline": "None",
+                "priority": 0,
+                "label": "None",
+                "description": "Description 7",
                 "subtasks": 0,
             },
         ])
