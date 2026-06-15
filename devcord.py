@@ -14,7 +14,11 @@ from app.console import print_tables
 from app.console import print_tasks
 from app.constants import config_path
 from app.constants import db_path
+from app.constants import DEFAULT_TABLE
 from app.constants import path
+from app.constants import STATUS_COMPLETED
+from app.constants import STATUS_IN_PROGRESS
+from app.constants import STATUS_PENDING
 from app.database import initialize
 from app.helper import check_table_exists
 from app.helper import lister
@@ -49,7 +53,7 @@ def cli(ctx):
     # db_path as well as config_path can only be set if path is not None
     if not os.path.exists(db_path):
         os.makedirs(path, exist_ok=True)
-        initialize("tasks")
+        initialize(DEFAULT_TABLE)
     if not os.path.exists(config_path):
         ctx.obj["config"] = initialize_config(config_path)
     else:
@@ -108,28 +112,28 @@ def cli(ctx):
 @click.option("-tb", "--table", help="Specify Table", type=str)
 def tasks(
     ctx,
-    list=None,
-    add=None,
-    desc=None,
-    priority=None,
-    today=False,
-    week=False,
-    date=None,
-    inprogress=None,
-    completed=None,
-    pending=None,
-    label=None,
-    output=None,
-    path=None,
-    subtask=False,
-    table=None,
+    list: bool = False,
+    add: str = None,
+    desc: bool = False,
+    priority: int = None,
+    today: bool = False,
+    week: bool = False,
+    date: str = None,
+    inprogress: bool = False,
+    completed: bool = False,
+    pending: bool = False,
+    label: str = None,
+    output: str = None,
+    path: str = None,
+    subtask: bool = False,
+    table: str = None,
 ):
     """
     Create and List tasks.
     """
 
     if not table:
-        table = ctx.obj["config"].get("current_table", "tasks")
+        table = ctx.obj["config"].get("current_table", DEFAULT_TABLE)
 
     if not add and not list:
         display_error_message("Please specify an action.")
@@ -277,27 +281,27 @@ def tasks(
 @click.option("-tb", "--table", help="Specify Table", type=str)
 def task(
     ctx,
-    desc=None,
-    inprogress=None,
-    completed=None,
-    pending=None,
-    subtasks=None,
-    week=False,
-    today=False,
-    delete=None,
-    name=None,
-    priority=None,
-    deadline=None,
-    label=None,
-    archive=False,
-    table=None,
+    desc: bool = False,
+    inprogress: bool = False,
+    completed: bool = False,
+    pending: bool = False,
+    subtasks: bool = False,
+    week: bool = False,
+    today: bool = False,
+    delete: bool = False,
+    name: str = None,
+    priority: int = None,
+    deadline: str = None,
+    label: str = None,
+    archive: bool = False,
+    table: str = None,
 ):
     """
     Modify a specific task.
     """
 
     if table is None:
-        table = ctx.obj["config"].get("current_table", "tasks")
+        table = ctx.obj["config"].get("current_table", DEFAULT_TABLE)
 
     current_task = lister(
         table=table,
@@ -311,11 +315,11 @@ def task(
     update_config(config_path, ctx.obj["config"])
 
     if inprogress:
-        current_task["status"] = "In Progress"
+        current_task["status"] = STATUS_IN_PROGRESS
     elif pending:
-        current_task["status"] = "Pending"
+        current_task["status"] = STATUS_PENDING
     elif completed:
-        current_task["status"] = "Completed"
+        current_task["status"] = STATUS_COMPLETED
 
     if name:
         current_task["title"] = name
@@ -394,7 +398,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
     """
     if list:
         table_list = application.list_tables()
-        print_tables(table_list, ctx.obj["config"].get("current_table", "tasks"))
+        print_tables(table_list, ctx.obj["config"].get("current_table", DEFAULT_TABLE))
 
     elif add:
         exists, add = check_table_exists(add)
@@ -441,7 +445,7 @@ def tables(ctx, list=None, add=None, select=None, delete=None, name=None):
             display_error_message("Cannot delete the only table.")
             return
 
-        if ctx.obj["config"].get("current_table", "tasks") == delete:
+        if ctx.obj["config"].get("current_table", DEFAULT_TABLE) == delete:
             display_error_message("Cannot delete curently selected table.")
             return
         ok = application.delete_table(delete)
@@ -563,6 +567,7 @@ def init(ctx, migrate=False):
     if migrate:
         update_version(ctx.obj["config"])
 
+
 @cli.command()
 @click.pass_context
 @click.option("-st", "--start", is_flag=True, help="Start a session for a task")
@@ -575,7 +580,7 @@ def session(ctx, start, end, list, select, filter, delete):
     """
     Manage sessions for tasks.
     """
-    table = ctx.obj["config"].get("current_table", "tasks")
+    table = ctx.obj["config"].get("current_table", DEFAULT_TABLE)
     current_task = None
     if filter:
         current_task = lister(table=table)

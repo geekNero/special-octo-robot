@@ -1,7 +1,6 @@
 import os
 import platform
 
-
 if platform.system() == "Windows":
     home_word_list = ["USERPROFILE", "HOMEDRIVE", "HOMEPATH"]
     for home_word in home_word_list:
@@ -29,3 +28,8 @@ else:
 
 LF_ENTER = 10
 CR_ENTER = 13
+
+STATUS_IN_PROGRESS = "In Progress"
+STATUS_COMPLETED = "Completed"
+STATUS_PENDING = "Pending"
+DEFAULT_TABLE = "tasks"

@@ -1,8 +1,14 @@
 import datetime
 import json
+import sqlite3
 import time
+from collections import defaultdict
 
 from . import database
+from app.constants import DEFAULT_TABLE
+from app.constants import STATUS_COMPLETED
+from app.constants import STATUS_IN_PROGRESS
+from app.constants import STATUS_PENDING
 from app.sessions.linux import session_end as linux_session_end
 from app.sessions.linux import session_start as linux_session_start
 from app.utility import convert_epoch_to_date
@@ -19,7 +25,7 @@ from app.utility import sanitize_text
 
 
 def list_tasks(
-    table="tasks",
+    table=DEFAULT_TABLE,
     priority=None,
     today=None,
     week=None,
@@ -65,17 +71,17 @@ def list_tasks(
         clause = []
         if inprogress:
             clause.append("?")
-            params.append("In Progress")
+            params.append(STATUS_IN_PROGRESS)
         if completed:
             clause.append("?")
-            params.append("Completed")
+            params.append(STATUS_COMPLETED)
         if pending:
             clause.append("?")
-            params.append("Pending")
+            params.append(STATUS_PENDING)
         where_clause.append("status in (" + ",".join(clause) + ")")
     else:
         clause = ["?", "?"]
-        params.extend(["In Progress", "Pending"])
+        params.extend([STATUS_IN_PROGRESS, STATUS_PENDING])
         where_clause.append("status in (" + ",".join(clause) + ")")
 
     if priority:
@@ -106,9 +112,9 @@ def list_tasks(
             params=tuple(params),
             order_by=f"ORDER BY {order_by}",
         )
-    except Exception as e:
-        print(e)
-        return None
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
 
     final_results = []
     for result in results:
@@ -130,7 +136,7 @@ def list_tasks(
 
 def add_tasks(
     title: str,
-    table="tasks",
+    table=DEFAULT_TABLE,
     description=None,
     priority=None,
     today=False,
@@ -164,15 +170,15 @@ def add_tasks(
         values.append(convert_time_to_epoch(deadline))
     if inprogress:
         columns.append("status")
-        values.append("In Progress")
+        values.append(STATUS_IN_PROGRESS)
     elif completed:
         columns.append("status")
-        values.append("Completed")
+        values.append(STATUS_COMPLETED)
         columns.append("completed")
         values.append(convert_time_to_epoch(get_deadline("today")))
     elif pending:
         columns.append("status")
-        values.append("Pending")
+        values.append(STATUS_PENDING)
     if label:
         columns.append("label")
         values.append(label)
@@ -181,8 +187,8 @@ def add_tasks(
         values.append(parent["id"])
     try:
         database.insert_into_table(table, columns=columns, values=values)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return
     # Insert the record then increment the count of the parent task.
     if parent:
@@ -217,7 +223,7 @@ def search_task(task_id, table: str):
             where_clause="WHERE id = ?",
             params=(task_id,),
         )
-    except:
+    except sqlite3.Error:
         generate_migration_error()
         return None
 
@@ -258,9 +264,9 @@ def get_subtasks(task_id: int, table: str):
             params=(task_id,),
             order_by="ORDER BY completed ASC, status ASC, priority DESC",
         )
-    except:
+    except sqlite3.Error:
         generate_migration_error()
-        return None
+        return []
     final_results = []
     for result in results:
         final_results.append(
@@ -283,10 +289,51 @@ def get_subtasks_recursive(task: dict, table: str):
     if task["subtasks"] == 0:
         return []
 
+    try:
+        all_subtasks = database.list_table(
+            table=table,
+            columns=[
+                "id",
+                "title",
+                "status",
+                "deadline",
+                "priority",
+                "label",
+                "description",
+                "subtasks",
+                "parent_id",
+            ],
+            where_clause="WHERE parent_id IS NOT NULL",
+            order_by="ORDER BY completed ASC, status ASC, priority DESC",
+        )
+    except sqlite3.Error:
+        generate_migration_error()
+        return []
+
+    children_map = defaultdict(list)
+    for row in all_subtasks:
+        child_dict = {
+            "id": row[0],
+            "title": row[1],
+            "status": row[2],
+            "deadline": convert_epoch_to_date(row[3]),
+            "priority": row[4],
+            "label": row[5] if row[5] else "None",
+            "description": row[6],
+            "subtasks": row[7],
+            "parent_id": row[8],
+        }
+        children_map[row[8]].append(child_dict)
+
     final_results = [task]
-    for child in get_subtasks(task["id"], table):
-        final_results.append(child)
-        final_results.extend(get_subtasks_recursive(child, table))
+
+    def traverse(node_id):
+        for child in children_map[node_id]:
+            final_results.append(child)
+            if child["subtasks"] > 0:
+                traverse(child["id"])
+
+    traverse(task["id"])
     return final_results
 
 
@@ -295,7 +342,7 @@ def update_task(updated_data: dict, table: str):
 
     updated_data["deadline"] = get_deadline(updated_data["deadline"])
 
-    if updated_data["status"] == "Completed":
+    if updated_data["status"] == STATUS_COMPLETED:
         updated_data["completed"] = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     else:
         updated_data["completed"] = updated_data["deadline"]
@@ -312,17 +359,17 @@ def update_task(updated_data: dict, table: str):
 
     try:
         database.update_table(table, final_data)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         generate_migration_error()
         return
-    if updated_data["subtasks"] != 0 and updated_data["status"] == "Completed":
+    if updated_data["subtasks"] != 0 and updated_data["status"] == STATUS_COMPLETED:
         children = get_subtasks(updated_data["id"], table)
         for child in children:
-            child["status"] = "Completed"
+            child["status"] = STATUS_COMPLETED
             try:
                 update_task(child, table)
-            except Exception:
+            except sqlite3.Error:
                 generate_migration_error()
 
 
@@ -351,8 +398,8 @@ def handle_delete(current_task: dict, table: str):
                         "id": current_task["parent_id"],
                     },
                 )
-            except Exception as e:
-                print(e)
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
 
 
 def list_tables() -> list:
@@ -361,7 +408,7 @@ def list_tables() -> list:
     """
     try:
         res = database.list_tables()
-    except:
+    except sqlite3.Error:
         generate_migration_error()
         return []
 
@@ -379,8 +426,8 @@ def add_table(table_name: str) -> bool:
     try:
         database.initialize(table_name)
         return True
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -392,8 +439,8 @@ def delete_table(table_name: str) -> bool:
         database.delete_table(table_name)
         return True
 
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -404,8 +451,8 @@ def rename_table(old_name: str, new_name: str) -> bool:
     try:
         database.rename_table(old_name, new_name)
         return True
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return False
 
 
@@ -477,12 +524,17 @@ def end_session(session_data: dict):
 
     session_data["end_time"] = int(datetime.datetime.now().timestamp())
 
-    session_id = database.add_session(
-        task_id=session_data["task_id"],
-        table_name=session_data["table"],
-        start_datetime=session_data["start_time"],
-        end_datetime=session_data["end_time"],
-    )
+    try:
+        session_id = database.add_session(
+            task_id=session_data["task_id"],
+            table_name=session_data["table"],
+            start_datetime=session_data["start_time"],
+            end_datetime=session_data["end_time"],
+        )
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return None
+
     session_data["session_id"] = session_id
     mapped_data = {}
     for value in data.values():
@@ -493,11 +545,14 @@ def end_session(session_data: dict):
             else:
                 mapped_data[name] += value["time"]
     for key, value in mapped_data.items():
-        database.add_session_data(
-            session_id=session_id,
-            application_name=key,
-            duration=value,
-        )
+        try:
+            database.add_session_data(
+                session_id=session_id,
+                application_name=key,
+                duration=value,
+            )
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
 
     return {"session_id": session_id, "session_data": session_data}
 
@@ -508,8 +563,8 @@ def list_sessions(table: str, task_id: int = None) -> list:
     """
     try:
         sessions = database.list_sessions(table, task_id)
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return []
 
     session_list = []
@@ -550,8 +605,8 @@ def get_session_data(session_id: int) -> dict:
                 },
             )
         return data
-    except Exception as e:
-        print(e)
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
         return {}
 
 
@@ -562,6 +617,6 @@ def delete_session(session_id: int) -> bool:
     try:
         database.delete_session(session_id)
         return True
-    except Exception as e:
+    except sqlite3.Error as e:
         display_error_message(f"Failed to delete session: {e}")
         return False
