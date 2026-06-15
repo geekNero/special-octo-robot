@@ -1,4 +1,3 @@
-import app.utility
 import json
 import os
 import signal

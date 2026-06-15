@@ -485,6 +485,9 @@ def start_session(task_id: int, table: str, session_data: dict):
         except Exception as e:
             display_error_message(f"Failed to start session: {e}")
             return None
+    else:
+        display_error_message("Session tracking is only supported on Linux.")
+        return None
 
     # Start a new session
     session_data["start_time"] = int(datetime.datetime.now().timestamp())
