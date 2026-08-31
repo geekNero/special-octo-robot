@@ -282,6 +282,7 @@ def tasks(
 @click.option("-lb", "--label", help="Change the label of the task", type=str)
 @click.option("-ar", "--archive", is_flag=True, help="Edit Completed the task")
 @click.option("-tb", "--table", help="Specify Table", type=str)
+@click.option("-id", "--task-id", help="Specify task ID headlessly", type=int)
 def task(
     ctx,
     desc: bool = False,
@@ -298,6 +299,7 @@ def task(
     label: str = None,
     archive: bool = False,
     table: str = None,
+    task_id: int = None,
 ):
     """
     Modify a specific task.
@@ -306,17 +308,23 @@ def task(
     if table is None:
         table = ctx.obj["config"].get("current_table", DEFAULT_TABLE)
 
-    current_task = lister(
-        table=table,
-        completed=archive,
-    )
+    if task_id is not None:
+        current_task = application.search_task(task_id, table)
+        if not current_task:
+            display_error_message("Task does not exist.")
+            return
+    else:
+        current_task = lister(
+            table=table,
+            completed=archive,
+        )
 
-    if current_task == {}:
-        return
+        if current_task == {}:
+            return
 
-    if current_task is None:
-        display_error_message("Task does not exist.")
-        return
+        if current_task is None:
+            display_error_message("Task does not exist.")
+            return
 
     update_config(config_path, ctx.obj["config"])
 

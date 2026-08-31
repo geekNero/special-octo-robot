@@ -77,6 +77,7 @@ Pass the keyword to perform the required action on a task. The command will laun
 | Modify task deadline                            | `devcord task -dd "dd/mm/yyyy"` <br/>`devcord task --deadline "dd/mm/yyyy"`         |
 | Modify task labels                              | `devcord task -lb "label"` <br/>`devcord task --label "label"`                      |
 | Modify Completed Task         | `devcord task -ar -n "new title"` <br/>`devcord task --archive --name "new title"`  |
+| Perform action headlessly by Task ID            | `devcord task -c -id <ID>` <br/>`devcord task --completed --task-id <ID>`           |
 
 
 ## For managing tables

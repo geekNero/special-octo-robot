@@ -83,4 +83,25 @@ class TestFreshInstall(unittest.TestCase):
         r = subprocess.run(("devcord tasks --list -st"), shell=True, capture_output=True, text=True)
         with open("test_list_task_with_empty_db_subtasks") as exp:
             self.assertEqual(str(r.stdout), exp.read())
+
+    def test_headless_task_management(self):
+        create_db_and_config()
+        p = subprocess.run(("../verify_debug.sh"), shell=True, capture_output=True)
+        self.assertEqual(p.returncode, 0)
+
+        # Add a task
+        subprocess.run(("devcord tasks --add 'Headless task test'"), shell=True, capture_output=True)
+        
+        # Mark as completed headlessly
+        subprocess.run(("devcord task -c -id 1"), shell=True, capture_output=True)
+
+        # Check DB directly to ensure status is completed
+        import sqlite3
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM tasks WHERE id = 1")
+        status = cursor.fetchone()[0]
+        conn.close()
+
+        self.assertEqual(status, "Completed")
         

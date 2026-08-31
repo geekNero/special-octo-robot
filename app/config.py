@@ -26,7 +26,7 @@ def initialize_config(
             "session_data": session_data,
         }
         json.dump(config, file, indent=4)
-        return config
+    return config
 
 
 def update_config(path, config):
